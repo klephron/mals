@@ -46,10 +46,16 @@ func (c *Client) initialize(data []byte) {
 					OpenClose: true,
 					Change:    message.FULL,
 				},
-				CompletionProvider: message.CompletionOptions{},
-				HoverProvider:      message.HoverOptions{},
-				CodeActionProvider: message.CodeActionOptions{},
-				CodeLensProvider:   message.CodeLensOptions{},
+				CompletionProvider: message.CompletionOptions{
+					CompletionItem: message.CompletionItem{
+						LabelDetailsSupport: true,
+					},
+				},
+				HoverProvider: message.HoverOptions{},
+				CodeActionProvider: message.CodeActionOptions{
+					CodeActionKinds: []message.CodeActionKind{},
+				},
+				CodeLensProvider: message.CodeLensOptions{},
 			},
 			ServerInfo: message.ServerInfo{
 				Name:    "mals-engine",
