@@ -25,7 +25,7 @@ type Engine struct {
 }
 
 func (p *Params) Parse() {
-	flag.IntVar(&p.flagPort, "p", 9200, "port to serve")
+	flag.IntVar(&p.flagPort, "p", 9651, "port to serve")
 
 	flag.Parse()
 }

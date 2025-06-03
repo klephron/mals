@@ -11,20 +11,21 @@ import (
 type Client struct {
 	logger *log.Logger
 
-	conn net.Conn
+	conn    net.Conn
+	scanner *bufio.Scanner
+	writer  *bufio.Writer
 }
 
-func NewClient(logger *log.Logger, conn net.Conn) *Client {
-	return &Client{logger: logger, conn: conn}
+func NewClient(logger *log.Logger, conn net.Conn) (c *Client) {
+	c = &Client{logger: logger, conn: conn, scanner: bufio.NewScanner(conn), writer: bufio.NewWriter(conn)}
+	c.scanner.Split(jsonrpc.ScannerSplit)
+	return
 }
 
 func (c *Client) Serve(ctx context.Context) {
 	defer c.Close()
 
-	c.logger.Printf("info: %s listening", c.conn.RemoteAddr())
-
-	scanner := bufio.NewScanner(c.conn)
-	scanner.Split(jsonrpc.ScannerSplit)
+	c.LogInfoPrintf("listening")
 
 	bytesC := make(chan []byte)
 
@@ -35,11 +36,11 @@ func (c *Client) Serve(ctx context.Context) {
 				close(bytesC)
 				return
 			default:
-				if !scanner.Scan() {
+				if !c.scanner.Scan() {
 					close(bytesC)
 					return
 				}
-				bytesC <- scanner.Bytes()
+				bytesC <- c.scanner.Bytes()
 			}
 		}
 	}()
@@ -52,28 +53,13 @@ func (c *Client) Serve(ctx context.Context) {
 			if !ok {
 				return
 			}
-			msg, _, err := jsonrpc.DecodeRequestMessage(bytes)
-
-			if err != nil {
-				c.logger.Printf("error: %s unable to decode %s", c.conn.RemoteAddr(), err)
-				continue
-			}
-
-			c.logger.Printf("info: %s handling method %s", c.conn.RemoteAddr(), msg.Method)
-
-			switch msg.Method {
-			case "initialize":
-				break
-			default:
-				c.logger.Printf("warn: %s unhandled method %s", c.conn.RemoteAddr(), msg.Method)
-				break
-			}
+			c.HandleClientRequest(bytes)
 		}
 	}
 }
 
 func (c *Client) Close() error {
-	c.logger.Printf("info: %s close", c.conn.RemoteAddr())
+	c.LogInfoPrintf("close")
 	if err := c.conn.Close(); err != nil {
 		return err
 	}
