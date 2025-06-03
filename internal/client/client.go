@@ -19,42 +19,63 @@ func NewClient(logger *log.Logger, conn net.Conn) *Client {
 }
 
 func (c *Client) Serve(ctx context.Context) {
-	go func() {
-		<-ctx.Done()
-		c.Close()
-	}()
+	defer c.Close()
 
 	c.logger.Printf("info: %s listening", c.conn.RemoteAddr())
 
 	scanner := bufio.NewScanner(c.conn)
 	scanner.Split(jsonrpc.ScannerSplit)
 
-	for scanner.Scan() {
-		bytes := scanner.Bytes()
+	bytesC := make(chan []byte)
 
-		msg, _, err := jsonrpc.DecodeRequestMessage(bytes)
-
-		if err != nil {
-			c.logger.Printf("error: %s unable to decode %s", c.conn.RemoteAddr(), err)
-			continue
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				close(bytesC)
+				return
+			default:
+				if !scanner.Scan() {
+					close(bytesC)
+					return
+				}
+				bytesC <- scanner.Bytes()
+			}
 		}
+	}()
 
-		c.logger.Printf("info: %s handling method %s", c.conn.RemoteAddr(), msg.Method)
+	for {
+		select {
+		case <-ctx.Done(): // can wait on scan
+			return
+		case bytes, ok := <-bytesC:
+			if !ok {
+				return
+			}
+			msg, _, err := jsonrpc.DecodeRequestMessage(bytes)
 
-		switch msg.Method {
-		case "initialize":
-			break
-		default:
-			c.logger.Printf("warn: %s unhandled method %s", c.conn.RemoteAddr(), msg.Method)
-			break
+			if err != nil {
+				c.logger.Printf("error: %s unable to decode %s", c.conn.RemoteAddr(), err)
+				continue
+			}
+
+			c.logger.Printf("info: %s handling method %s", c.conn.RemoteAddr(), msg.Method)
+
+			switch msg.Method {
+			case "initialize":
+				break
+			default:
+				c.logger.Printf("warn: %s unhandled method %s", c.conn.RemoteAddr(), msg.Method)
+				break
+			}
 		}
 	}
 }
 
 func (c *Client) Close() error {
+	c.logger.Printf("info: %s close", c.conn.RemoteAddr())
 	if err := c.conn.Close(); err != nil {
 		return err
 	}
-	c.logger.Printf("info: %s disconnected", c.conn.RemoteAddr())
 	return nil
 }

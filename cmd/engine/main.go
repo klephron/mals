@@ -47,8 +47,13 @@ func (e *Engine) Serve(ctx context.Context) error {
 
 	go func() {
 		for {
-			if conn, err := listener.Accept(); err == nil {
-				connC <- conn
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if conn, err := listener.Accept(); err == nil {
+					connC <- conn
+				}
 			}
 		}
 	}()
