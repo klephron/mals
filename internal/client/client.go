@@ -17,7 +17,13 @@ func NewClient(logger *log.Logger, conn net.Conn) *Client {
 	return &Client{logger: logger, conn: conn}
 }
 
-func (c *Client) Listen() {
+func (c *Client) Serve() {
+	defer func() {
+		if err := c.Close(); err != nil {
+			c.logger.Printf("error: %s", err)
+		}
+	}()
+
 	c.logger.Printf("info: %s listening", c.conn.RemoteAddr())
 
 	scanner := bufio.NewScanner(c.conn)

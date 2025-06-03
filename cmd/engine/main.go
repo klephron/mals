@@ -19,17 +19,17 @@ type Engine struct {
 	logger *log.Logger
 }
 
-func (p *Params) parse() {
+func (p *Params) Parse() {
 	flag.IntVar(&p.flagPort, "p", 9200, "port to serve")
 
 	flag.Parse()
 }
 
-func (e *Engine) setupLogger() {
+func (e *Engine) SetupLogger() {
 	e.logger = log.New(os.Stdout, "", log.LUTC|log.Lshortfile|log.Ldate|log.Ltime)
 }
 
-func (e *Engine) listen() error {
+func (e *Engine) Serve() error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", e.flagPort))
 	if err != nil {
 		return err
@@ -47,14 +47,7 @@ func (e *Engine) listen() error {
 
 		go func() {
 			client := client.NewClient(e.logger, conn)
-
-			defer func() {
-				if err := client.Close(); err != nil {
-					e.logger.Printf("error: %s", err)
-				}
-			}()
-
-			client.Listen()
+			client.Serve()
 		}()
 	}
 }
@@ -62,10 +55,10 @@ func (e *Engine) listen() error {
 func main() {
 	var engine Engine
 
-	engine.parse()
-	engine.setupLogger()
+	engine.Parse()
+	engine.SetupLogger()
 
-	if err := engine.listen(); err != nil {
+	if err := engine.Serve(); err != nil {
 		engine.logger.Fatal(err)
 	}
 }
