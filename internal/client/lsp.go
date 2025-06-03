@@ -53,7 +53,7 @@ func (c *Client) initialize(data []byte) {
 				},
 				HoverProvider: message.HoverOptions{},
 				CodeActionProvider: message.CodeActionOptions{
-					CodeActionKinds: []message.CodeActionKind{},
+					CodeActionKinds: []message.CodeActionKind{message.REFACTOR, message.QUICKFIX},
 				},
 				CodeLensProvider: message.CodeLensOptions{},
 			},

@@ -26,10 +26,6 @@ type HoverOptions struct {
 	WorkDoneProgressOptions
 }
 
-type CodeActionKind struct {
-	string
-}
-
 type CodeActionOptions struct {
 	WorkDoneProgressOptions
 	CodeActionKinds []CodeActionKind `json:"codeActionKinds"`
@@ -40,11 +36,15 @@ type CodeLensOptions struct {
 }
 
 type TextDocumentSyncKind int
+type CodeActionKind string
 
 const (
 	NONE        TextDocumentSyncKind = 0
 	FULL        TextDocumentSyncKind = 1
 	INCREMENTAL TextDocumentSyncKind = 2
+
+	REFACTOR CodeActionKind = "refactor"
+	QUICKFIX CodeActionKind = "quickfix"
 )
 
 type TextDocumentSyncOptions struct {
@@ -53,7 +53,7 @@ type TextDocumentSyncOptions struct {
 }
 
 type ServerCapabilities struct {
-	TextDocumentSync   TextDocumentSyncOptions `json:"textDocumentSyncOptions"`
+	TextDocumentSync   TextDocumentSyncOptions `json:"textDocumentSync"`
 	CompletionProvider CompletionOptions       `json:"completionProvider"`
 	HoverProvider      HoverOptions            `json:"hoverProvider"`
 	CodeActionProvider CodeActionOptions       `json:"codeActionProvider"`
