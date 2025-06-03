@@ -36,6 +36,7 @@ func (w *Workspace) GetCompletionList(filepath string, position message.Position
 
 	// TODO: change when deleging to real LSP
 	words := strings.Fields(documentText)
+	words = append(words, filepath)
 
 	items := make([]message.CompletionItem, len(words))
 	for i, s := range words {
