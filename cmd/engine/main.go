@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"mals-engine/internal/client"
 	"net"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 )
 
 type Params struct {
@@ -16,7 +20,8 @@ type Params struct {
 type Engine struct {
 	Params
 
-	logger *log.Logger
+	logger  *log.Logger
+	clients sync.Map
 }
 
 func (p *Params) Parse() {
@@ -29,26 +34,45 @@ func (e *Engine) SetupLogger() {
 	e.logger = log.New(os.Stdout, "", log.LUTC|log.Lshortfile|log.Ldate|log.Ltime)
 }
 
-func (e *Engine) Serve() error {
+func (e *Engine) Serve(ctx context.Context) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", e.flagPort))
 	if err != nil {
 		return err
 	}
-	e.logger.Printf("info: listening on port %d", e.flagPort)
+	e.logger.Printf("info: listening %d", e.flagPort)
 
-	defer listener.Close()
+	var wg sync.WaitGroup
+
+	connC := make(chan net.Conn)
+
+	go func() {
+		for {
+			if conn, err := listener.Accept(); err == nil {
+				connC <- conn
+			}
+		}
+	}()
 
 	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			e.logger.Printf("error: %s", err)
-			continue
-		}
+		select {
+		case <-ctx.Done():
+			wg.Wait()
+			e.logger.Printf("info: all clients done")
+			listener.Close()
+			return nil
+		case conn := <-connC:
+			go func() {
+				client := client.NewClient(e.logger, conn)
 
-		go func() {
-			client := client.NewClient(e.logger, conn)
-			client.Serve()
-		}()
+				e.clients.Store(client, struct{}{})
+
+				wg.Add(1)
+				client.Serve(ctx)
+				wg.Done()
+
+				e.clients.Delete(client)
+			}()
+		}
 	}
 }
 
@@ -58,7 +82,10 @@ func main() {
 	engine.Parse()
 	engine.SetupLogger()
 
-	if err := engine.Serve(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	if err := engine.Serve(ctx); err != nil {
 		engine.logger.Fatal(err)
 	}
 }

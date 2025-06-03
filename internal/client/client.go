@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"log"
 	"mals-engine/internal/jsonrpc"
 	"net"
@@ -17,11 +18,10 @@ func NewClient(logger *log.Logger, conn net.Conn) *Client {
 	return &Client{logger: logger, conn: conn}
 }
 
-func (c *Client) Serve() {
-	defer func() {
-		if err := c.Close(); err != nil {
-			c.logger.Printf("error: %s", err)
-		}
+func (c *Client) Serve(ctx context.Context) {
+	go func() {
+		<-ctx.Done()
+		c.Close()
 	}()
 
 	c.logger.Printf("info: %s listening", c.conn.RemoteAddr())
@@ -49,12 +49,12 @@ func (c *Client) Serve() {
 			break
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		c.logger.Printf("error: %s scanner error: %v", c.conn.RemoteAddr(), err)
-	}
 }
 
 func (c *Client) Close() error {
+	if err := c.conn.Close(); err != nil {
+		return err
+	}
 	c.logger.Printf("info: %s disconnected", c.conn.RemoteAddr())
-	return c.conn.Close()
+	return nil
 }
