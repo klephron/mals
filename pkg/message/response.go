@@ -1,8 +1,8 @@
 package message
 
-type Response struct {
-	Message
-	Id  int32  `json:"id"`
+type InitializeResult struct {
+	Capabilities ServerCapabilities `json:"capabilities"`
+	ServerInfo   ServerInfo         `json:"serverInfo"`
 }
 
 type InitializeResponse struct {

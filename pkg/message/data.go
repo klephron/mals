@@ -53,11 +53,11 @@ type TextDocumentSyncOptions struct {
 }
 
 type ServerCapabilities struct {
-	TextDocumentSync   TextDocumentSyncOptions `json:"textDocumentSync"`
-	CompletionProvider CompletionOptions       `json:"completionProvider"`
-	HoverProvider      HoverOptions            `json:"hoverProvider"`
-	CodeActionProvider CodeActionOptions       `json:"codeActionProvider"`
-	CodeLensProvider   CodeLensOptions         `json:"codeLensProvider"`
+	TextDocumentSync TextDocumentSyncOptions `json:"textDocumentSync"`
+	// CompletionProvider CompletionOptions       `json:"completionProvider"`
+	// HoverProvider      HoverOptions            `json:"hoverProvider"`
+	// CodeActionProvider CodeActionOptions       `json:"codeActionProvider"`
+	// CodeLensProvider   CodeLensOptions         `json:"codeLensProvider"`
 }
 
 type ServerInfo struct {
@@ -65,12 +65,33 @@ type ServerInfo struct {
 	Version string `json:"version"`
 }
 
-type InitializeParams struct {
-	ClientInfo       ClientInfo        `json:"clientInfo"`
-	WorkspaceFolders []WorkspaceFolder `json:"workspaceFolders"`
+type TextDocumentItem struct {
+	Uri        string `json:"uri"`
+	LanguageId string `json:"languageId"`
+	Version    int32  `json:"version"`
+	Text       string `json:"text"`
 }
 
-type InitializeResult struct {
-	Capabilities ServerCapabilities `json:"capabilities"`
-	ServerInfo   ServerInfo         `json:"serverInfo"`
+type TextDocumentIdentifier struct {
+	Uri string `json:"uri"`
+}
+
+type VersionedTextDocumentIdentifier struct {
+	TextDocumentIdentifier
+	Version int32 `json:"version"`
+}
+
+type Position struct {
+	Line      uint32 `json:"line"`
+	Character uint32 `json:"character"`
+}
+
+type Range struct {
+	Start Position `json:"start"`
+	End   Position `json:"end"`
+}
+
+type TextDocumentContentChangeEvent struct {
+	Range Range  `json:"range"`
+	Text  string `json:"text"`
 }

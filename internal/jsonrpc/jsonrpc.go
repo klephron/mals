@@ -27,23 +27,23 @@ func getContentLength(header []byte) (length int, err error) {
 	return
 }
 
-func DecodeRequest(data []byte) (message.Request, []byte, error) {
+func DecodeNotification(data []byte) (message.Notification, []byte, error) {
 	header, content, err := cutRequestMessage(data)
 	if err != nil {
-		return message.Request{}, nil, err
+		return message.Notification{}, nil, err
 	}
 
 	length, err := getContentLength(header)
 	if err != nil {
-		return message.Request{}, nil, err
+		return message.Notification{}, nil, err
 	}
 
-	var requestMessage message.Request
-	if err := json.Unmarshal(content[:length], &requestMessage); err != nil {
-		return message.Request{}, nil, err
+	var msg message.Notification
+	if err := json.Unmarshal(content[:length], &msg); err != nil {
+		return message.Notification{}, nil, err
 	}
 
-	return requestMessage, content[:length], nil
+	return msg, content[:length], nil
 }
 
 func EncodeResponse(msg any) ([]byte, error) {

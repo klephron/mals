@@ -1,9 +1,8 @@
 package message
 
-type Request struct {
-	Message
-	Id     int32  `json:"id"`
-	Method string `json:"method"`
+type InitializeParams struct {
+	ClientInfo       ClientInfo        `json:"clientInfo"`
+	WorkspaceFolders []WorkspaceFolder `json:"workspaceFolders"`
 }
 
 type InitializeRequest struct {

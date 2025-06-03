@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 	"mals-engine/internal/jsonrpc"
+	"mals-engine/internal/state"
 	"net"
 )
 
@@ -14,10 +15,18 @@ type Client struct {
 	conn    net.Conn
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
+
+	state *state.State
 }
 
 func NewClient(logger *log.Logger, conn net.Conn) (c *Client) {
-	c = &Client{logger: logger, conn: conn, scanner: bufio.NewScanner(conn), writer: bufio.NewWriter(conn)}
+	c = &Client{
+		logger:  logger,
+		conn:    conn,
+		scanner: bufio.NewScanner(conn),
+		writer:  bufio.NewWriter(conn),
+		state:   state.NewState(logger),
+	}
 	c.scanner.Split(jsonrpc.ScannerSplit)
 	return
 }
