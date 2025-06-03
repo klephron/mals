@@ -13,18 +13,20 @@ type WorkspaceFolder struct {
 type WorkDoneProgressOptions struct {
 }
 
-type CompletionItem struct {
-	LabelDetailsSupport bool `json:"labelDetailsSupport"`
-}
-
 type CompletionOptions struct {
 	WorkDoneProgressOptions
-	CompletionItem CompletionItem `json:"completionItem"`
 }
 
 type HoverOptions struct {
 	WorkDoneProgressOptions
 }
+
+type CodeActionKind string
+
+const (
+	REFACTOR CodeActionKind = "refactor"
+	QUICKFIX CodeActionKind = "quickfix"
+)
 
 type CodeActionOptions struct {
 	WorkDoneProgressOptions
@@ -36,15 +38,11 @@ type CodeLensOptions struct {
 }
 
 type TextDocumentSyncKind int
-type CodeActionKind string
 
 const (
 	NONE        TextDocumentSyncKind = 0
 	FULL        TextDocumentSyncKind = 1
 	INCREMENTAL TextDocumentSyncKind = 2
-
-	REFACTOR CodeActionKind = "refactor"
-	QUICKFIX CodeActionKind = "quickfix"
 )
 
 type TextDocumentSyncOptions struct {
@@ -53,8 +51,8 @@ type TextDocumentSyncOptions struct {
 }
 
 type ServerCapabilities struct {
-	TextDocumentSync TextDocumentSyncOptions `json:"textDocumentSync"`
-	// CompletionProvider CompletionOptions       `json:"completionProvider"`
+	TextDocumentSync   TextDocumentSyncOptions `json:"textDocumentSync"`
+	CompletionProvider CompletionOptions       `json:"completionProvider"`
 	// HoverProvider      HoverOptions            `json:"hoverProvider"`
 	// CodeActionProvider CodeActionOptions       `json:"codeActionProvider"`
 	// CodeLensProvider   CodeLensOptions         `json:"codeLensProvider"`
@@ -94,4 +92,28 @@ type Range struct {
 type TextDocumentContentChangeEvent struct {
 	Range Range  `json:"range"`
 	Text  string `json:"text"`
+}
+
+type CompletionTriggerKind int32
+
+const (
+	INVOKED                CompletionTriggerKind = 1
+	CHARACTER              CompletionTriggerKind = 2
+	INCOMPLETE_COMPLETIONS CompletionTriggerKind = 3
+)
+
+type CompletionContext struct {
+	TriggerKind      CompletionTriggerKind `json:"triggerKind"`
+	TriggerCharacter string                `json:"triggerCharacter"`
+}
+
+type CompletionItem struct {
+	Label         string `json:"label"`
+	Detail        string `json:"detail"`
+	Documentation string `json:"documentation"`
+}
+
+type CompletionList struct {
+	IsIncomplete bool             `json:"isIncomplete"`
+	Items        []CompletionItem `json:"items"`
 }

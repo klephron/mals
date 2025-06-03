@@ -7,6 +7,15 @@ import (
 	"mals-engine/pkg/uri"
 )
 
+func defaultResponse(request *message.Request) message.Response {
+	return message.Response{
+		Message: message.Message{
+			JsonRpc: "2.0",
+		},
+		Id: request.Id,
+	}
+}
+
 func (c *Client) HandleClientRequest(bytes []byte) {
 	msg, data, err := jsonrpc.DecodeNotification(bytes)
 
@@ -30,9 +39,21 @@ func (c *Client) HandleClientRequest(bytes []byte) {
 	case "textDocument/didClose":
 		c.textDocumentDidClose(data)
 		break
+	case "textDocument/completion":
+		c.textDocumentCompletion(data)
+		break
 	default:
 		c.LogWarnPrintf("unhandled method %s", msg.Method)
 		break
+	}
+}
+
+func (c *Client) writeResponse(response any) {
+	if bytes, err := jsonrpc.EncodeResponse(response); err == nil {
+		c.writer.Write(bytes)
+		c.writer.Flush()
+	} else {
+		c.LogErrorPrintf("cannot encode message to send")
 	}
 }
 
@@ -53,24 +74,15 @@ func (c *Client) initialize(data []byte) {
 		}
 	}
 
-	initializeResponse := message.InitializeResponse{
-		Response: message.Response{
-			Message: message.Message{
-				JsonRpc: "2.0",
-			},
-			Id: request.Id,
-		},
+	response := message.InitializeResponse{
+		Response: defaultResponse(&request.Request),
 		Result: message.InitializeResult{
 			Capabilities: message.ServerCapabilities{
 				TextDocumentSync: message.TextDocumentSyncOptions{
 					OpenClose: true,
 					Change:    message.FULL,
 				},
-				// CompletionProvider: message.CompletionOptions{
-				// 	CompletionItem: message.CompletionItem{
-				// 		LabelDetailsSupport: true,
-				// 	},
-				// },
+				CompletionProvider: message.CompletionOptions{},
 				// HoverProvider: message.HoverOptions{},
 				// CodeActionProvider: message.CodeActionOptions{
 				// 	CodeActionKinds: []message.CodeActionKind{message.REFACTOR, message.QUICKFIX},
@@ -84,12 +96,7 @@ func (c *Client) initialize(data []byte) {
 		},
 	}
 
-	if bytes, err := jsonrpc.EncodeResponse(initializeResponse); err == nil {
-		c.writer.Write(bytes)
-		c.writer.Flush()
-	} else {
-		c.LogErrorPrintf("cannot encode message to send")
-	}
+	c.writeResponse(response)
 }
 
 func (c *Client) textDocumentDidOpen(data []byte) {
@@ -97,7 +104,6 @@ func (c *Client) textDocumentDidOpen(data []byte) {
 	json.Unmarshal(data, &notification)
 
 	fileUri := notification.Params.TextDocument.Uri
-
 	path, err := uri.UriToPath(fileUri)
 	if err != nil {
 		c.LogErrorPrintf("unable to resolve file uri: %s", err)
@@ -115,7 +121,6 @@ func (c *Client) textDocumentDidChange(data []byte) {
 	json.Unmarshal(data, &notification)
 
 	fileUri := notification.Params.TextDocument.Uri
-
 	path, err := uri.UriToPath(fileUri)
 	if err != nil {
 		c.LogErrorPrintf("unable to resolve file uri: %s", err)
@@ -136,7 +141,6 @@ func (c *Client) textDocumentDidClose(data []byte) {
 	json.Unmarshal(data, &notification)
 
 	fileUri := notification.Params.TextDocument.Uri
-
 	path, err := uri.UriToPath(fileUri)
 	if err != nil {
 		c.LogErrorPrintf("unable to resolve file uri: %s", err)
@@ -146,5 +150,32 @@ func (c *Client) textDocumentDidClose(data []byte) {
 	if workspace, found := c.state.FindWorkspace(path); found {
 		workspace.CloseDocument(path)
 		c.LogInfoPrintf("workspace %s: document %s: closed", workspace.Root, path)
+	}
+}
+
+func (c *Client) textDocumentCompletion(data []byte) {
+	var request message.CompletionRequest
+	json.Unmarshal(data, &request)
+
+	fileUri := request.Params.TextDocument.Uri
+	path, err := uri.UriToPath(fileUri)
+	if err != nil {
+		c.LogErrorPrintf("unable to resolve file uri: %s", err)
+		return
+	}
+
+	if workspace, found := c.state.FindWorkspace(path); found {
+		list, ok := workspace.GetCompletionList(path, request.Params.Position)
+		if !ok {
+			c.LogErrorPrintf("workspace %s: document %s: not found for completion", workspace.Root, path)
+		} else {
+			c.LogInfoPrintf("workspace %s: document %s: completion", workspace.Root, path)
+
+			response := message.CompletionResponse{
+				Response: defaultResponse(&request.Request),
+				Result:   *list,
+			}
+			c.writeResponse(response)
+		}
 	}
 }

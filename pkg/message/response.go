@@ -9,3 +9,8 @@ type InitializeResponse struct {
 	Response
 	Result InitializeResult `json:"result"`
 }
+
+type CompletionResponse struct {
+	Response
+	Result CompletionList `json:"result"`
+}
