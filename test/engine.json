@@ -1,0 +1,26 @@
+{
+  "models": [
+    {
+      "id": "llama-3.2:1B:Q6_K",
+      "base_url": "http://localhost:9652/v1",
+      "spec": "OpenAPI"
+    }
+  ],
+  "workspaces": {
+    "*": {
+      "lsp_servers": [
+        {
+          "name": "bash-language-server",
+          "filetypes": ["bash", "sh"],
+          "cmd": [
+            "/home/nikit/.local/share/nvim/mason/bin/bash-language-server",
+            "start"
+          ]
+        }
+      ],
+      "model": {
+        "id": "llama-3.2:1B:Q6_K"
+      }
+    }
+  }
+}

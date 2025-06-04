@@ -22,7 +22,7 @@ type Workspace struct {
 }
 
 type Workspaces struct {
-	Default Workspace `json:"default"`
+	Default Workspace `json:"*"`
 }
 
 type Config struct {
@@ -49,6 +49,18 @@ func Decode(data []byte) (*Config, error) {
 
 	if err := json.Unmarshal(data, config); err != nil {
 		return nil, err
+	}
+
+	for i, model := range config.Models {
+		if model.Settings == nil {
+			config.Models[i].Settings = struct{}{}
+		}
+	}
+
+	for i, server := range config.Workspaces.Default.LspServers {
+		if server.Settings == nil {
+			config.Workspaces.Default.LspServers[i].Settings = struct{}{}
+		}
 	}
 
 	return config, nil
