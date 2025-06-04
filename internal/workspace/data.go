@@ -6,7 +6,7 @@ type Position struct {
 }
 
 type CompletionItem struct {
-	Label string
-	Detail string
+	Label         string
+	Detail        string
 	Documentation string
 }

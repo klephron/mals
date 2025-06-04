@@ -3,7 +3,11 @@
     {
       "id": "llama-3.2:1B:Q6_K",
       "base_url": "http://localhost:9652/v1",
-      "spec": "OpenAPI"
+      "spec": "OpenAI",
+      "settings": {
+        "max_tokens": 100,
+        "temperature": 0.7
+      }
     }
   ],
   "workspaces": {

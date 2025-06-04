@@ -2,11 +2,16 @@ package config
 
 import "encoding/json"
 
+type ModelSettings struct {
+	MaxTokens   *int64   `json:"max_tokens"`
+	Temperature *float64 `json:"temperature"`
+}
+
 type Model struct {
-	Id       string `json:"id"`
-	BaseUrl  string `json:"base_url"`
-	Spec     string `json:"spec"`
-	Settings any    `json:"settings"`
+	Id       string        `json:"id"`
+	BaseUrl  string        `json:"base_url"`
+	Spec     string        `json:"spec"`
+	Settings ModelSettings `json:"settings"`
 }
 
 type LspServer struct {
@@ -37,10 +42,10 @@ func (c *Config) String() string {
 
 func Default() *Config {
 	var config Config
-	config.Workspaces.Default.LspServers = make([]LspServer, 0)
-	config.Workspaces.Default.Model.Settings = struct{}{}
 
+	config.Workspaces.Default.LspServers = make([]LspServer, 0)
 	config.Models = make([]Model, 0)
+
 	return &config
 }
 
@@ -49,12 +54,6 @@ func Decode(data []byte) (*Config, error) {
 
 	if err := json.Unmarshal(data, config); err != nil {
 		return nil, err
-	}
-
-	for i, model := range config.Models {
-		if model.Settings == nil {
-			config.Models[i].Settings = struct{}{}
-		}
 	}
 
 	for i, server := range config.Workspaces.Default.LspServers {
