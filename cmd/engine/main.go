@@ -21,10 +21,8 @@ type Params struct {
 
 type Engine struct {
 	Params
-
-	config *config.Config
-
 	logger  *log.Logger
+	config  *config.Config
 	clients sync.Map
 }
 

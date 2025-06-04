@@ -10,12 +10,10 @@ import (
 )
 
 type Client struct {
-	logger *log.Logger
-
-	conn    net.Conn
-	scanner *bufio.Scanner
-	writer  *bufio.Writer
-
+	logger     *log.Logger
+	conn       net.Conn
+	scanner    *bufio.Scanner
+	writer     *bufio.Writer
 	workspaces map[string]*workspace.Workspace // path should be cleaned
 }
 
