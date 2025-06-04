@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"mals-engine/internal/client"
+	"mals-engine/pkg/config"
 	"net"
 	"os"
 	"os/signal"
@@ -14,27 +15,52 @@ import (
 )
 
 type Params struct {
-	flagPort int
+	flagPort       int
+	flagConfigPath string
 }
 
 type Engine struct {
 	Params
 
+	config *config.Config
+
 	logger  *log.Logger
 	clients sync.Map
 }
 
-func (p *Params) Parse() {
+func (p *Params) parse() {
 	flag.IntVar(&p.flagPort, "p", 9651, "port to serve")
+	flag.StringVar(&p.flagConfigPath, "c", "", "configuration file path")
 
 	flag.Parse()
 }
 
-func (e *Engine) SetupLogger() {
+func (e *Engine) setupLogger() {
 	e.logger = log.New(os.Stdout, "", log.LUTC|log.Lshortfile|log.Ldate|log.Ltime)
 }
 
-func (e *Engine) Serve(ctx context.Context) error {
+func (e *Engine) loadConfig() error {
+	var configuration *config.Config
+
+	if len(e.flagConfigPath) > 0 {
+		bytes, err := os.ReadFile(e.flagConfigPath)
+		if err != nil {
+			return err
+		}
+		configuration, err = config.Decode(bytes)
+		if err != nil {
+			return err
+		}
+	} else {
+		configuration = config.Default()
+	}
+
+	e.config = configuration
+
+	return nil
+}
+
+func (e *Engine) serve(ctx context.Context) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", e.flagPort))
 	if err != nil {
 		return err
@@ -84,13 +110,20 @@ func (e *Engine) Serve(ctx context.Context) error {
 func main() {
 	var engine Engine
 
-	engine.Parse()
-	engine.SetupLogger()
+	engine.parse()
+
+	engine.setupLogger()
+
+	if err := engine.loadConfig(); err != nil {
+		engine.logger.Fatalf("error: %s", err)
+	}
+
+	engine.logger.Printf("info: config %s", engine.config)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	if err := engine.Serve(ctx); err != nil {
-		engine.logger.Fatal(err)
+	if err := engine.serve(ctx); err != nil {
+		engine.logger.Fatalf("error: %s", err)
 	}
 }
