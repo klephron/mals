@@ -3,6 +3,7 @@ package state
 import (
 	"fmt"
 	"mals-engine/pkg/message"
+	"slices"
 	"strings"
 )
 
@@ -36,6 +37,8 @@ func (w *Workspace) GetCompletionList(filepath string, position message.Position
 
 	// TODO: change when deleging to real LSP
 	words := strings.Fields(documentText)
+	slices.Sort(words)
+	words = slices.Compact(words)
 	words = append(words, filepath)
 
 	items := make([]message.CompletionItem, len(words))
