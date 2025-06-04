@@ -1,4 +1,4 @@
-package message
+package lsp_message
 
 type InitializeResult struct {
 	Capabilities ServerCapabilities `json:"capabilities"`

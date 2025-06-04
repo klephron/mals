@@ -1,15 +1,15 @@
 package uri_test
 
 import (
-	"mals-engine/pkg/uri"
+	"mals-engine/pkg/url"
 	"testing"
 )
 
-func TestUriFile(t *testing.T) {
+func TestUrlFile(t *testing.T) {
 	source := "file:///home/nikit/tmp/main.py"
 	expected := "/home/nikit/tmp/main.py"
 
-	if actual, err := uri.UriToPath(source); err == nil {
+	if actual, err := url.UriToPath(source); err == nil {
 		if actual != expected {
 			t.Fatalf("expected %s, actual %s", expected, actual)
 		}
@@ -18,11 +18,11 @@ func TestUriFile(t *testing.T) {
 	}
 }
 
-func TestUriDirectory(t *testing.T) {
+func TestUrlDirectory(t *testing.T) {
 	source := "file:///home/nikit/tmp"
 	expected := "/home/nikit/tmp"
 
-	if actual, err := uri.UriToPath(source); err == nil {
+	if actual, err := url.UriToPath(source); err == nil {
 		if actual != expected {
 			t.Fatalf("expected %s, actual %s", expected, actual)
 		}
@@ -31,11 +31,11 @@ func TestUriDirectory(t *testing.T) {
 	}
 }
 
-func TestUriDirectorySlash(t *testing.T) {
+func TestUrlDirectorySlash(t *testing.T) {
 	source := "file:///home/nikit/tmp/"
 	expected := "/home/nikit/tmp"
 
-	if actual, err := uri.UriToPath(source); err == nil {
+	if actual, err := url.UriToPath(source); err == nil {
 		if actual != expected {
 			t.Fatalf("expected %s, actual %s", expected, actual)
 		}

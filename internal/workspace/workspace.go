@@ -1,8 +1,7 @@
-package state
+package workspace
 
 import (
 	"fmt"
-	"mals-engine/pkg/message"
 	"slices"
 	"strings"
 )
@@ -29,7 +28,7 @@ func (w *Workspace) CloseDocument(filepath string) {
 	delete(w.Documents, filepath)
 }
 
-func (w *Workspace) GetCompletionList(filepath string, position message.Position) (*message.CompletionList, bool) {
+func (w *Workspace) GetCompletionList(filepath string, position Position) ([]CompletionItem, bool) {
 	documentText, exists := w.Documents[filepath]
 	if !exists {
 		return nil, false
@@ -41,17 +40,14 @@ func (w *Workspace) GetCompletionList(filepath string, position message.Position
 	words = slices.Compact(words)
 	words = append(words, filepath)
 
-	items := make([]message.CompletionItem, len(words))
+	items := make([]CompletionItem, len(words))
 	for i, s := range words {
-		items[i] = message.CompletionItem{
+		items[i] = CompletionItem{
 			Label:         s,
 			Detail:        fmt.Sprintf("%s (%d)", s, i),
 			Documentation: "see dictionary",
 		}
 	}
 
-	return &message.CompletionList{
-		IsIncomplete: false,
-		Items:        items,
-	}, true
+	return items, true
 }

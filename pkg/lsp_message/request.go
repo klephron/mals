@@ -1,4 +1,4 @@
-package message
+package lsp_message
 
 type InitializeParams struct {
 	ClientInfo       ClientInfo        `json:"clientInfo"`

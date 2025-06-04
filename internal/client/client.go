@@ -5,7 +5,7 @@ import (
 	"context"
 	"log"
 	"mals-engine/internal/jsonrpc"
-	"mals-engine/internal/state"
+	"mals-engine/internal/workspace"
 	"net"
 )
 
@@ -16,16 +16,16 @@ type Client struct {
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
 
-	state *state.State
+	workspaces map[string]*workspace.Workspace // path should be cleaned
 }
 
 func NewClient(logger *log.Logger, conn net.Conn) (c *Client) {
 	c = &Client{
-		logger:  logger,
-		conn:    conn,
-		scanner: bufio.NewScanner(conn),
-		writer:  bufio.NewWriter(conn),
-		state:   state.NewState(logger),
+		logger:     logger,
+		conn:       conn,
+		scanner:    bufio.NewScanner(conn),
+		writer:     bufio.NewWriter(conn),
+		workspaces: make(map[string]*workspace.Workspace),
 	}
 	c.scanner.Split(jsonrpc.ScannerSplit)
 	return
@@ -62,7 +62,7 @@ func (c *Client) Serve(ctx context.Context) {
 			if !ok {
 				return
 			}
-			c.HandleClientRequest(bytes)
+			c.HandleLspRequest(bytes)
 		}
 	}
 }

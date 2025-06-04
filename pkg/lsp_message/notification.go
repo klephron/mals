@@ -1,4 +1,4 @@
-package message
+package lsp_message
 
 type DidOpenTextDocumentParams struct {
 	TextDocument TextDocumentItem `json:"textDocument"`

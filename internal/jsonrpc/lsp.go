@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"mals-engine/pkg/message"
+	message "mals-engine/pkg/lsp_message"
 	"strconv"
 )
 
@@ -27,6 +27,25 @@ func getContentLength(header []byte) (length int, err error) {
 	return
 }
 
+func DecodeRequest(data []byte) (message.Request, []byte, error) {
+	header, content, err := cutRequestMessage(data)
+	if err != nil {
+		return message.Request{}, nil, err
+	}
+
+	length, err := getContentLength(header)
+	if err != nil {
+		return message.Request{}, nil, err
+	}
+
+	var msg message.Request
+	if err := json.Unmarshal(content[:length], &msg); err != nil {
+		return message.Request{}, nil, err
+	}
+
+	return msg, content[:length], nil
+}
+
 func DecodeNotification(data []byte) (message.Notification, []byte, error) {
 	header, content, err := cutRequestMessage(data)
 	if err != nil {
@@ -46,7 +65,7 @@ func DecodeNotification(data []byte) (message.Notification, []byte, error) {
 	return msg, content[:length], nil
 }
 
-func EncodeResponse(msg any) ([]byte, error) {
+func Encode(msg any) ([]byte, error) {
 	content, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
