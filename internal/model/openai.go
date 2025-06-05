@@ -18,15 +18,7 @@ type ModelOpenAI struct {
 
 func NewModelOpenAI(logger *log.Logger, id string, spec string, baseUrl string, settings config.ModelSettings) *ModelOpenAI {
 	m := &ModelOpenAI{
-		Model: Model{
-			logger:    logger,
-			requests:  make(chan ModelRequest),
-			responses: make(chan ModelResponse),
-			Id:        id,
-			Spec:      spec,
-			BaseUrl:   baseUrl,
-			Settings:  settings,
-		},
+		Model:         NewModel(logger, id, spec, baseUrl, settings),
 		client:        openai.Client{},
 		clientCreated: false,
 	}
