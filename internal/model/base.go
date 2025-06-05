@@ -26,7 +26,7 @@ type ModelResponse struct {
 type ModelService interface {
 	Serve(ctx context.Context)
 	onRequest(ctx context.Context, request ModelRequest) ModelResponse
-	SendRequest(request ModelRequest, output chan<- ModelResponse)
+	SubmitTask(request ModelTask)
 }
 
 type Model struct {
@@ -53,7 +53,8 @@ func NewModelRequest(text string) ModelRequest {
 	}
 }
 
-func newModelTask(request ModelRequest, output chan<- ModelResponse) ModelTask {
+// just in case there would be different kinds of requests
+func NewModelTask(request ModelRequest, output chan<- ModelResponse) ModelTask {
 	return ModelTask{
 		id:      uuid.New(),
 		Request: request,
@@ -94,6 +95,6 @@ func (m *Model) onRequest(ctx context.Context, request ModelRequest) ModelRespon
 	return NewModelError(errors.New("generic model is unable to generate responses"))
 }
 
-func (m *Model) SendRequest(request ModelRequest, output chan<- ModelResponse) {
-	m.tasks <- newModelTask(request, output)
+func (m *Model) SubmitTask(task ModelTask) {
+	m.tasks <- task
 }
