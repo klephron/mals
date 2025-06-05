@@ -1,9 +1,12 @@
 package workspace
 
-import "strings"
+import (
+	"fmt"
+)
 
 const (
-	PROMPT_SYSTEM = `You are an intelligent autocompletion engine. Your task is to suggest relevant completions based on the document context and current cursor position.
+	PROMPT_TEMPLATE = `
+You are an intelligent autocompletion engine. Your task is to suggest relevant completions based on the document context and current cursor position.
 
 Input Format:
 - Document Text: The full text of the document
@@ -20,21 +23,18 @@ Instructions:
 
 Document text:
 
-`
-
-	PROMPT_CONTEXT = `
-
-Provide completion for the given input:
-
-`
-
-	PROMPT_FORMAT = `
+%s
 
 Return your response as a simple JSON array of strings without duplicates. Example format: [\"item1\", \"item2\", \"item3\"].
 
-`
+Complete this text:
+
+%s`
+
 )
 
 func GetCompletionPrompt(documentContext string, currentContext string) string {
-	return strings.TrimSpace(PROMPT_SYSTEM + documentContext + PROMPT_FORMAT + PROMPT_CONTEXT + currentContext)
+	prompt := fmt.Sprintf(PROMPT_TEMPLATE, documentContext, currentContext)
+	fmt.Println(prompt)
+	return prompt
 }
