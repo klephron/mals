@@ -6,31 +6,46 @@ import (
 
 const (
 	PROMPT_TEMPLATE = `
-You are an intelligent autocompletion engine. Your task is to suggest relevant completions based on the document context and current cursor position.
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-Input Format:
-- Document Text: The full text of the document
-- Current Context: Text before current position
+You are an intelligent autocompletion engine. Your task is to suggest relevant text completions based on document context.
 
-Instructions:
-1. Analyze the document context, writing style, and subject matter
-2. Consider the partial text before the cursor position
-3. No more than 5 relevant completion suggestions that:
-   - Are contextually appropriate
-   - Match the writing style and tone
-   - Complete words, phrases, or sentences naturally
-   - Vary in length (from single words to full phrases)
+Rules:
+- Analyze the document context and writing style
+- Generate 3-5 contextually appropriate completions
+- Match the existing tone and style
+- Provide completions of varying lengths (words to phrases)
+- Return ONLY a valid JSON array of strings
+- No explanations, no additional text
+
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Document text: The weather today is quite nice. I think I'll go for a walk in the park and maybe stop by the
+Current context: "I think I'll go for a walk in the park and maybe stop by the"
+
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+["coffee shop", "library", "store to buy groceries", "lake to feed the ducks"]
+
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Document text: She opened her laptop and started typing her report. The first chapter discussed the importance of renewable energy sources. Solar panels and wind turbines are becoming more
+Current context: "Solar panels and wind turbines are becoming more"
+
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+["efficient", "affordable each year", "popular worldwide", "cost-effective solutions", "widely adopted"]
+
+<|eot_id|><|start_header_id|>user<|end_header_id|>
 
 Document text:
-
 %s
 
-Return your response as a simple JSON array of strings without duplicates. Example format: [\"item1\", \"item2\", \"item3\"].
+Current context:
+%s
 
-Complete this text:
-
-%s`
-
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+`
 )
 
 func GetCompletionPrompt(documentContext string, currentContext string) string {
