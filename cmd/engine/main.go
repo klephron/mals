@@ -85,21 +85,6 @@ func (e *Engine) serveModels(ctx context.Context) {
 			m.Serve(ctx)
 		}(m)
 
-		output := make(chan model.ModelResponse)
-
-		go func() {
-			req := model.NewModelRequest("what have you doooooone.")
-			task := model.NewModelTask(req, output)
-			m.SubmitTask(task)
-
-			resp := <-output
-			if resp.Error != nil {
-				log.Printf("info: received error %s", resp.Error)
-			} else {
-				log.Printf("info: received response %s", resp.Text)
-			}
-		}()
-
 		return true
 	})
 
