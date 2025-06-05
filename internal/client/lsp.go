@@ -139,6 +139,8 @@ func (c *Client) textDocumentCompletion(data []byte) {
 		return
 	}
 
+	c.LogInfoPrintf("workspace %s: document %s: completion", w.Root, path)
+
 	// in separate goroutine because it is a long process
 	go func() {
 		items, err := w.GenerateCompletionList(path, workspace.Position{
@@ -150,8 +152,6 @@ func (c *Client) textDocumentCompletion(data []byte) {
 			c.LogErrorPrintf("workspace %s: %s: ", w.Root, err)
 			return
 		}
-
-		c.LogInfoPrintf("workspace %s: document %s: completion", w.Root, path)
 
 		list_items := make([]lsp_message.CompletionItem, len(items))
 		for i, s := range items {
@@ -165,7 +165,7 @@ func (c *Client) textDocumentCompletion(data []byte) {
 		response := lsp_message.CompletionResponse{
 			Response: defaultResponse(&request.Request),
 			Result: *&lsp_message.CompletionList{
-				IsIncomplete: false,
+				IsIncomplete: true,
 				Items:        list_items,
 			},
 		}
