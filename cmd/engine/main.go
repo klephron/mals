@@ -28,7 +28,7 @@ type Engine struct {
 	logger  *log.Logger
 	config  *config.Config
 	clients *xsync.Map[*client.Client, struct{}]
-	models  *xsync.Map[model.ModelService, struct{}]
+	models  *xsync.Map[string, model.ModelService]
 }
 
 func (p *Params) parse() {
@@ -64,13 +64,18 @@ func (e *Engine) loadConfig() error {
 }
 
 func (e *Engine) setupModels() error {
-	e.models = xsync.NewMap[model.ModelService, struct{}]()
+	e.models = xsync.NewMap[string, model.ModelService]()
 
 	for _, m := range e.config.Models {
+		if _, present := e.models.Load(m.Id); present {
+			return errors.New(fmt.Sprintf("error: model %s: duplicate id", m.Id))
+		}
+
 		if m.Spec != "OpenAI" {
 			return errors.New(fmt.Sprintf("error: model %s: spec %s is unsupported", m.Id, m.Spec))
 		}
-		e.models.Store(model.NewModelOpenAI(e.logger, m.Id, m.Spec, m.BaseUrl, m.Settings), struct{}{})
+
+		e.models.Store(m.Id, model.NewModelOpenAI(e.logger, m.Id, m.Spec, m.BaseUrl, m.Settings))
 	}
 	return nil
 }
@@ -78,7 +83,7 @@ func (e *Engine) setupModels() error {
 func (e *Engine) serveModels(ctx context.Context) {
 	var wg sync.WaitGroup
 
-	e.models.Range(func(m model.ModelService, value struct{}) bool {
+	e.models.Range(func(id string, m model.ModelService) bool {
 		wg.Add(1)
 		go func(m model.ModelService) {
 			defer wg.Done()
