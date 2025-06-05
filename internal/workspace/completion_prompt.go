@@ -50,6 +50,6 @@ Current context:
 
 func GetCompletionPrompt(documentContext string, currentContext string) string {
 	prompt := fmt.Sprintf(PROMPT_TEMPLATE, documentContext, currentContext)
-	fmt.Println(prompt)
+	// fmt.Println(prompt)
 	return prompt
 }
