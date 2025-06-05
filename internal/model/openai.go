@@ -42,12 +42,23 @@ func (m *ModelOpenAI) onRequest(ctx context.Context, request ModelRequest) Model
 		temperature = openai.Float(*m.Settings.Temperature)
 	}
 
+	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+		Name:   request.SchemaName,
+		Schema: request.Schema,
+		Strict: openai.Bool(true),
+	}
+
 	resp, err := m.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(request.Text),
 		},
 		MaxTokens:   maxTokens,
 		Temperature: temperature,
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
+				JSONSchema: schemaParam,
+			},
+		},
 	})
 
 	if err != nil {

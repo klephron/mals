@@ -28,7 +28,7 @@ type Engine struct {
 	logger  *log.Logger
 	config  *config.Config
 	clients *xsync.Map[*client.Client, struct{}]
-	models  *xsync.Map[string, model.ModelService]
+	models  *xsync.Map[string, model.ModelService] // [id, model]
 }
 
 func (p *Params) parse() {
@@ -136,7 +136,13 @@ func (e *Engine) serveClients(ctx context.Context) error {
 			go func(conn net.Conn) {
 				defer wg.Done()
 
-				client := client.NewClient(e.logger, conn)
+				config, err := e.setupClientConfig(conn)
+				if err != nil {
+					e.logger.Printf("%s", err)
+					return
+				}
+
+				client := client.NewClient(e.logger, conn, config)
 				e.clients.Store(client, struct{}{})
 
 				client.Serve(ctx)
@@ -145,6 +151,19 @@ func (e *Engine) serveClients(ctx context.Context) error {
 			}(conn)
 		}
 	}
+}
+
+func (e *Engine) setupClientConfig(conn net.Conn) (client.Config, error) {
+	defaultModelId := e.config.Workspaces.Default.Model.Id
+	defaultModel, ok := e.models.Load(defaultModelId)
+	if !ok {
+		return client.Config{}, errors.New(fmt.Sprintf("error: for client %s model %s not found", conn.LocalAddr(), defaultModelId))
+	}
+	return client.Config{
+		Workspace: client.WorkspaceConfig{
+			DefaultModel: defaultModel,
+		},
+	}, nil
 }
 
 func (e *Engine) serve(ctx context.Context) {

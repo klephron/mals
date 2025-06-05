@@ -36,7 +36,7 @@ func (c *Client) initialize(data []byte) {
 			c.LogErrorPrintf("unable to get workspace %s path", workspace.URI)
 			continue
 		}
-		if _, created := c.NewWorkspace(path); created {
+		if _, created := c.NewWorkspace(path, c.config.Workspace.DefaultModel); created {
 			c.LogInfoPrintf("workspace %s: created", path)
 		} else {
 			c.LogInfoPrintf("workspace %s: recreated", path)
@@ -133,35 +133,44 @@ func (c *Client) textDocumentCompletion(data []byte) {
 		return
 	}
 
-	if w, found := c.FindWorkspace(path); found {
-		items, ok := w.GetCompletionList(path, workspace.Position{
+	w, found := c.FindWorkspace(path)
+	if !found {
+		c.LogErrorPrintf("workspace %s not found", err)
+		return
+	}
+
+	// in separate goroutine because it is a long process
+	go func() {
+		items, err := w.GenerateCompletionList(path, workspace.Position{
 			Line: request.Params.Position.Line,
 			Char: request.Params.Position.Character,
 		})
-		if !ok {
-			c.LogErrorPrintf("workspace %s: document %s: not found for completion", w.Root, path)
-		} else {
-			c.LogInfoPrintf("workspace %s: document %s: completion", w.Root, path)
 
-			list_items := make([]lsp_message.CompletionItem, len(items))
-			for i, s := range items {
-				list_items[i] = lsp_message.CompletionItem{
-					Label:         s.Label,
-					Detail:        s.Detail,
-					Documentation: s.Documentation,
-				}
-			}
-
-			response := lsp_message.CompletionResponse{
-				Response: defaultResponse(&request.Request),
-				Result: *&lsp_message.CompletionList{
-					IsIncomplete: false,
-					Items:        list_items,
-				},
-			}
-			c.writeResponse(response)
+		if err != nil {
+			c.LogErrorPrintf("workspace %s: %s: ", w.Root, err)
+			return
 		}
-	}
+
+		c.LogInfoPrintf("workspace %s: document %s: completion", w.Root, path)
+
+		list_items := make([]lsp_message.CompletionItem, len(items))
+		for i, s := range items {
+			list_items[i] = lsp_message.CompletionItem{
+				Label:         s.Label,
+				Detail:        s.Detail,
+				Documentation: s.Documentation,
+			}
+		}
+
+		response := lsp_message.CompletionResponse{
+			Response: defaultResponse(&request.Request),
+			Result: *&lsp_message.CompletionList{
+				IsIncomplete: false,
+				Items:        list_items,
+			},
+		}
+		c.writeResponse(response)
+	}()
 }
 
 func (c *Client) HandleLspRequest(bytes []byte) {

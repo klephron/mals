@@ -9,7 +9,10 @@ import (
 )
 
 type ModelRequest struct {
-	Text string
+	Text              string
+	Schema            any
+	SchemaName        string
+	SchemaDescription string
 }
 
 type ModelTask struct {
@@ -47,9 +50,12 @@ func NewModelError(error error) ModelResponse {
 	return ModelResponse{Text: "", Error: error}
 }
 
-func NewModelRequest(text string) ModelRequest {
+func NewModelRequest(text string, schema any, schemaName string, schemaDescription string) ModelRequest {
 	return ModelRequest{
-		Text: text,
+		Text:              text,
+		Schema:            schema,
+		SchemaName:        schemaName,
+		SchemaDescription: schemaDescription,
 	}
 }
 

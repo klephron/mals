@@ -5,9 +5,18 @@ import (
 	"context"
 	"log"
 	"mals-engine/internal/jsonrpc"
+	"mals-engine/internal/model"
 	"mals-engine/internal/workspace"
 	"net"
 )
+
+type WorkspaceConfig struct {
+	DefaultModel model.ModelService
+}
+
+type Config struct {
+	Workspace WorkspaceConfig
+}
 
 type Client struct {
 	logger     *log.Logger
@@ -15,15 +24,17 @@ type Client struct {
 	scanner    *bufio.Scanner
 	writer     *bufio.Writer
 	workspaces map[string]*workspace.Workspace // path should be cleaned
+	config     Config
 }
 
-func NewClient(logger *log.Logger, conn net.Conn) (c *Client) {
+func NewClient(logger *log.Logger, conn net.Conn, config Config) (c *Client) {
 	c = &Client{
 		logger:     logger,
 		conn:       conn,
 		scanner:    bufio.NewScanner(conn),
 		writer:     bufio.NewWriter(conn),
 		workspaces: make(map[string]*workspace.Workspace),
+		config:     config,
 	}
 	c.scanner.Split(jsonrpc.ScannerSplit)
 	return
@@ -32,19 +43,18 @@ func NewClient(logger *log.Logger, conn net.Conn) (c *Client) {
 func (c *Client) Serve(ctx context.Context) {
 	defer c.Close()
 
-	c.LogInfoPrintf("listening")
-
 	bytesC := make(chan []byte)
+	defer close(bytesC)
+
+	c.LogInfoPrintf("listening")
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				close(bytesC)
 				return
 			default:
 				if !c.scanner.Scan() {
-					close(bytesC)
 					return
 				}
 				bytesC <- c.scanner.Bytes()
