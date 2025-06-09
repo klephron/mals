@@ -59,7 +59,7 @@ func getLastNPositionChars(content string, position uint64, n uint64) string {
 	return content[start:position]
 }
 
-func getLastNChars(content string, line, char uint32, n uint64) string {
+func GetLastNChars(content string, line, char uint32, n uint64) string {
 	position := getPosition(content, line, char)
 	return getLastNPositionChars(content, position, n)
 }
@@ -77,7 +77,7 @@ func (w *Workspace) GenerateCompletionList(filepath string, position Position) (
 	// words = slices.Compact(words)
 	// words = append(words, filepath)
 
-	currentContext := getLastNChars(documentText, position.Line, position.Char, 200)
+	currentContext := GetLastNChars(documentText, position.Line, position.Char, 200)
 
 	prompt := GetCompletionPrompt(documentText, currentContext)
 	schema := generateSchema[[]string]()

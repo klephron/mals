@@ -1,4 +1,4 @@
-package uri_test
+package test
 
 import (
 	"mals-engine/pkg/url"
