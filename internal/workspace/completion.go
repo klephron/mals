@@ -2,9 +2,8 @@ package workspace
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"mals-engine/internal/model"
+	"mals/internal/model"
 	"strings"
 
 	"github.com/invopop/jsonschema"
@@ -29,7 +28,7 @@ func getPosition(content string, line, char uint32) uint64 {
 
 	var position uint64
 	// Add lengths of all previous lines (including newlines)
-	for i := uint32(0); i < line; i++ {
+	for i := range line {
 		position += uint64(len(lines[i])) + 1 // +1 for newline
 	}
 
@@ -68,7 +67,7 @@ func GetLastNChars(content string, line, char uint32, n uint64) string {
 func (w *Workspace) GenerateCompletionList(filepath string, position Position) ([]CompletionItem, error) {
 	documentText, exists := w.Documents[filepath]
 	if !exists {
-		return nil, errors.New(fmt.Sprintf("document %s doesn't exist", filepath))
+		return nil, fmt.Errorf("document %s doesn't exist", filepath)
 	}
 
 	// TODO: change when deleging to real LSP
@@ -100,7 +99,7 @@ func (w *Workspace) GenerateCompletionList(filepath string, position Position) (
 
 	var respItemArray []string
 	if err := json.Unmarshal([]byte(resp.Text), &respItemArray); err != nil {
-		return nil, errors.New(fmt.Sprintf("%s, while parsing %s", err, resp.Text))
+		return nil, fmt.Errorf("%s, while parsing %s", err, resp.Text)
 	}
 
 	items := make([]CompletionItem, len(respItemArray))

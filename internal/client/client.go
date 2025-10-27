@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"context"
 	"log"
-	"mals-engine/internal/jsonrpc"
-	"mals-engine/internal/model"
-	"mals-engine/internal/workspace"
+	"mals/internal/jsonrpc"
+	"mals/internal/model"
+	"mals/internal/workspace"
 	"net"
 )
 

@@ -1,4 +1,4 @@
-module mals-engine
+module mals
 
 go 1.24.3
 

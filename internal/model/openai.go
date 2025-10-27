@@ -3,7 +3,7 @@ package model
 import (
 	"context"
 	"log"
-	"mals-engine/pkg/config"
+	"mals/pkg/config"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"

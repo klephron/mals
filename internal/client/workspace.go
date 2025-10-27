@@ -1,8 +1,8 @@
 package client
 
 import (
-	"mals-engine/internal/model"
-	"mals-engine/internal/workspace"
+	"mals/internal/model"
+	"mals/internal/workspace"
 	"path/filepath"
 )
 

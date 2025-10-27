@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"log"
-	"mals-engine/pkg/config"
+	"mals/pkg/config"
 )
 
 type ModelRequest struct {

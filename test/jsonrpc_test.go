@@ -2,8 +2,8 @@ package test
 
 import (
 	"bytes"
-	. "mals-engine/internal/jsonrpc"
-	. "mals-engine/pkg/lsp_message"
+	. "mals/internal/jsonrpc"
+	. "mals/pkg/lsp_message"
 	"testing"
 )
 

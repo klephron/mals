@@ -2,10 +2,10 @@ package client
 
 import (
 	"encoding/json"
-	"mals-engine/internal/jsonrpc"
-	"mals-engine/internal/workspace"
-	"mals-engine/pkg/lsp_message"
-	"mals-engine/pkg/url"
+	"mals/internal/jsonrpc"
+	"mals/internal/workspace"
+	"mals/pkg/lsp_message"
+	"mals/pkg/url"
 )
 
 func defaultResponse(request *lsp_message.Request) lsp_message.Response {
@@ -164,7 +164,7 @@ func (c *Client) textDocumentCompletion(data []byte) {
 
 		response := lsp_message.CompletionResponse{
 			Response: defaultResponse(&request.Request),
-			Result: *&lsp_message.CompletionList{
+			Result: lsp_message.CompletionList{
 				IsIncomplete: true,
 				Items:        list_items,
 			},
@@ -184,23 +184,16 @@ func (c *Client) HandleLspRequest(bytes []byte) {
 	switch msg.Method {
 	case "initialize":
 		c.initialize(data)
-		break
 	case "initialized":
-		break
 	case "textDocument/didOpen":
 		c.textDocumentDidOpen(data)
-		break
 	case "textDocument/didChange":
 		c.textDocumentDidChange(data)
-		break
 	case "textDocument/didClose":
 		c.textDocumentDidClose(data)
-		break
 	case "textDocument/completion":
 		c.textDocumentCompletion(data)
-		break
 	default:
 		c.LogWarnPrintf("unhandled method %s", msg.Method)
-		break
 	}
 }

@@ -1,7 +1,7 @@
 package workspace
 
 import (
-	"mals-engine/internal/model"
+	"mals/internal/model"
 	"sync"
 )
 

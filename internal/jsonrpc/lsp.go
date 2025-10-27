@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	message "mals-engine/pkg/lsp_message"
+	message "mals/pkg/lsp_message"
 	"strconv"
 )
 

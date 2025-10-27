@@ -1,7 +1,7 @@
 package test
 
 import (
-	"mals-engine/pkg/url"
+	"mals/pkg/url"
 	"testing"
 )
 

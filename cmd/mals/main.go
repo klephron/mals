@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"mals-engine/internal/client"
-	"mals-engine/internal/model"
-	"mals-engine/pkg/config"
+	"mals/internal/client"
+	"mals/internal/model"
+	"mals/pkg/config"
 	"net"
 	"os"
 	"os/signal"
@@ -68,11 +67,11 @@ func (e *Engine) setupModels() error {
 
 	for _, m := range e.config.Models {
 		if _, present := e.models.Load(m.Id); present {
-			return errors.New(fmt.Sprintf("error: model %s: duplicate id", m.Id))
+			return fmt.Errorf("error: model %s: duplicate id", m.Id)
 		}
 
 		if m.Spec != "OpenAI" {
-			return errors.New(fmt.Sprintf("error: model %s: spec %s is unsupported", m.Id, m.Spec))
+			return fmt.Errorf("error: model %s: spec %s is unsupported", m.Id, m.Spec)
 		}
 
 		e.models.Store(m.Id, model.NewModelOpenAI(e.logger, m.Id, m.Spec, m.BaseUrl, m.Settings))
@@ -157,7 +156,7 @@ func (e *Engine) setupClientConfig(conn net.Conn) (client.Config, error) {
 	defaultModelId := e.config.Workspaces.Default.Model.Id
 	defaultModel, ok := e.models.Load(defaultModelId)
 	if !ok {
-		return client.Config{}, errors.New(fmt.Sprintf("error: for client %s model %s not found", conn.LocalAddr(), defaultModelId))
+		return client.Config{}, fmt.Errorf("error: for client %s model %s not found", conn.LocalAddr(), defaultModelId)
 	}
 	return client.Config{
 		Workspace: client.WorkspaceConfig{
