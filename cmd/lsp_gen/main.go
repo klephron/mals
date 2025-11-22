@@ -40,6 +40,7 @@ func httpRead(source string, file string) []byte {
 func write(target string, bytes []byte) {
 	dir := path.Dir(target)
 	os.MkdirAll(dir, os.ModePerm)
+
 	file, err := os.Create(target)
 	if err != nil {
 		log.Fatalf("failed to create file: %s", target)
@@ -77,13 +78,14 @@ func genGopls(params Params) {
 }
 
 func genUri(params Params) {
+	file := "uri.go"
 	bytes := []byte(`package protocol
 
 type URI = string
 type DocumentURI = string`)
 
 	modified := modify(params, bytes)
-	targetPath := getTargetPath(params, "uri.go")
+	targetPath := getTargetPath(params, file)
 	write(targetPath, modified)
 }
 
