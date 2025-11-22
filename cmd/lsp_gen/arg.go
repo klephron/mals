@@ -5,7 +5,7 @@ import (
 )
 
 type Params struct {
-	Target  string `arg:"-o" default:"pkg/lsp/protocol"`
+	Target  string `arg:"-o" default:"internal/lsp/protocol"`
 	Package string `arg:"-p" default:"protocol"`
 	Prefix  string `arg:"-s" default:"gen."`
 }
