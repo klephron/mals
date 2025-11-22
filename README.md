@@ -1,9 +1,23 @@
 # mals
 
+## Generate LSP protocol structures
+
+Build utility script to fetch latest changes:
+
+```sh
+go build -o build/lsp-gen cmd/lsp_gen/*.go
+```
+
+Generate lsp protocol structures and helpers:
+
+```sh
+./build/lsp-gen
+```
+
 ## Build
 
 ```sh
-go build -o build/mals cmd/mals/main.go
+go build -o build/mals cmd/mals/*.go
 ```
 
 ## Usage

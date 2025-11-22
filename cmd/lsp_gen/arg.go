@@ -1,0 +1,17 @@
+package main
+
+import (
+	"github.com/alexflint/go-arg"
+)
+
+type Params struct {
+	Target  string `arg:"-o" default:"pkg/lsp/protocol"`
+	Package string `arg:"-p" default:"protocol"`
+	Prefix  string `arg:"-s" default:"gen."`
+}
+
+func argParse() Params {
+	var params Params
+	arg.MustParse(&params)
+	return params
+}
