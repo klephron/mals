@@ -8,7 +8,7 @@ import (
 
 type Log struct {
 	logfile *os.File
-	logger  *slog.Logger
+	Logger  *slog.Logger
 }
 
 func logLevel(level int) slog.Level {
@@ -36,7 +36,7 @@ func Open(path string, level int) (*Log, error) {
 		Level:     logLevel(level),
 	}))
 
-	return &Log{logfile, logger}, nil
+	return &Log{logfile: logfile, Logger: logger}, nil
 }
 
 func (log *Log) Close() {
