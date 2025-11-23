@@ -98,11 +98,22 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 
 	switch t.Spec {
 	case "openai":
-		var settings ModelSpecOpenAI
-		if err := json.Unmarshal(t.Settings, &settings); err != nil {
+		var ts struct {
+			Url         string  `json:"url"`
+			MaxTokens   int     `json:"max_tokens"`
+			Temperature float32 `json:"temperature"`
+		}
+
+		if err := json.Unmarshal(t.Settings, &ts); err != nil {
 			return err
 		}
-		o.Settings = &settings
+
+		o.Settings = &ModelSpecOpenAI{
+			Url:         ts.Url,
+			MaxTokens:   ts.MaxTokens,
+			Temperature: ts.Temperature,
+		}
+
 	default:
 		o.Settings = nil
 	}
@@ -125,16 +136,20 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 
 	switch t.Spec {
 	case "stdio":
-		var settings LspSpecStdio
-		if err := json.Unmarshal(t.Settings, &settings); err != nil {
+		var ts struct {
+			Cmd []string `json:"cmd"`
+		}
+
+		ts.Cmd = []string{}
+
+		if err := json.Unmarshal(t.Settings, &ts); err != nil {
 			return err
 		}
 
-		if settings.Cmd == nil {
-			settings.Cmd = []string{}
+		o.Settings = LspSpecStdio{
+			Cmd: ts.Cmd,
 		}
 
-		o.Settings = &settings
 	default:
 		o.Settings = nil
 	}
