@@ -5,22 +5,20 @@ import (
 	"fmt"
 )
 
-type wireMessage struct {
-	VersionTag string           `json:"jsonrpc"`
-	Id         *int32           `json:"id,omitempty"`
-	Method     *string          `json:"method,omitempty"`
-	Params     *json.RawMessage `json:"params,omitempty"`
-	Result     *json.RawMessage `json:"result,omitempty"`
-	Error      *json.RawMessage `json:"error,omitempty"`
-}
-
 func DecodeMessage(data []byte) (Message, error) {
 	body, err := decode(data)
 	if err != nil {
 		return nil, err
 	}
 
-	msg := wireMessage{}
+	var msg struct {
+		VersionTag string           `json:"jsonrpc"`
+		Id         *int32           `json:"id,omitempty"`
+		Method     *string          `json:"method,omitempty"`
+		Params     *json.RawMessage `json:"params,omitempty"`
+		Result     *json.RawMessage `json:"result,omitempty"`
+		Error      *json.RawMessage `json:"error,omitempty"`
+	}
 
 	if err := json.Unmarshal(body, &msg); err != nil {
 		return nil, fmt.Errorf("jsonrpc unmarshalling: %w", err)
@@ -57,7 +55,7 @@ func DecodeMessage(data []byte) (Message, error) {
 }
 
 func EncodeMessage(message Message) ([]byte, error) {
-	msg := wireMessage{
+	msg := messageWire{
 		VersionTag: "2.0",
 	}
 

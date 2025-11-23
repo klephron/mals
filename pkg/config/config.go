@@ -5,9 +5,8 @@ type ModelSpec interface {
 }
 
 type Model struct {
-	Name     *string   `json:"name"`
-	Spec     *string   `json:"spec"`
-	Settings ModelSpec `json:"settings"`
+	Name     string
+	Settings ModelSpec
 }
 
 type LspSpec interface {
@@ -15,15 +14,14 @@ type LspSpec interface {
 }
 
 type Lsp struct {
-	Name     *string `json:"name"`
-	Spec     *string `json:"spec"`
-	Settings LspSpec `json:"settings"`
+	Name     string
+	Settings LspSpec
 }
 
 type Condition struct {
-	Filetypes []string `json:"filetypes,omitempty"`
-	Paths     []string `json:"paths,omitempty"`
-	Types     []string `json:"types,omitempty"`
+	Filetypes []string
+	Paths     []string
+	Types     []string
 }
 
 type Step interface {
@@ -32,36 +30,36 @@ type Step interface {
 
 type StepGeneric struct {
 	Step
-	Name       *string      `json:"name"`
-	Conditions []*Condition `json:"conditions,omitempty"`
-	Scope      *string      `json:"scope"`
+	Name       string
+	Conditions []*Condition
+	Scope      string
 }
 
 type StepModel struct {
 	StepGeneric
-	Model    *string `json:"model"`
-	Template *string `json:"template"`
+	Model    string
+	Template string
 }
 
 type StepLsp struct {
 	StepGeneric
-	Lsp      *string `json:"lsp"`
-	Template *string `json:"template"`
+	Lsp      string
+	Template string
 }
 
 type Workflow struct {
-	Name  *string `json:"name"`
-	Steps []Step  `json:"steps,omitempty"`
+	Name  string
+	Steps []Step
 }
 
 type Usage struct {
-	Name       *string      `json:"name"`
-	Conditions []*Condition `json:"conditions,omitempty"`
-	Workflow   Workflow     `json:"workflow"`
+	Name       string
+	Conditions []*Condition
+	Workflow   *Workflow
 }
 
 type Config struct {
-	Models []*Model `json:"models,omitempty"`
-	Lsps   []*Lsp   `json:"lsps,omitempty"`
-	Usages []*Usage `json:"usages,omitempty"`
+	Models []*Model
+	Lsps   []*Lsp
+	Usages []*Usage
 }
