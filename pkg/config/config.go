@@ -21,9 +21,9 @@ type Lsp struct {
 }
 
 type Condition struct {
-	Filetypes []string `json:"filetypes" default:"[]"`
-	Paths     []string `json:"paths" default:"[]"`
-	Types     []string `json:"types" default:"[]"`
+	Filetypes []string `json:"filetypes,omitempty"`
+	Paths     []string `json:"paths,omitempty"`
+	Types     []string `json:"types,omitempty"`
 }
 
 type Step interface {
@@ -33,7 +33,7 @@ type Step interface {
 type StepGeneric struct {
 	Step
 	Name       *string      `json:"name"`
-	Conditions []*Condition `json:"conditions"`
+	Conditions []*Condition `json:"conditions,omitempty"`
 	Scope      *string      `json:"scope"`
 }
 
@@ -51,17 +51,17 @@ type StepLsp struct {
 
 type Workflow struct {
 	Name  *string `json:"name"`
-	Steps []Step  `json:"steps" default:"[]"`
+	Steps []Step  `json:"steps,omitempty"`
 }
 
 type Usage struct {
 	Name       *string      `json:"name"`
-	Conditions []*Condition `json:"conditions" default:"[]"`
+	Conditions []*Condition `json:"conditions,omitempty"`
 	Workflow   Workflow     `json:"workflow"`
 }
 
 type Config struct {
-	Models []*Model `json:"models" default:"[]"`
-	Lsps   []*Lsp   `json:"lsps" default:"[]"`
-	Usages []*Usage `'json:"usages" default:"[]"`
+	Models []*Model `json:"models,omitempty"`
+	Lsps   []*Lsp   `json:"lsps,omitempty"`
+	Usages []*Usage `json:"usages,omitempty"`
 }
