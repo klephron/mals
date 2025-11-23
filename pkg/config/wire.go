@@ -7,11 +7,15 @@ import (
 
 func (o *Config) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Models []*Model `json:"models"`
-		Lsps   []*Lsp   `json:"lsps"`
-		Usages []*Usage `json:"usages"`
+		Loggers   []*json.RawMessage `json:"loggers"`
+		Listeners []*Listener        `json:"listeners"`
+		Models    []*Model           `json:"models"`
+		Lsps      []*Lsp             `json:"lsps"`
+		Usages    []*Usage           `json:"usages"`
 	}
 
+	t.Loggers = []*json.RawMessage{}
+	t.Listeners = []*Listener{}
 	t.Models = []*Model{}
 	t.Lsps = []*Lsp{}
 	t.Usages = []*Usage{}
@@ -20,9 +24,61 @@ func (o *Config) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	loggers := []Log{}
+	for _, tlogger := range t.Loggers {
+		logger, err := logUnmarshalJSON(tlogger)
+		if err != nil {
+			return err
+		}
+		loggers = append(loggers, logger)
+	}
+	o.Loggers = loggers
+
+	o.Listeners = t.Listeners
 	o.Models = t.Models
 	o.Lsps = t.Lsps
 	o.Usages = t.Usages
+
+	return nil
+}
+
+func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
+	var t struct {
+		Type  string  `json:"type"`
+		Level string  `json:"level"`
+		File  *string `json:"file"`
+	}
+
+	if err := json.Unmarshal(*data, &t); err != nil {
+		return nil, err
+	}
+
+	switch t.Type {
+	case "file":
+		file := &LogFile{
+			Level: t.Level,
+		}
+		if t.File != nil {
+			file.File = *t.File
+		}
+		return file, nil
+	}
+
+	return nil, fmt.Errorf(`in log: "type" is not or not "file", got "%v"`, t.Type)
+}
+
+func (o *Listener) UnmarshalJSON(data []byte) error {
+	var t struct {
+		Type string `json:"type"`
+		Port int    `json:"port"`
+	}
+
+	if err := json.Unmarshal(data, &t); err != nil {
+		return err
+	}
+
+	o.Type = t.Type
+	o.Port = t.Port
 
 	return nil
 }
@@ -145,7 +201,7 @@ func stepUnmarshalJSON(data *json.RawMessage) (Step, error) {
 	}
 
 	if t.Model != nil && t.Lsp != nil {
-		return nil, fmt.Errorf(`in step %v both "model" and "lsp" are set`, t.Name)
+		return nil, fmt.Errorf(`in step %v: both "model" and "lsp" are set`, t.Name)
 	}
 
 	generic := StepGeneric{
@@ -180,7 +236,7 @@ func stepUnmarshalJSON(data *json.RawMessage) (Step, error) {
 		return lsp, nil
 	}
 
-	return nil, fmt.Errorf(`in step %v both "model" and "lsp" are not set`, t.Name)
+	return nil, fmt.Errorf(`in step %v: both "model" and "lsp" are not set`, t.Name)
 }
 
 func (o *Workflow) UnmarshalJSON(data []byte) error {

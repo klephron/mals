@@ -1,7 +1,9 @@
 package main
 
 import (
-// "mals/internal/log"
+	"encoding/json"
+	"fmt"
+	"mals/internal/log"
 )
 
 // type Engine struct {
@@ -158,10 +160,22 @@ func main() {
 	_, stop := signalHandle()
 	defer stop()
 
-	_ = argParse()
+	params := argParse()
 
-	// log, err := log.Open()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	config, err := loadConfig(&params)
+	if err != nil {
+		panic(err)
+	}
+
+	log, err := log.Open(config.Loggers)
+	if err != nil {
+		panic(err)
+	}
+
+	configJson, err := json.Marshal(config)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Debug(fmt.Sprintf("config: %v", string(configJson)))
 }

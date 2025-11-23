@@ -58,8 +58,19 @@ type Usage struct {
 	Workflow   *Workflow
 }
 
+type Log interface {
+	log()
+}
+
+type Listener struct {
+	Type string
+	Port int
+}
+
 type Config struct {
-	Models []*Model
-	Lsps   []*Lsp
-	Usages []*Usage
+	Loggers   []Log
+	Listeners []*Listener
+	Models    []*Model
+	Lsps      []*Lsp
+	Usages    []*Usage
 }

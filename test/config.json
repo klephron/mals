@@ -1,0 +1,8 @@
+{
+  "loggers": [
+    {
+      "type": "file",
+      "file": "/dev/stderr"
+    }
+  ]
+}

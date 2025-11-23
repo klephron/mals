@@ -6,7 +6,7 @@ import (
 )
 
 type Params struct {
-	Config string `arg:"-c" default:"" help:"config file path"`
+	Config string `arg:"-c" default:"config.json" help:"config file path"`
 }
 
 func argParse() Params {
