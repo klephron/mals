@@ -6,7 +6,7 @@ import (
 )
 
 type Message interface {
-	jsonrpc2()
+	message()
 }
 
 type Request struct {

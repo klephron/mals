@@ -1,74 +1,67 @@
 package config
 
-import "encoding/json"
-
-type ModelSettings struct {
-	MaxTokens   *int64   `json:"max_tokens"`
-	Temperature *float64 `json:"temperature"`
+type ModelSpec interface {
+	modelspec()
 }
 
 type Model struct {
-	Id       string        `json:"id"`
-	BaseUrl  string        `json:"base_url"`
-	Spec     string        `json:"spec"`
-	Settings ModelSettings `json:"settings"`
+	Name     *string   `json:"name"`
+	Spec     *string   `json:"spec"`
+	Settings ModelSpec `json:"settings"`
 }
 
-type LspServer struct {
-	Name      string   `json:"name"`
-	Filetypes []string `json:"filetypes"`
-	Cmd       []string `json:"cmd"`
-	Settings  any      `json:"settings"`
+type LspSpec interface {
+	lspspec()
 }
 
-type Workspace struct {
-	LspServers []LspServer `json:"lsp_servers"`
-	Model      Model       `json:"model"`
+type Lsp struct {
+	Name     *string `json:"name"`
+	Spec     *string `json:"spec"`
+	Settings LspSpec `json:"settings"`
 }
 
-type Workspaces struct {
-	Default Workspace `json:"*"`
+type Condition struct {
+	Filetypes []string `json:"filetypes" default:"[]"`
+	Paths     []string `json:"paths" default:"[]"`
+	Types     []string `json:"types" default:"[]"`
+}
+
+type Step interface {
+	step()
+}
+
+type StepGeneric struct {
+	Step
+	Name       *string      `json:"name"`
+	Conditions []*Condition `json:"conditions"`
+	Scope      *string      `json:"scope"`
+}
+
+type StepModel struct {
+	StepGeneric
+	Model    *string `json:"model"`
+	Template *string `json:"template"`
+}
+
+type StepLsp struct {
+	StepGeneric
+	Lsp      *string `json:"lsp"`
+	Template *string `json:"template"`
+}
+
+type Workflow struct {
+	Name  *string `json:"name"`
+	Steps []Step  `json:"steps" default:"[]"`
+}
+
+type Usage struct {
+	Name       *string      `json:"name"`
+	Conditions []*Condition `json:"conditions" default:"[]"`
+	Workflow   Workflow     `json:"workflow"`
 }
 
 type Config struct {
-	Models     []Model    `json:"models"`
-	Workspaces Workspaces `json:"workspaces"`
-}
-
-func (c *Config) String() string {
-	bytes, _ := Encode(c)
-	return string(bytes)
-}
-
-func Default() *Config {
-	var config Config
-
-	config.Workspaces.Default.LspServers = make([]LspServer, 0)
-	config.Models = make([]Model, 0)
-
-	return &config
-}
-
-func Decode(data []byte) (*Config, error) {
-	config := Default()
-
-	if err := json.Unmarshal(data, config); err != nil {
-		return nil, err
-	}
-
-	for i, server := range config.Workspaces.Default.LspServers {
-		if server.Settings == nil {
-			config.Workspaces.Default.LspServers[i].Settings = struct{}{}
-		}
-	}
-
-	return config, nil
-}
-
-func Encode(config *Config) ([]byte, error) {
-	content, err := json.Marshal(config)
-	if err != nil {
-		return nil, err
-	}
-	return content, nil
+	Models []*Model `json:"models" default:"[]"`
+	Lsps   []*Lsp   `json:"lsps" default:"[]"`
+	Usages []*Usage `'json:"usages" default:"[]"`
 }
