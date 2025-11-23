@@ -8,12 +8,12 @@ import (
 )
 
 type logFile struct {
-	Logfile *os.File
-	Logger  *slog.Logger
+	logfile *os.File
+	logger  *slog.Logger
 }
 
 type Log struct {
-	loggers []*logFile
+	logFiles []*logFile
 }
 
 func slogLevel(level string) (slog.Level, error) {
@@ -49,11 +49,11 @@ func openFile(path string, level string) (*logFile, error) {
 		Level:     slogLevel,
 	}))
 
-	return &logFile{Logfile: logfile, Logger: log}, nil
+	return &logFile{logfile: logfile, logger: log}, nil
 }
 
 func Open(loggers []config.Log) (*Log, error) {
-	log := &Log{loggers: []*logFile{}}
+	l := &Log{logFiles: []*logFile{}}
 
 	for _, logger := range loggers {
 		switch typed := logger.(type) {
@@ -61,47 +61,47 @@ func Open(loggers []config.Log) (*Log, error) {
 			opened, err := openFile(typed.File, typed.Level)
 
 			if err != nil {
-				log.Close()
+				l.Close()
 				return nil, err
 			}
 
-			log.loggers = append(log.loggers, opened)
+			l.logFiles = append(l.logFiles, opened)
 
 		default:
-			log.Close()
+			l.Close()
 			return nil, fmt.Errorf("unhandled log type %T", typed)
 		}
 	}
 
-	return log, nil
+	return l, nil
 }
 
-func (log *Log) Close() {
-	for _, logger := range log.loggers {
-		logger.Logfile.Close()
+func (l *Log) Close() {
+	for _, logger := range l.logFiles {
+		logger.logfile.Close()
 	}
 }
 
-func (log *Log) Debug(msg string, args ...any) {
-	for _, logger := range log.loggers {
-		logger.Logger.Debug(msg, args...)
+func (l *Log) Debug(msg string, args ...any) {
+	for _, logger := range l.logFiles {
+		logger.logger.Debug(msg, args...)
 	}
 }
 
-func (log *Log) Info(msg string, args ...any) {
-	for _, logger := range log.loggers {
-		logger.Logger.Info(msg, args...)
+func (l *Log) Info(msg string, args ...any) {
+	for _, logger := range l.logFiles {
+		logger.logger.Info(msg, args...)
 	}
 }
 
-func (log *Log) Warn(msg string, args ...any) {
-	for _, logger := range log.loggers {
-		logger.Logger.Warn(msg, args...)
+func (l *Log) Warn(msg string, args ...any) {
+	for _, logger := range l.logFiles {
+		logger.logger.Warn(msg, args...)
 	}
 }
 
-func (log *Log) Error(msg string, args ...any) {
-	for _, logger := range log.loggers {
-		logger.Logger.Error(msg, args...)
+func (l *Log) Error(msg string, args ...any) {
+	for _, logger := range l.logFiles {
+		logger.logger.Error(msg, args...)
 	}
 }
