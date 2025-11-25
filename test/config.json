@@ -4,5 +4,11 @@
       "type": "file",
       "file": "/dev/stderr"
     }
+  ],
+  "listeners": [
+    {
+      "type": "lsp",
+      "port": 9651
+    }
   ]
 }

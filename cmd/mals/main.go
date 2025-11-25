@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"mals/internal/listener"
 	"mals/internal/log"
 	"mals/internal/state"
 )
@@ -158,7 +159,7 @@ import (
 // }
 
 func main() {
-	_, stop := signalHandle()
+	ctx, stop := signalHandle()
 	defer stop()
 
 	params := argParse()
@@ -184,4 +185,15 @@ func main() {
 	}
 
 	state.LogContext().Debug(fmt.Sprintf("config: %v", string(configJson)))
+
+	for _, listenerConfig := range config.Listeners {
+		listener, err := listener.New(state, listenerConfig)
+		if err != nil {
+			panic(err)
+		}
+		state.ListenerAdd(listener)
+	}
+
+	// will unblock when currently present listeners at done, not all
+	state.ListenerListenAndServeSnapshot(ctx)
 }
