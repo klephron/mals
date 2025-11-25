@@ -1,23 +1,20 @@
 package listener
 
 import (
-	"context"
 	"fmt"
-	"mals/internal/log"
+	"mals/internal/listener/api"
+	"mals/internal/listener/common"
+	"mals/internal/listener/lsp"
+	"mals/internal/state"
 	"mals/pkg/config"
 )
 
-type Listener interface {
-	Type() string
-	ListenAndServe(ctx context.Context) error
-}
-
-func NewListener(listener *config.Listener, log *log.Log) (Listener, error) {
+func New(state *state.State, listener *config.Listener) (common.Listener, error) {
 	switch listener.Type {
-	case listenerLspType():
-		return newListenerLsp(listener.Port, log)
-	case listenerApiType():
-		return newListenerApi(listener.Port, log)
+	case lsp.Type():
+		return lsp.New(state, listener.Port)
+	case api.Type():
+		return lsp.New(state, listener.Port)
 	default:
 		return nil, fmt.Errorf(`unhandled listener type "%v"`, listener.Type)
 	}

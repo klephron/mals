@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mals/internal/log"
+	"mals/internal/state"
 )
 
 // type Engine struct {
@@ -167,9 +168,14 @@ func main() {
 		panic(err)
 	}
 
-	log, err := log.Open(config.Loggers)
-	if err != nil {
-		panic(err)
+	state := state.New()
+
+	for _, loggerConfig := range config.Loggers {
+		log, err := log.Open(loggerConfig)
+		if err != nil {
+			panic(err)
+		}
+		state.LogAdd(log)
 	}
 
 	configJson, err := json.Marshal(config)
@@ -177,5 +183,5 @@ func main() {
 		panic(err)
 	}
 
-	log.Debug(fmt.Sprintf("config: %v", string(configJson)))
+	state.LogContext().Debug(fmt.Sprintf("config: %v", string(configJson)))
 }
