@@ -3,30 +3,33 @@ package state
 import (
 	"context"
 	listener "mals/internal/listener/common"
-	"sync"
 )
 
-func (s *State) ListenerAdd(listener listener.Listener) {
-	s.Listeners = append(s.Listeners, listener)
+type ListenerValue struct {
+	cancel context.CancelFunc
 }
 
-func (s *State) ListenerListenAndServeSnapshot(ctx context.Context) {
-	var wg sync.WaitGroup
+func (s *State) ListenerAdd(listener listener.Listener) {
+	s.Listeners.Store(listener, nil)
+}
 
-	for _, l := range s.Listeners {
-		if l.Listening() {
-			continue
-		}
+func (s *State) ListenerDelete(listener listener.Listener) bool {
+	value, loaded := s.Listeners.LoadAndDelete(listener)
+	if !loaded {
+		return false
+	}
+	value.cancel()
+	return true
+}
 
-		wg.Add(1)
-		go func(l listener.Listener) {
-			defer wg.Done()
-			err := l.ListenAndServe(ctx)
-			if err != nil {
-				s.LogContext().Error(err.Error())
-			}
-		}(l)
+func (s *State) ListenerListen(listener listener.Listener, ctx context.Context) error {
+	lctx, cancel := context.WithCancel(ctx)
+	s.Listeners.Store(listener, &ListenerValue{cancel: cancel})
+
+	if err := listener.ListenAndServe(lctx); err != nil {
+		return err
 	}
 
-	wg.Wait()
+	s.EventChan <- &EventListenerDone{}
+	return nil
 }

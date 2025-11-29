@@ -48,13 +48,13 @@ func (l *ListenerLsp) listen(ctx context.Context) error {
 	listener, err := net.Listen("tcp", l.addr)
 
 	if err != nil {
-		l.state.LogContext().Error(fmt.Sprintf("%s: %v", l.logPrefix(), err))
+		l.state.Error(fmt.Sprintf("%s: %v", l.logPrefix(), err))
 		return err
 	}
 
 	defer listener.Close()
 
-	l.state.LogContext().Info(fmt.Sprintf("%s: listen", l.logPrefix()))
+	l.state.Info(fmt.Sprintf("%s: listen", l.logPrefix()))
 
 	go func() {
 		<-ctx.Done()
@@ -66,16 +66,16 @@ func (l *ListenerLsp) listen(ctx context.Context) error {
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				l.state.LogContext().Info(fmt.Sprintf("%s: closed", l.logPrefix()))
+				l.state.Info(fmt.Sprintf("%s: closed", l.logPrefix()))
 				return nil
 			}
-			l.state.LogContext().Warn(fmt.Sprintf("%s: %v", l.logPrefix(), err))
+			l.state.Warn(fmt.Sprintf("%s: %v", l.logPrefix(), err))
 			continue
 		}
 
 		go func(c net.Conn) {
 			defer c.Close()
-			l.state.LogContext().Info(fmt.Sprintf("%s: connection %v established", l.logPrefix(), c))
+			l.state.Info(fmt.Sprintf("%s: connection %v established", l.logPrefix(), c))
 		}(conn)
 	}
 }
