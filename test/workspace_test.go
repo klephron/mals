@@ -1,7 +1,7 @@
 package test
 
 import (
-	. "mals/internal/workspace"
+	. "mals/internal/lsp/workspace"
 	"testing"
 )
 
