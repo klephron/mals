@@ -51,7 +51,9 @@ func (s *StateImpl) ListenerListen(listener listener.Listener, ctx context.Conte
 
 	s.Listeners.Store(listener, state)
 
-	s.EventChan <- &EventListenerListen{listener: listener, ctx: lctx}
+	go func() {
+		s.EventChan <- &EventListenerListen{listener: listener, ctx: lctx}
+	}()
 
 	return nil
 }

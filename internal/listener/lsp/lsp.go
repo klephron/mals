@@ -33,18 +33,16 @@ func (s *ListenerLsp) Type() string {
 	return Type()
 }
 
-func (s *ListenerLsp) Listen(ctx context.Context) error {
-	s.listening = true
-	err := s.listen(ctx)
-	s.listening = false
-	return err
-}
-
 func (s *ListenerLsp) Listening() bool {
 	return s.listening
 }
 
-func (s *ListenerLsp) listen(ctx context.Context) error {
+func (s *ListenerLsp) Listen(ctx context.Context) error {
+	s.listening = true
+	defer func() {
+		s.listening = false
+	}()
+
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {

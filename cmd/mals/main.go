@@ -43,9 +43,7 @@ func main() {
 			panic(err)
 		}
 		state.ListenerAdd(listener)
-		go func() {
-			state.ListenerListen(listener, ctx)
-		}()
+		state.ListenerListen(listener, ctx)
 	}
 
 	state.Wait()
