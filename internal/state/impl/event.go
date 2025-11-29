@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	listener "mals/internal/listener"
 	client "mals/internal/lsp/client"
 )
 
@@ -15,12 +16,18 @@ type EventGeneric struct {
 
 func (*EventGeneric) event() {}
 
-type EventListenerDown struct {
+type EventListenerListen struct {
 	EventGeneric
+	listener listener.Listener
+	ctx      context.Context
 }
 
-type EventClientListen struct {
+type EventClientLspListen struct {
 	EventGeneric
 	client *client.Client
 	ctx    context.Context
+}
+
+type EventShutdown struct {
+	EventGeneric
 }
