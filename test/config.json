@@ -9,10 +9,6 @@
     {
       "type": "lsp",
       "port": 9651
-    },
-    {
-      "type": "api",
-      "port": 9650
     }
   ]
 }

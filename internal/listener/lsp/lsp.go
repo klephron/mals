@@ -62,7 +62,7 @@ func (s *ListenerLsp) listen(ctx context.Context) error {
 	}()
 
 	for {
-		_, err := listener.Accept()
+		conn, err := listener.Accept()
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
@@ -73,7 +73,9 @@ func (s *ListenerLsp) listen(ctx context.Context) error {
 			continue
 		}
 
-		// state.RegisterListenerConn(conn)
+		s.state.Info(fmt.Sprintf("%s: accepted %v", s.logPrefix(), conn.RemoteAddr()))
+
+		s.state.ListenerAddConn(s, ctx, conn)
 	}
 }
 

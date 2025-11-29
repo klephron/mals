@@ -9,38 +9,24 @@ import (
 
 type StateImpl struct {
 	EventChan chan Event
-	Listeners *xsync.Map[listener.Listener, ListenerValue]
+	Listeners *xsync.Map[listener.Listener, ListenerState]
 	Logs      *xsync.Map[log.Log, struct{}]
 }
 
 func New() *StateImpl {
 	return &StateImpl{
 		EventChan: make(chan Event),
-		Listeners: xsync.NewMap[listener.Listener, ListenerValue](),
+		Listeners: xsync.NewMap[listener.Listener, ListenerState](),
 		Logs:      xsync.NewMap[log.Log, struct{}](),
 	}
 }
 
 func (s *StateImpl) Wait() {
-	for range s.EventChan {
-		c := xsync.NewCounter()
-
-		// check whether any resource is active
-		s.Listeners.Range(func(listener listener.Listener, value ListenerValue) bool {
-			if listener.Listening() {
-				c.Inc()
-			}
-			return true
-		})
-
-		if c.Value() == 0 {
-			return
-		}
-	}
+	s.EventLoop()
 }
 
 func (s *StateImpl) Close() {
-	s.Listeners.Range(func(key listener.Listener, value ListenerValue) bool {
+	s.Listeners.Range(func(key listener.Listener, value ListenerState) bool {
 		s.ListenerDelete(key)
 		return true
 	})

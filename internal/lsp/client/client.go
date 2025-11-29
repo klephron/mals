@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/jsonrpc"
-	// "mals/internal/lsp/workspace"
 	"mals/internal/state"
 	"net"
 )
@@ -15,7 +14,6 @@ type Client struct {
 	conn    net.Conn
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
-	// workspace *workspace.Workspace
 }
 
 func New(state state.State, conn net.Conn) (c *Client) {
@@ -24,44 +22,46 @@ func New(state state.State, conn net.Conn) (c *Client) {
 		conn:    conn,
 		scanner: bufio.NewScanner(conn),
 		writer:  bufio.NewWriter(conn),
-		// workspace: nil,
 	}
 	c.scanner.Split(jsonrpc.ScannerSplit)
 	return
 }
 
-func (s *Client) Serve(ctx context.Context) {
-	defer s.Close()
-
-	bytesC := make(chan []byte)
-	defer close(bytesC)
-
-	s.state.Info(fmt.Sprintf("%s: serving", s.logPrefix()))
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				if !s.scanner.Scan() {
-					return
-				}
-				bytesC <- s.scanner.Bytes()
-				s.state.Debug(fmt.Sprintf("%s: scanned %s", s.logPrefix(), string(s.scanner.Bytes())))
-			}
-		}
-	}()
-
+func (s *Client) Scan(ctx context.Context, ch chan<- []byte) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case _, ok := <-bytesC:
-			if !ok {
+		default:
+			if !s.scanner.Scan() {
 				return
 			}
-			// s.LspHandle(bytes)
+			ch <- s.scanner.Bytes()
+			s.state.Debug(fmt.Sprintf("%s: scanned %s", s.logPrefix(), string(s.scanner.Bytes())))
+		}
+	}
+}
+
+func (s *Client) Listen(ctx context.Context) {
+	ch := make(chan []byte)
+	defer close(ch)
+
+	s.state.Info(fmt.Sprintf("%s: listening", s.logPrefix()))
+
+	scanCtx, scanCancel := context.WithCancel(ctx)
+
+	go func() {
+		s.Scan(scanCtx, ch)
+		scanCancel()
+	}()
+
+	for {
+		select {
+		case <-scanCtx.Done():
+			s.state.Info(fmt.Sprintf("%s: done", s.logPrefix()))
+			return
+		case bytes := <-ch:
+			s.LspHandle(bytes)
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"mals/internal/listener"
 	"mals/internal/log"
+	"net"
 )
 
 type State interface {
@@ -13,6 +14,7 @@ type State interface {
 	ListenerAdd(listener listener.Listener)
 	ListenerDelete(listener listener.Listener) bool
 	ListenerListen(listener listener.Listener, ctx context.Context) error
+	ListenerAddConn(listener listener.Listener, ctx context.Context, conn net.Conn) error
 
 	LogAdd(log log.Log)
 	LogDelete(log log.Log) bool

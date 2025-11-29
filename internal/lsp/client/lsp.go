@@ -173,27 +173,27 @@ package client
 // 	}()
 // }
 
-// func (s *Client) LspHandle(bytes []byte) {
-// 	msg, data, err := jsonrpc.DecodeNotification(bytes)
+func (s *Client) LspHandle(bytes []byte) {
+	// msg, data, err := jsonrpc.DecodeNotification(bytes)
 
-// 	if err != nil {
-// 		s.LogErrorPrintf("unable to decode %s", err)
-// 		return
-// 	}
+	// if err != nil {
+	// 	s.LogErrorPrintf("unable to decode %s", err)
+	// 	return
+	// }
 
-// 	switch msg.Method {
-// 	case "initialize":
-// 		s.initialize(data)
-// 	case "initialized":
-// 	case "textDocument/didOpen":
-// 		s.textDocumentDidOpen(data)
-// 	case "textDocument/didChange":
-// 		s.textDocumentDidChange(data)
-// 	case "textDocument/didClose":
-// 		s.textDocumentDidClose(data)
-// 	case "textDocument/completion":
-// 		s.textDocumentCompletion(data)
-// 	default:
-// 		s.LogWarnPrintf("unhandled method %s", msg.Method)
-// 	}
-// }
+	// switch msg.Method {
+	// case "initialize":
+	// 	s.initialize(data)
+	// case "initialized":
+	// case "textDocument/didOpen":
+	// 	s.textDocumentDidOpen(data)
+	// case "textDocument/didChange":
+	// 	s.textDocumentDidChange(data)
+	// case "textDocument/didClose":
+	// 	s.textDocumentDidClose(data)
+	// case "textDocument/completion":
+	// 	s.textDocumentCompletion(data)
+	// default:
+	// 	s.LogWarnPrintf("unhandled method %s", msg.Method)
+	// }
+}
