@@ -1,51 +1,23 @@
 package state
 
 import (
-	"github.com/puzpuzpuz/xsync/v4"
-	listener "mals/internal/listener/common"
-	log "mals/internal/log/common"
+	"context"
+	"mals/internal/listener"
+	"mals/internal/log"
 )
 
-type State struct {
-	EventChan chan Event
-	Listeners *xsync.Map[listener.Listener, *ListenerValue]
-	Logs      *xsync.Map[log.Log, struct{}]
-}
+type State interface {
+	Wait()
+	Close()
 
-func New() *State {
-	return &State{
-		EventChan: make(chan Event),
-		Listeners: xsync.NewMap[listener.Listener, *ListenerValue](),
-		Logs:      xsync.NewMap[log.Log, struct{}](),
-	}
-}
+	ListenerAdd(listener listener.Listener)
+	ListenerDelete(listener listener.Listener) bool
+	ListenerListen(listener listener.Listener, ctx context.Context) error
 
-func (s *State) Wait() {
-	for range s.EventChan {
-		c := xsync.NewCounter()
-
-		// check whether any resource is active
-		s.Listeners.Range(func(listener listener.Listener, value *ListenerValue) bool {
-			if listener.Listening() {
-				c.Inc()
-			}
-			return true
-		})
-
-		if c.Value() == 0 {
-			return
-		}
-	}
-}
-
-func (s *State) Close() {
-	s.Listeners.Range(func(key listener.Listener, value *ListenerValue) bool {
-		s.ListenerDelete(key)
-		return true
-	})
-	s.Logs.Range(func(key log.Log, value struct{}) bool {
-		s.LogDelete(key)
-		return true
-	})
-	close(s.EventChan)
+	LogAdd(log log.Log)
+	LogDelete(log log.Log) bool
+	Debug(msg string, args ...any)
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
+	Error(msg string, args ...any)
 }

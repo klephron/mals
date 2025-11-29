@@ -3,12 +3,12 @@ package file
 import (
 	"fmt"
 	"log/slog"
-	"mals/internal/log/common"
+	"mals/internal/log"
 	"os"
 )
 
 type LogFile struct {
-	common.Log
+	log.Log
 	file   *os.File
 	logger *slog.Logger
 }
@@ -20,7 +20,7 @@ func Open(path string, level string) (*LogFile, error) {
 		return nil, fmt.Errorf("unable to open log file %s", path)
 	}
 
-	lvl, err := common.GetLevel(level)
+	lvl, err := log.GetLevel(level)
 	if err != nil {
 		file.Close()
 		return nil, err
@@ -34,22 +34,22 @@ func Open(path string, level string) (*LogFile, error) {
 	return &LogFile{file: file, logger: logger}, nil
 }
 
-func (l *LogFile) Debug(msg string, args ...any) {
-	l.logger.Debug(msg, args...)
+func (s *LogFile) Debug(msg string, args ...any) {
+	s.logger.Debug(msg, args...)
 }
 
-func (l *LogFile) Info(msg string, args ...any) {
-	l.logger.Info(msg, args...)
+func (s *LogFile) Info(msg string, args ...any) {
+	s.logger.Info(msg, args...)
 }
 
-func (l *LogFile) Warn(msg string, args ...any) {
-	l.logger.Warn(msg, args...)
+func (s *LogFile) Warn(msg string, args ...any) {
+	s.logger.Warn(msg, args...)
 }
 
-func (l *LogFile) Error(msg string, args ...any) {
-	l.logger.Error(msg, args...)
+func (s *LogFile) Error(msg string, args ...any) {
+	s.logger.Error(msg, args...)
 }
 
-func (l *LogFile) Close() error {
-	return l.file.Close()
+func (s *LogFile) Close() error {
+	return s.file.Close()
 }

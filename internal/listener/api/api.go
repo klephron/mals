@@ -2,13 +2,13 @@ package api
 
 import (
 	"context"
-	"mals/internal/listener/common"
+	"mals/internal/listener"
 	"mals/internal/state"
 )
 
 type ListenerApi struct {
-	common.Listener
-	state     *state.State
+	listener.Listener
+	state     state.State
 	port      int
 	listening bool
 }
@@ -17,7 +17,7 @@ func Type() string {
 	return "lsp"
 }
 
-func New(state *state.State, port int) (*ListenerApi, error) {
+func New(state state.State, port int) (*ListenerApi, error) {
 	l := &ListenerApi{
 		state:     state,
 		port:      port,
@@ -26,21 +26,21 @@ func New(state *state.State, port int) (*ListenerApi, error) {
 	return l, nil
 }
 
-func (l *ListenerApi) Type() string {
+func (s *ListenerApi) Type() string {
 	return Type()
 }
 
-func (l *ListenerApi) ListenAndServe(ctx context.Context) error {
-	l.listening = true
-	err := l.listen(ctx)
-	l.listening = false
+func (s *ListenerApi) Listen(ctx context.Context) error {
+	s.listening = true
+	err := s.listen(ctx)
+	s.listening = false
 	return err
 }
 
-func (l *ListenerApi) listen(ctx context.Context) error {
+func (s *ListenerApi) listen(ctx context.Context) error {
 	return nil
 }
 
-func (l *ListenerApi) Listening() bool {
-	return l.listening
+func (s *ListenerApi) Listening() bool {
+	return s.listening
 }

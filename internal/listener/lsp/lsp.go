@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"mals/internal/listener/common"
+	"mals/internal/listener"
 	"mals/internal/state"
 	"net"
 )
 
 type ListenerLsp struct {
-	common.Listener
-	state     *state.State
+	listener.Listener
+	state     state.State
 	addr      string
 	listening bool
 }
@@ -20,7 +20,7 @@ func Type() string {
 	return "lsp"
 }
 
-func New(state *state.State, port int) (*ListenerLsp, error) {
+func New(state state.State, port int) (*ListenerLsp, error) {
 	l := &ListenerLsp{
 		state:     state,
 		addr:      fmt.Sprintf(":%d", port),
@@ -29,32 +29,32 @@ func New(state *state.State, port int) (*ListenerLsp, error) {
 	return l, nil
 }
 
-func (l *ListenerLsp) Type() string {
+func (s *ListenerLsp) Type() string {
 	return Type()
 }
 
-func (l *ListenerLsp) ListenAndServe(ctx context.Context) error {
-	l.listening = true
-	err := l.listen(ctx)
-	l.listening = false
+func (s *ListenerLsp) Listen(ctx context.Context) error {
+	s.listening = true
+	err := s.listen(ctx)
+	s.listening = false
 	return err
 }
 
-func (l *ListenerLsp) Listening() bool {
-	return l.listening
+func (s *ListenerLsp) Listening() bool {
+	return s.listening
 }
 
-func (l *ListenerLsp) listen(ctx context.Context) error {
-	listener, err := net.Listen("tcp", l.addr)
+func (s *ListenerLsp) listen(ctx context.Context) error {
+	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
-		l.state.Error(fmt.Sprintf("%s: %v", l.logPrefix(), err))
+		s.state.Error(fmt.Sprintf("%s: %v", s.logPrefix(), err))
 		return err
 	}
 
 	defer listener.Close()
 
-	l.state.Info(fmt.Sprintf("%s: listen", l.logPrefix()))
+	s.state.Info(fmt.Sprintf("%s: listen", s.logPrefix()))
 
 	go func() {
 		<-ctx.Done()
@@ -62,24 +62,21 @@ func (l *ListenerLsp) listen(ctx context.Context) error {
 	}()
 
 	for {
-		conn, err := listener.Accept()
+		_, err := listener.Accept()
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				l.state.Info(fmt.Sprintf("%s: closed", l.logPrefix()))
+				s.state.Info(fmt.Sprintf("%s: closed", s.logPrefix()))
 				return nil
 			}
-			l.state.Warn(fmt.Sprintf("%s: %v", l.logPrefix(), err))
+			s.state.Warn(fmt.Sprintf("%s: %v", s.logPrefix(), err))
 			continue
 		}
 
-		go func(c net.Conn) {
-			defer c.Close()
-			l.state.Info(fmt.Sprintf("%s: connection %v established", l.logPrefix(), c))
-		}(conn)
+		// state.RegisterListenerConn(conn)
 	}
 }
 
-func (l *ListenerLsp) logPrefix() string {
-	return fmt.Sprintf("listener[%s%s]", l.Type(), l.addr)
+func (s *ListenerLsp) logPrefix() string {
+	return fmt.Sprintf("listener[%s%s]", s.Type(), s.addr)
 }

@@ -3,50 +3,40 @@ package client
 import (
 	"bufio"
 	"context"
-	"log"
+	"fmt"
 	"mals/internal/jsonrpc"
-	"mals/internal/model"
-	"mals/internal/workspace"
+	// "mals/internal/lsp/workspace"
+	"mals/internal/state"
 	"net"
 )
 
-type WorkspaceConfig struct {
-	DefaultModel model.ModelService
-}
-
-type Config struct {
-	Workspace WorkspaceConfig
-}
-
 type Client struct {
-	logger     *log.Logger
-	conn       net.Conn
-	scanner    *bufio.Scanner
-	writer     *bufio.Writer
-	workspaces map[string]*workspace.Workspace // path should be cleaned
-	config     Config
+	state   state.State
+	conn    net.Conn
+	scanner *bufio.Scanner
+	writer  *bufio.Writer
+	// workspace *workspace.Workspace
 }
 
-func NewClient(logger *log.Logger, conn net.Conn, config Config) (c *Client) {
+func New(state state.State, conn net.Conn) (c *Client) {
 	c = &Client{
-		logger:     logger,
-		conn:       conn,
-		scanner:    bufio.NewScanner(conn),
-		writer:     bufio.NewWriter(conn),
-		workspaces: make(map[string]*workspace.Workspace),
-		config:     config,
+		state:   state,
+		conn:    conn,
+		scanner: bufio.NewScanner(conn),
+		writer:  bufio.NewWriter(conn),
+		// workspace: nil,
 	}
 	c.scanner.Split(jsonrpc.ScannerSplit)
 	return
 }
 
-func (c *Client) Serve(ctx context.Context) {
-	defer c.Close()
+func (s *Client) Serve(ctx context.Context) {
+	defer s.Close()
 
 	bytesC := make(chan []byte)
 	defer close(bytesC)
 
-	c.LogInfoPrintf("listening")
+	s.state.Info(fmt.Sprintf("%s: serving", s.logPrefix()))
 
 	go func() {
 		for {
@@ -54,31 +44,37 @@ func (c *Client) Serve(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			default:
-				if !c.scanner.Scan() {
+				if !s.scanner.Scan() {
 					return
 				}
-				bytesC <- c.scanner.Bytes()
+				bytesC <- s.scanner.Bytes()
+				s.state.Debug(fmt.Sprintf("%s: scanned %s", string(s.scanner.Bytes())))
 			}
 		}
 	}()
 
 	for {
 		select {
-		case <-ctx.Done(): // can wait on scan
+		case <-ctx.Done():
 			return
-		case bytes, ok := <-bytesC:
+		case _, ok := <-bytesC:
 			if !ok {
 				return
 			}
-			c.HandleLspRequest(bytes)
+			// s.LspHandle(bytes)
 		}
 	}
 }
 
-func (c *Client) Close() error {
-	c.LogInfoPrintf("close")
-	if err := c.conn.Close(); err != nil {
+func (s *Client) Close() error {
+	if err := s.conn.Close(); err != nil {
+		s.state.Error(fmt.Sprintf("%s: %v", err))
 		return err
 	}
+	s.state.Info(fmt.Sprintf("%s: closed", s.logPrefix()))
 	return nil
+}
+
+func (s *Client) logPrefix() string {
+	return fmt.Sprintf("client[%s]", s.conn.RemoteAddr())
 }
