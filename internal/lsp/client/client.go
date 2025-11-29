@@ -48,7 +48,7 @@ func (s *Client) Serve(ctx context.Context) {
 					return
 				}
 				bytesC <- s.scanner.Bytes()
-				s.state.Debug(fmt.Sprintf("%s: scanned %s", string(s.scanner.Bytes())))
+				s.state.Debug(fmt.Sprintf("%s: scanned %s", s.logPrefix(), string(s.scanner.Bytes())))
 			}
 		}
 	}()
@@ -68,7 +68,7 @@ func (s *Client) Serve(ctx context.Context) {
 
 func (s *Client) Close() error {
 	if err := s.conn.Close(); err != nil {
-		s.state.Error(fmt.Sprintf("%s: %v", err))
+		s.state.Error(fmt.Sprintf("%s: %v", s.logPrefix(), err))
 		return err
 	}
 	s.state.Info(fmt.Sprintf("%s: closed", s.logPrefix()))

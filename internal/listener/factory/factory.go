@@ -14,7 +14,7 @@ func NewConfig(state state.State, listener *config.Listener) (listener.Listener,
 	case lsp.Type():
 		return lsp.New(state, listener.Port)
 	case api.Type():
-		return lsp.New(state, listener.Port)
+		return api.New(state, listener.Port)
 	default:
 		return nil, fmt.Errorf(`unhandled listener type "%v"`, listener.Type)
 	}

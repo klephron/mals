@@ -14,7 +14,7 @@ type ListenerApi struct {
 }
 
 func Type() string {
-	return "lsp"
+	return "api"
 }
 
 func New(state state.State, port int) (*ListenerApi, error) {

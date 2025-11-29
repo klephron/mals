@@ -48,5 +48,6 @@ func main() {
 		}()
 	}
 
+	<-ctx.Done()
 	state.Wait()
 }
