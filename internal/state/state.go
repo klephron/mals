@@ -7,7 +7,7 @@ import (
 )
 
 type State struct {
-	EventChan chan Event // should I close this channel?
+	EventChan chan Event
 	Listeners *xsync.Map[listener.Listener, *ListenerValue]
 	Logs      *xsync.Map[log.Log, struct{}]
 }
@@ -36,4 +36,16 @@ func (s *State) Wait() {
 			return
 		}
 	}
+}
+
+func (s *State) Close() {
+	s.Listeners.Range(func(key listener.Listener, value *ListenerValue) bool {
+		s.ListenerDelete(key)
+		return true
+	})
+	s.Logs.Range(func(key log.Log, value struct{}) bool {
+		s.LogDelete(key)
+		return true
+	})
+	close(s.EventChan)
 }

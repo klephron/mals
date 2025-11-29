@@ -20,6 +20,7 @@ func main() {
 	}
 
 	state := state.New()
+	defer state.Close()
 
 	for _, loggerConfig := range config.Loggers {
 		log, err := log.Open(loggerConfig)
