@@ -32,7 +32,6 @@ func main() {
 
 		configInitLogs(config, controller)
 		configLog(config, controller)
-
 		configInitListeners(config, controller)
 
 		<-ctx.Done()

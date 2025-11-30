@@ -10,9 +10,11 @@ func (s *Scheduler) EventLoop() {
 		switch e := e.(type) {
 		case *event.EventShutdown:
 			s.Warn("TODO: gracefully shutdown")
+			fmt.Println("TODO: gracefully shutdown")
 			return
 		default:
-			s.Warn(fmt.Sprintf("received event %v of type %T", e, e))
+			s.Warn(fmt.Sprintf("received event %T %v", e, e))
+			fmt.Printf("received event %T %v\n", e, e)
 		}
 	}
 }

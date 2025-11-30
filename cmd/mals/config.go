@@ -43,6 +43,7 @@ func configInitLogs(config *config.Config, controller *controller.Controller) {
 			panic(err)
 		}
 		controller.LogAdd(log)
+		controller.LogStart(log)
 	}
 }
 
@@ -53,6 +54,7 @@ func configInitListeners(config *config.Config, controller *controller.Controlle
 			panic(err)
 		}
 		controller.ListenerAdd(listener)
+		controller.ListenerStart(listener)
 	}
 }
 
