@@ -8,13 +8,13 @@ import (
 )
 
 type State struct {
-	Listeners *xsync.Map[listener.Listener, struct{}]
+	Listeners *xsync.Map[listener.Listener, *StateListener]
 	Logs      *xsync.Map[log.Log, *StateLog]
 }
 
 func New() *State {
 	return &State{
-		Listeners: xsync.NewMap[listener.Listener, struct{}](),
+		Listeners: xsync.NewMap[listener.Listener, *StateListener](),
 		Logs:      xsync.NewMap[log.Log, *StateLog](),
 	}
 }
