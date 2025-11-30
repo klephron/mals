@@ -1,7 +1,10 @@
 package state
 
 import (
+	"context"
+	"fmt"
 	listener "mals/internal/listener"
+	"mals/internal/listener/lsp"
 	log "mals/internal/log"
 
 	"github.com/puzpuzpuz/xsync/v4"
@@ -21,22 +24,6 @@ func New() *StateImpl {
 	}
 }
 
-func (s *StateImpl) Wait() {
-	s.Loop()
-}
-
-func (s *StateImpl) Close() {
-	s.Listeners.Range(func(key listener.Listener, value StateListener) bool {
-		s.ListenerDelete(key)
-		return true
-	})
-	s.Logs.Range(func(key log.Log, value struct{}) bool {
-		s.LogDelete(key)
-		return true
-	})
-	close(s.EventChan)
-}
-
 func (s *StateImpl) listenerAnyListening() bool {
 	r := false
 	s.Listeners.Range(func(listener listener.Listener, value StateListener) bool {
@@ -49,7 +36,7 @@ func (s *StateImpl) listenerAnyListening() bool {
 	return r
 }
 
-func (s *StateImpl) Loop() {
+func (s *StateImpl) Loop(ctx context.Context) {
 	for {
 		event, ok := <-s.EventChan
 		if !ok {
@@ -63,7 +50,20 @@ func (s *StateImpl) Loop() {
 		case *EventListenerListen:
 			go func(event *EventListenerListen) {
 				listener := event.listener
-				listener.Listen(event.ctx)
+
+				lctx, cancel := context.WithCancel(ctx)
+
+				var state StateListener
+				switch listener := listener.(type) {
+				case *lsp.ListenerLsp:
+					state = NewStateListenerLsp(cancel)
+				default:
+					s.Warn(fmt.Sprintf("unhandled listener type %T when starting listening", listener))
+					state = NewStateListener(cancel)
+				}
+
+				s.Listeners.Store(listener, state)
+				listener.Listen(lctx)
 
 				if !s.listenerAnyListening() {
 					s.EventChan <- &EventShutdown{}

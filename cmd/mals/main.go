@@ -1,50 +1,43 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"mals/internal/listener/factory"
-	"mals/internal/log/factory"
-	"mals/internal/state/impl"
+	"context"
+	"mals/internal/control/controller"
+	"mals/internal/control/event"
+	"mals/internal/control/scheduler"
+	"mals/internal/control/state"
 )
 
 func main() {
-	ctx, stop := signalHandle()
-	defer stop()
-
 	params := argParse()
 
-	config, err := loadConfig(&params)
+	config, err := configLoad(&params)
 	if err != nil {
 		panic(err)
 	}
+
+	ctx, cancel := signalHandle(context.Background())
+	defer cancel()
 
 	state := state.New()
-	defer state.Close()
 
-	for _, loggerConfig := range config.Loggers {
-		log, err := log.OpenConfig(loggerConfig)
-		if err != nil {
-			panic(err)
-		}
-		state.LogAdd(log)
-	}
+	bus := event.NewEventBus()
+	defer bus.Close()
 
-	configJson, err := json.Marshal(config)
-	if err != nil {
-		panic(err)
-	}
+	scheduler := scheduler.New(state, bus)
+	scheduler.Subscribe()
 
-	state.Debug(fmt.Sprintf("config: %v", string(configJson)))
+	go func(ctx context.Context) {
+		controller := controller.New(state, bus)
 
-	for _, listenerConfig := range config.Listeners {
-		listener, err := listener.NewConfig(state, listenerConfig)
-		if err != nil {
-			panic(err)
-		}
-		state.ListenerAdd(listener)
-		state.ListenerListen(listener, ctx)
-	}
+		configInitLogs(config, controller)
+		configLog(config, controller)
 
-	state.Wait()
+		configInitListeners(config, controller)
+
+		<-ctx.Done()
+		controller.Shutdown()
+	}(ctx)
+
+	scheduler.ServeSubscribed()
 }

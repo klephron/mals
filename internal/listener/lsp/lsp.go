@@ -4,27 +4,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"mals/internal/control/controller"
 	"mals/internal/listener"
-	"mals/internal/state"
 	"net"
 )
 
 type ListenerLsp struct {
 	listener.Listener
-	state     state.State
-	addr      string
-	listening bool
+	controller *controller.Controller
+	addr       string
+	listening  bool
 }
 
 func Type() string {
 	return "lsp"
 }
 
-func New(state state.State, port int) (*ListenerLsp, error) {
+func New(controller *controller.Controller, port int) (*ListenerLsp, error) {
 	l := &ListenerLsp{
-		state:     state,
-		addr:      fmt.Sprintf(":%d", port),
-		listening: false,
+		controller: controller,
+		addr:       fmt.Sprintf(":%d", port),
+		listening:  false,
 	}
 	return l, nil
 }
@@ -46,13 +46,13 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
-		s.state.Error(fmt.Sprintf("%s: %v", s.logPrefix(), err))
+		s.controller.Error(fmt.Sprintf("%s: %v", s.logPrefix(), err))
 		return err
 	}
 
 	defer listener.Close()
 
-	s.state.Info(fmt.Sprintf("%s: listen", s.logPrefix()))
+	s.controller.Info(fmt.Sprintf("%s: listen", s.logPrefix()))
 
 	go func() {
 		<-ctx.Done()
@@ -64,16 +64,16 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				s.state.Info(fmt.Sprintf("%s: closed", s.logPrefix()))
+				s.controller.Info(fmt.Sprintf("%s: closed", s.logPrefix()))
 				return nil
 			}
-			s.state.Warn(fmt.Sprintf("%s: %v", s.logPrefix(), err))
+			s.controller.Warn(fmt.Sprintf("%s: %v", s.logPrefix(), err))
 			continue
 		}
 
-		s.state.Info(fmt.Sprintf("%s: accepted %v", s.logPrefix(), conn.RemoteAddr()))
+		s.controller.Info(fmt.Sprintf("%s: accepted %v", s.logPrefix(), conn.RemoteAddr()))
 
-		s.state.ListenerAddConn(s, ctx, conn)
+		s.controller.Warn("TODO: listener connect")
 	}
 }
 

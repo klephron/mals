@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"mals/internal/control/controller"
+	listener "mals/internal/listener/factory"
+	log "mals/internal/log/factory"
 	"mals/pkg/config"
 	"os"
 )
 
-func loadConfig(params *Params) (*config.Config, error) {
+func configLoad(params *Params) (*config.Config, error) {
 	bytes, err := os.ReadFile(params.Config)
 	if err != nil {
 		return nil, err
@@ -31,4 +34,33 @@ func loadConfig(params *Params) (*config.Config, error) {
 	}
 
 	return &c, nil
+}
+
+func configInitLogs(config *config.Config, controller *controller.Controller) {
+	for _, loggerConfig := range config.Loggers {
+		log, err := log.OpenConfig(loggerConfig)
+		if err != nil {
+			panic(err)
+		}
+		controller.LogAdd(log)
+	}
+}
+
+func configInitListeners(config *config.Config, controller *controller.Controller) {
+	for _, listenerConfig := range config.Listeners {
+		listener, err := listener.NewConfig(controller, listenerConfig)
+		if err != nil {
+			panic(err)
+		}
+		controller.ListenerAdd(listener)
+	}
+}
+
+func configLog(config *config.Config, controller *controller.Controller) {
+	configJson, err := json.Marshal(config)
+	if err != nil {
+		panic(err)
+	}
+
+	controller.Debug(fmt.Sprintf("config: %v", string(configJson)))
 }
