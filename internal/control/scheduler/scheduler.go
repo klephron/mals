@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"fmt"
 	"mals/internal/control/event"
 	"mals/internal/control/state"
 )
@@ -39,11 +38,18 @@ func (s *Scheduler) ServeSubscribed() {
 	s.EventLoop()
 }
 
-func (s *Scheduler) EventLoop() {
-	for event := range s.ch {
-		switch event := event.(type) {
-		default:
-			fmt.Printf("received event %v of type %T", event, event)
-		}
-	}
+func (s *Scheduler) Debug(msg string, args ...any) {
+	s.state.Debug(msg, args...)
+}
+
+func (s *Scheduler) Info(msg string, args ...any) {
+	s.state.Info(msg, args...)
+}
+
+func (s *Scheduler) Warn(msg string, args ...any) {
+	s.state.Warn(msg, args...)
+}
+
+func (s *Scheduler) Error(msg string, args ...any) {
+	s.state.Error(msg, args...)
 }

@@ -14,7 +14,7 @@ type State struct {
 
 func New() *State {
 	return &State{
-		Listeners: &xsync.Map[listener.Listener, struct{}]{},
-		Logs:      &xsync.Map[log.Log, struct{}]{},
+		Listeners: xsync.NewMap[listener.Listener, struct{}](),
+		Logs:      xsync.NewMap[log.Log, struct{}](),
 	}
 }

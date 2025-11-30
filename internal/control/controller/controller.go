@@ -16,3 +16,19 @@ func New(state *state.State, bus *event.EventBus) *Controller {
 		bus:   bus,
 	}
 }
+
+func (s *Controller) Debug(msg string, args ...any) {
+	s.state.Debug(msg, args...)
+}
+
+func (s *Controller) Info(msg string, args ...any) {
+	s.state.Info(msg, args...)
+}
+
+func (s *Controller) Warn(msg string, args ...any) {
+	s.state.Warn(msg, args...)
+}
+
+func (s *Controller) Error(msg string, args ...any) {
+	s.state.Error(msg, args...)
+}
