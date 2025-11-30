@@ -3,6 +3,7 @@ package controller
 import (
 	"mals/internal/control/event"
 	"mals/internal/control/state"
+	"mals/internal/control/util"
 )
 
 type Controller struct {
@@ -18,17 +19,17 @@ func New(state *state.State, bus *event.EventBus) *Controller {
 }
 
 func (s *Controller) Debug(msg string, args ...any) {
-	s.state.Debug(msg, args...)
+	util.Debug(s.state, msg, args...)
 }
 
 func (s *Controller) Info(msg string, args ...any) {
-	s.state.Info(msg, args...)
+	util.Info(s.state, msg, args...)
 }
 
 func (s *Controller) Warn(msg string, args ...any) {
-	s.state.Warn(msg, args...)
+	util.Warn(s.state, msg, args...)
 }
 
 func (s *Controller) Error(msg string, args ...any) {
-	s.state.Error(msg, args...)
+	util.Error(s.state, msg, args...)
 }
