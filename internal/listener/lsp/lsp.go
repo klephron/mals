@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mals/internal/control/controller"
 	"mals/internal/listener"
+	client "mals/internal/lsp/client/net"
 	"net"
 )
 
@@ -18,6 +19,10 @@ type ListenerLsp struct {
 
 func Type() string {
 	return "lsp"
+}
+
+func (s *ListenerLsp) Name() string {
+	return fmt.Sprintf("listener[%s%s]", s.Type(), s.addr)
 }
 
 func New(controller *controller.Controller, port int) (*ListenerLsp, error) {
@@ -46,13 +51,13 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
-		s.controller.Error(fmt.Sprintf("%s: %v", s.logPrefix(), err))
+		s.controller.Error(fmt.Sprintf("%s: %v", s.Name(), err))
 		return err
 	}
 
 	defer listener.Close()
 
-	s.controller.Info(fmt.Sprintf("%s: listen", s.logPrefix()))
+	s.controller.Info(fmt.Sprintf("%s: listen", s.Name()))
 
 	go func() {
 		<-ctx.Done()
@@ -64,19 +69,16 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				s.controller.Info(fmt.Sprintf("%s: closed", s.logPrefix()))
+				s.controller.Info(fmt.Sprintf("%s: closed", s.Name()))
 				return nil
 			}
-			s.controller.Warn(fmt.Sprintf("%s: %v", s.logPrefix(), err))
+			s.controller.Warn(fmt.Sprintf("%s: %v", s.Name(), err))
 			continue
 		}
 
-		s.controller.Info(fmt.Sprintf("%s: accepted %v", s.logPrefix(), conn.RemoteAddr()))
+		s.controller.Info(fmt.Sprintf("%s: accepted %v", s.Name(), conn.RemoteAddr()))
 
-		s.controller.Warn("TODO: listener connect")
+		client := client.New(s.controller)
+		client.Bind(conn)
 	}
-}
-
-func (s *ListenerLsp) logPrefix() string {
-	return fmt.Sprintf("listener[%s%s]", s.Type(), s.addr)
 }

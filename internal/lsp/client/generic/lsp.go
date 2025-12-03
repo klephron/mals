@@ -173,7 +173,7 @@ package client
 // 	}()
 // }
 
-func (s *Client) LspHandle(bytes []byte) {
+func (s *ClientGeneric) LspHandle(bytes []byte) {
 	// msg, data, err := jsonrpc.DecodeNotification(bytes)
 
 	// if err != nil {

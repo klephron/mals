@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"mals/internal/control/controller"
 	"mals/internal/listener"
 )
@@ -28,6 +29,10 @@ func New(controller *controller.Controller, port int) (*ListenerApi, error) {
 
 func (s *ListenerApi) Type() string {
 	return Type()
+}
+
+func (s *ListenerApi) Name() string {
+	return fmt.Sprintf("listener[%s]", s.Type())
 }
 
 func (s *ListenerApi) Listen(ctx context.Context) error {

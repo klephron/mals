@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"errors"
 	"mals/internal/control/event"
 	"mals/internal/control/state"
 	"mals/internal/control/util"
@@ -26,9 +27,9 @@ func (s *Scheduler) Subscribe() {
 	s.ch = s.bus.Subscribe()
 }
 
-func (s *Scheduler) ServeSubscribed() {
+func (s *Scheduler) ServeSubscribed() error {
 	if s.ch == nil {
-		panic("must can subscribe before serve")
+		return errors.New("must be subscribed before serve")
 	}
 
 	defer func() {
@@ -37,6 +38,7 @@ func (s *Scheduler) ServeSubscribed() {
 	}()
 
 	s.EventLoop()
+	return nil
 }
 
 func (s *Scheduler) Debug(msg string, args ...any) {
