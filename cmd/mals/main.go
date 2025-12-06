@@ -8,7 +8,7 @@ import (
 func main() {
 	params := argParse()
 
-	_, err := configLoad(&params)
+	config, err := configLoad(&params)
 	if err != nil {
 		panic(err)
 	}
@@ -18,10 +18,13 @@ func main() {
 
 	plane := plane.New()
 
-	go func() {
-		<-ctx.Done()
-		plane.Lifecycle.Shutdown()
-	}()
+	plane.Serve(func() {
+		go func() {
+			<-ctx.Done()
+			plane.Lifecycle.Shutdown()
+		}()
 
-	plane.Serve()
+		configInit(config, plane)
+		configLog(config, plane)
+	})
 }

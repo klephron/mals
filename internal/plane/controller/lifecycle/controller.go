@@ -21,7 +21,7 @@ func New(state *state.State, bus *event.EventBus) *LifecycleController {
 	}
 }
 
-func (s *LifecycleController) Serve() error {
+func (s *LifecycleController) Serve(onReady func()) error {
 	if s.external != nil {
 		err := fmt.Errorf("%T is already serving", s)
 
@@ -38,6 +38,8 @@ func (s *LifecycleController) Serve() error {
 		s.bus.Unsubscribe(s.external)
 		s.external = nil
 	}()
+
+	onReady()
 
 	for e := range s.external {
 		switch e := e.(type) {

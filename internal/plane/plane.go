@@ -33,15 +33,21 @@ func New() *Plane {
 	return manager
 }
 
-func (s *Plane) Serve() {
+func (s *Plane) Serve(onReady func()) {
 	var wg sync.WaitGroup
+	var wgReady sync.WaitGroup
+
+	wgReady.Add(2)
 
 	wg.Go(func() {
-		s.Lifecycle.Serve()
+		s.Lifecycle.Serve(func() { wgReady.Done() })
 	})
 	wg.Go(func() {
-		s.Log.Serve()
+		s.Log.Serve(func() { wgReady.Done() })
 	})
+
+	wgReady.Wait()
+	onReady()
 
 	wg.Wait()
 }

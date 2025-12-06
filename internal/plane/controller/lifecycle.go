@@ -1,7 +1,7 @@
 package controller
 
 type LifecycleController interface {
-	Serve() error
+	Serve(onReady func()) error
 
 	Shutdown()
 }

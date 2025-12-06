@@ -25,7 +25,7 @@ func New(state *state.State, bus *event.EventBus) *LogController {
 	}
 }
 
-func (s *LogController) Serve() error {
+func (s *LogController) Serve(onReady func()) error {
 	if s.external != nil {
 		err := fmt.Errorf("%T is already serving", s)
 
@@ -48,6 +48,8 @@ func (s *LogController) Serve() error {
 		close(s.internal)
 		s.internal = nil
 	}()
+
+	onReady()
 
 	for {
 		select {

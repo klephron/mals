@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"mals/internal/plane"
 	"mals/pkg/config"
 	"os"
 )
@@ -33,33 +34,25 @@ func configLoad(params *Params) (*config.Config, error) {
 	return &c, nil
 }
 
-// func configInitLogs(config *config.Config, controller *controller.Controller) {
-// 	for _, loggerConfig := range config.Loggers {
-// 		log, err := log.OpenConfig(loggerConfig)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		controller.LogAdd(log)
-// 		controller.LogStart(log)
-// 	}
-// }
+func configInit(config *config.Config, plane *plane.Plane) {
+	for _, log := range config.Loggers {
+		if err := plane.Log.Register(log); err != nil {
+			plane.Log.Errorf("%v", err)
+		}
+		if err := plane.Log.Create(log.Name()); err != nil {
+			plane.Log.Errorf("%v", err)
+		}
+		if err := plane.Log.Start(log.Name()); err != nil {
+			plane.Log.Errorf("%v", err)
+		}
+	}
+}
 
-// func configInitListeners(config *config.Config, controller *controller.Controller) {
-// 	for _, listenerConfig := range config.Listeners {
-// 		listener, err := listener.NewConfig(controller, listenerConfig)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		controller.ListenerAdd(listener)
-// 		controller.ListenerStart(listener)
-// 	}
-// }
+func configLog(config *config.Config, plane *plane.Plane) {
+	configJson, err := json.Marshal(config)
+	if err != nil {
+		panic(err)
+	}
 
-// func configLog(config *config.Config, controller *controller.Controller) {
-// 	configJson, err := json.Marshal(config)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	controller.Debug(fmt.Sprintf("config: %v", string(configJson)))
-// }
+	plane.Log.Debugf("config: %v", string(configJson))
+}
