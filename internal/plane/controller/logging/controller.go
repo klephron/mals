@@ -37,8 +37,8 @@ func (s *LogController) Serve() error {
 		switch e := e.(type) {
 		case *event.EventShutdown:
 			s.handleShutdown(e)
+			return nil
 		case *event.EventTerminate:
-			s.handleTerminate(e)
 			return nil
 		}
 	}

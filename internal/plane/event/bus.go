@@ -13,7 +13,30 @@ func NewEventBus() *EventBus {
 	}
 }
 
-func (s *EventBus) Publish(event Event) {
+func (s *EventBus) Unicast(event Event, dst <-chan Event) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, subscriber := range s.subscribers {
+		if dst == subscriber {
+			subscriber <- event
+			break
+		}
+	}
+}
+
+func (s *EventBus) Broadcast(event Event, src <-chan Event) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, subscriber := range s.subscribers {
+		if src != subscriber {
+			subscriber <- event
+		}
+	}
+}
+
+func (s *EventBus) Allcast(event Event) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

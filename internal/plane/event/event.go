@@ -7,5 +7,3 @@ type Event interface {
 type EventGeneric struct {
 	Event
 }
-
-func (*EventGeneric) event() {}

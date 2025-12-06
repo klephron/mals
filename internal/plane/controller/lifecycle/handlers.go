@@ -2,9 +2,14 @@ package lifecycle
 
 import "mals/internal/plane/event"
 
-func (s *LifecycleController) handleShutdown(e *event.EventShutdown) {
-
+func (s *LifecycleController) handleLifecycleShutdown(_ *EventShutdown) {
+	go func() {
+		s.bus.Allcast(&event.EventShutdown{})
+	}()
 }
 
-func (s *LifecycleController) handleTerminate(_ *event.EventTerminate) {
+func (s *LifecycleController) handleLifecycleTerminate(_ *EventTerminate) {
+	go func() {
+		s.bus.Allcast(&event.EventTerminate{})
+	}()
 }
