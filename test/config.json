@@ -1,6 +1,7 @@
 {
   "loggers": [
     {
+      "name": "l1",
       "type": "file",
       "file": "/dev/stderr"
     }

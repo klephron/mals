@@ -49,10 +49,10 @@ func configInit(config *config.Config, plane *plane.Plane) {
 }
 
 func configLog(config *config.Config, plane *plane.Plane) {
-	configJson, err := json.Marshal(config)
+	bytes, err := json.Marshal(config)
 	if err != nil {
 		panic(err)
 	}
 
-	plane.Log.Debugf("config: %v", string(configJson))
+	plane.Log.Debugf("config: %v", string(bytes))
 }
