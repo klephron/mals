@@ -2,16 +2,6 @@ package event
 
 import "sync"
 
-type Event interface {
-	event()
-}
-
-type EventGeneric struct {
-	Event
-}
-
-func (*EventGeneric) event() {}
-
 type EventBus struct {
 	mu          sync.RWMutex
 	subscribers []chan Event
