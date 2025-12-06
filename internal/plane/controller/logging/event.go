@@ -12,9 +12,19 @@ type EventGeneric struct {
 
 func (*EventGeneric) event() {}
 
+type EventLog struct {
+}
+
 type EventRegister struct {
 	EventGeneric
 	Config config.Log
+
+	Error error
+}
+
+type EventUnregister struct {
+	EventGeneric
+	Name string
 
 	Error error
 }

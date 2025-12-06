@@ -29,10 +29,9 @@ func (s *LogController) Serve() error {
 	if s.external != nil {
 		err := fmt.Errorf("%T is already serving", s)
 
-		s.bus.Broadcast(event.EventLog{
-			Level:   log.LevelError,
-			Pattern: "%v",
-			Args:    []any{err},
+		s.bus.Unicast(event.EventLog{
+			Level: log.LevelError,
+			Msg:   fmt.Sprintf("%v", err),
 		}, s.external)
 
 		return err
@@ -60,11 +59,12 @@ func (s *LogController) Serve() error {
 			case *event.EventTerminate:
 				s.handleTerminate(e)
 				return nil
+			case *event.EventLog:
+				s.handleLog(e)
 			default:
-				s.bus.Broadcast(&event.EventLog{
-					Level:   log.LevelWarn,
-					Pattern: "%T unhandled message %T, %v",
-					Args:    []any{s, e, e},
+				s.bus.Unicast(&event.EventLog{
+					Level: log.LevelDebug,
+					Msg:   fmt.Sprintf("%T unhandled message %T, %v", s, e, e),
 				}, s.external)
 			}
 
@@ -72,6 +72,8 @@ func (s *LogController) Serve() error {
 			switch e := e.(type) {
 			case *EventRegister:
 				s.handleRegister(e)
+			case *EventUnregister:
+				s.handleUnregister(e)
 			case *EventCreate:
 				s.handleCreate(e)
 			case *EventDelete:
@@ -81,10 +83,9 @@ func (s *LogController) Serve() error {
 			case *EventStop:
 				s.handleStop(e)
 			default:
-				s.bus.Broadcast(&event.EventLog{
-					Level:   log.LevelWarn,
-					Pattern: "%T unhandled internal message %T, %v",
-					Args:    []any{s, e, e},
+				s.bus.Unicast(&event.EventLog{
+					Level: log.LevelWarn,
+					Msg:   fmt.Sprintf("%T unhandled internal message %T, %v", s, e, e),
 				}, s.external)
 			}
 		}

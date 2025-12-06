@@ -26,9 +26,8 @@ func (s *LifecycleController) Serve() error {
 		err := fmt.Errorf("%T is already serving", s)
 
 		s.bus.Broadcast(event.EventLog{
-			Level:   log.LevelError,
-			Pattern: "%v",
-			Args:    []any{err},
+			Level: log.LevelError,
+			Msg:   fmt.Sprintf("%v", err),
 		}, s.external)
 
 		return err
@@ -48,9 +47,8 @@ func (s *LifecycleController) Serve() error {
 			return nil
 		default:
 			s.bus.Broadcast(&event.EventLog{
-				Level:   log.LevelWarn,
-				Pattern: "%T unhandled message %T, %v",
-				Args:    []any{s, e, e},
+				Level: log.LevelDebug,
+				Msg:   fmt.Sprintf("%T unhandled message %T, %v", s, e, e),
 			}, s.external)
 		}
 	}

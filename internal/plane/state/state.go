@@ -4,6 +4,7 @@ import (
 	"context"
 	"mals/internal/listener"
 	"mals/internal/log"
+	"mals/pkg/config"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
@@ -14,6 +15,7 @@ type State struct {
 }
 
 type LogValue struct {
+	Config  config.Log
 	Log     log.Log
 	Enabled bool
 }

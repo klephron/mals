@@ -50,11 +50,9 @@ func Test_Unmarshall(t *testing.T) {
 			expected: &Config{
 				Loggers: []Log{
 					&LogFile{
-						LogGeneric: LogGeneric{
-							Name: "l1",
-						},
-						File:  "logFile",
-						Level: "debug",
+						LogGeneric: NewLogGeneric("l1"),
+						File:       "logFile",
+						Level:      "debug",
 					},
 				},
 				Listeners: []*Listener{},

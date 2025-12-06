@@ -59,12 +59,22 @@ type Usage struct {
 }
 
 type Log interface {
-	log()
+	Name() string
 }
 
 type LogGeneric struct {
 	Log
-	Name string
+	name string
+}
+
+func (s *LogGeneric) Name() string {
+	return s.name
+}
+
+func NewLogGeneric(name string) LogGeneric {
+	return LogGeneric{
+		name: name,
+	}
 }
 
 type Listener struct {
