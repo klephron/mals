@@ -1,9 +1,11 @@
 package lifecycle
 
+import "mals/internal/plane/event"
+
 func (s *LifecycleController) Shutdown() {
-	s.internal <- &EventShutdown{}
+	s.bus.Allcast(&event.EventShutdown{})
 }
 
 func (s *LifecycleController) Terminate() {
-	s.internal <- &EventTerminate{}
+	s.bus.Allcast(&event.EventTerminate{})
 }

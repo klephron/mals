@@ -11,7 +11,6 @@ type LifecycleController struct {
 	state    *state.State
 	bus      *event.EventBus
 	external <-chan event.Event
-	internal chan Event
 }
 
 func New(state *state.State, bus *event.EventBus) *LifecycleController {
@@ -19,13 +18,20 @@ func New(state *state.State, bus *event.EventBus) *LifecycleController {
 		state:    state,
 		bus:      bus,
 		external: nil,
-		internal: nil,
 	}
 }
 
 func (s *LifecycleController) Serve() error {
-	if s.external != nil || s.internal != nil {
-		return fmt.Errorf("%T is already serving", s)
+	if s.external != nil {
+		err := fmt.Errorf("%T is already serving", s)
+
+		s.bus.Broadcast(event.EventLog{
+			Level:   log.LevelError,
+			Pattern: "%v",
+			Args:    []any{err},
+		}, s.external)
+
+		return err
 	}
 
 	s.external = s.bus.Subscribe()
@@ -34,40 +40,20 @@ func (s *LifecycleController) Serve() error {
 		s.external = nil
 	}()
 
-	s.internal = make(chan Event)
-	defer func() {
-		close(s.internal)
-		s.internal = nil
-	}()
-
-	for {
-		select {
-		case e := <-s.external:
-			switch e := e.(type) {
-			case *event.EventShutdown:
-				return nil
-			case *event.EventTerminate:
-				return nil
-			default:
-				s.bus.Broadcast(&event.EventLog{
-					Level:   log.LevelWarn,
-					Pattern: "%T unhandled message %T, %v",
-					Args:    []any{s, e, e},
-				}, s.external)
-			}
-		case e := <-s.internal:
-			switch e := e.(type) {
-			case *EventShutdown:
-				s.handleLifecycleShutdown(e)
-			case *EventTerminate:
-				s.handleLifecycleTerminate(e)
-			default:
-				s.bus.Broadcast(&event.EventLog{
-					Level:   log.LevelWarn,
-					Pattern: "%T unhandled internal message %T, %v",
-					Args:    []any{s, e, e},
-				}, s.external)
-			}
+	for e := range s.external {
+		switch e := e.(type) {
+		case *event.EventShutdown:
+			return nil
+		case *event.EventTerminate:
+			return nil
+		default:
+			s.bus.Broadcast(&event.EventLog{
+				Level:   log.LevelWarn,
+				Pattern: "%T unhandled message %T, %v",
+				Args:    []any{s, e, e},
+			}, s.external)
 		}
 	}
+
+	return nil
 }
