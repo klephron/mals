@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"log/slog"
 )
 
 type Log interface {
@@ -13,17 +12,29 @@ type Log interface {
 	Close() error
 }
 
-func GetLevel(level string) (slog.Level, error) {
+type Level int
+
+const (
+	LevelAll   Level = iota
+	LevelTrace Level = iota
+	LevelDebug Level = iota
+	LevelInfo  Level = iota
+	LevelWarn  Level = iota
+	LevelError Level = iota
+	LevelOff   Level = iota
+)
+
+func GetLevel(level string) (Level, error) {
 	switch level {
 	case "error":
-		return slog.LevelError, nil
+		return LevelError, nil
 	case "warn":
-		return slog.LevelWarn, nil
+		return LevelWarn, nil
 	case "info":
-		return slog.LevelInfo, nil
+		return LevelInfo, nil
 	case "debug":
-		return slog.LevelDebug, nil
+		return LevelDebug, nil
 	default:
-		return slog.LevelDebug, fmt.Errorf("unexpected log level %v", level)
+		return LevelOff, fmt.Errorf("unexpected log level %v", level)
 	}
 }

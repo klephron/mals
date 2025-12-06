@@ -46,10 +46,13 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "log",
-			input: []byte(`{"loggers": [{"type": "file", "file": "logFile", "level": "debug"}], "models":[], "lsps":[], "usages":[]}`),
+			input: []byte(`{"loggers": [{"name": "l1", "type": "file", "file": "logFile", "level": "debug"}], "models":[], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers: []Log{
 					&LogFile{
+						LogGeneric: LogGeneric{
+							Name: "l1",
+						},
 						File:  "logFile",
 						Level: "debug",
 					},
@@ -81,11 +84,12 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "listeners",
-			input: []byte(`{"listeners": [{"type": "rest", "port": 12},{"type": "lsp", "port": 999}], "models":[], "lsps":[], "usages":[]}`),
+			input: []byte(`{"listeners": [{"name": "l1", "type": "rest", "port": 12},{"type": "lsp", "port": 999}], "models":[], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers: []Log{},
 				Listeners: []*Listener{
 					&Listener{
+						Name: "l1",
 						Type: "rest",
 						Port: 12,
 					},

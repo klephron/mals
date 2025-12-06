@@ -13,22 +13,34 @@ type LogFile struct {
 	logger *slog.Logger
 }
 
-func Open(path string, level string) (*LogFile, error) {
+func Open(path string, levelString string) (*LogFile, error) {
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to open log file %s", path)
 	}
 
-	lvl, err := log.GetLevel(level)
+	level, err := log.GetLevel(levelString)
 	if err != nil {
 		file.Close()
 		return nil, err
 	}
 
+	slogLevel := slog.LevelInfo
+	switch level {
+	case log.LevelDebug:
+		slogLevel = slog.LevelDebug
+	case log.LevelInfo:
+		slogLevel = slog.LevelInfo
+	case log.LevelWarn:
+		slogLevel = slog.LevelWarn
+	case log.LevelError:
+		slogLevel = slog.LevelError
+	}
+
 	logger := slog.New(slog.NewTextHandler(file, &slog.HandlerOptions{
 		AddSource: true,
-		Level:     lvl,
+		Level:     slogLevel,
 	}))
 
 	return &LogFile{file: file, logger: logger}, nil

@@ -12,7 +12,7 @@ type LifecycleController struct {
 	external <-chan event.Event
 }
 
-func NewController(state *state.State, bus *event.EventBus) *LifecycleController {
+func New(state *state.State, bus *event.EventBus) *LifecycleController {
 	return &LifecycleController{
 		state:    state,
 		bus:      bus,

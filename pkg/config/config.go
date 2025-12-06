@@ -62,7 +62,13 @@ type Log interface {
 	log()
 }
 
+type LogGeneric struct {
+	Log
+	Name string
+}
+
 type Listener struct {
+	Name string
 	Type string
 	Port int
 }

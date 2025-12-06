@@ -9,14 +9,16 @@ import (
 )
 
 type State struct {
-	Listeners *xsync.Map[listener.Listener, *ListenerValue]
-	Logs      *xsync.Map[log.Log, *LogValue]
+	Logs      *xsync.Map[string, *LogValue]
+	Listeners *xsync.Map[string, *ListenerValue]
 }
 
 type LogValue struct {
+	Log     log.Log
 	Enabled bool
 }
 
 type ListenerValue struct {
+	Listener   listener.Listener
 	CancelFunc context.CancelFunc
 }

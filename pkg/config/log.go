@@ -1,7 +1,7 @@
 package config
 
 type LogFile struct {
-	Log
+	LogGeneric
 	Level string
 	File  string
 }

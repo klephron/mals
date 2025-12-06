@@ -2,17 +2,19 @@ package logging
 
 import (
 	"fmt"
+	"mals/internal/plane/controller"
 	"mals/internal/plane/event"
 	"mals/internal/plane/state"
 )
 
 type LogController struct {
+	controller.LogController
 	state    *state.State
 	bus      *event.EventBus
 	external <-chan event.Event
 }
 
-func NewController(state *state.State, bus *event.EventBus) *LogController {
+func New(state *state.State, bus *event.EventBus) *LogController {
 	return &LogController{
 		state:    state,
 		bus:      bus,

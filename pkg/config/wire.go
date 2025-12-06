@@ -44,6 +44,7 @@ func (o *Config) UnmarshalJSON(data []byte) error {
 
 func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
 	var t struct {
+		Name  string  `json:"name"`
 		Type  string  `json:"type"`
 		Level string  `json:"level"`
 		File  *string `json:"file"`
@@ -56,6 +57,9 @@ func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
 	switch t.Type {
 	case "file":
 		file := &LogFile{
+			LogGeneric: LogGeneric{
+				Name: t.Name,
+			},
 			Level: t.Level,
 		}
 		if t.File != nil {
@@ -69,6 +73,7 @@ func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
 
 func (o *Listener) UnmarshalJSON(data []byte) error {
 	var t struct {
+		Name string `json:"name"`
 		Type string `json:"type"`
 		Port int    `json:"port"`
 	}
@@ -77,6 +82,7 @@ func (o *Listener) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	o.Name = t.Name
 	o.Type = t.Type
 	o.Port = t.Port
 

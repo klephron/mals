@@ -1,41 +1,41 @@
 package logging
 
 import (
-	"mals/internal/log"
+	"fmt"
 	"mals/internal/plane/state"
 )
 
-func (s *LogController) Debug(msg string, args ...any) {
-	s.state.Logs.Range(func(key log.Log, value *state.LogValue) bool {
-		if value.Enabled {
-			key.Debug(msg, args...)
+func (s *LogController) Debugf(format string, a ...any) {
+	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
+		if value.Log != nil && value.Enabled {
+			value.Log.Debug(fmt.Sprintf(format, a...))
 		}
 		return true
 	})
 }
 
-func (s *LogController) Info(msg string, args ...any) {
-	s.state.Logs.Range(func(key log.Log, value *state.LogValue) bool {
-		if value.Enabled {
-			key.Info(msg, args...)
+func (s *LogController) Infof(format string, a ...any) {
+	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
+		if value.Log != nil && value.Enabled {
+			value.Log.Info(format, a...)
 		}
 		return true
 	})
 }
 
-func (s *LogController) Warn(msg string, args ...any) {
-	s.state.Logs.Range(func(key log.Log, value *state.LogValue) bool {
-		if value.Enabled {
-			key.Warn(msg, args...)
+func (s *LogController) Warnf(format string, a ...any) {
+	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
+		if value.Log != nil && value.Enabled {
+			value.Log.Warn(format, a...)
 		}
 		return true
 	})
 }
 
-func (s *LogController) Error(msg string, args ...any) {
-	s.state.Logs.Range(func(key log.Log, value *state.LogValue) bool {
-		if value.Enabled {
-			key.Error(msg, args...)
+func (s *LogController) Errorf(format string, a ...any) {
+	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
+		if value.Log != nil && value.Enabled {
+			value.Log.Error(format, a...)
 		}
 		return true
 	})
