@@ -18,20 +18,32 @@ func NewClient(plane plane.Plane) *ClientLspTcp {
 		ClientLsp: *lsp.New(plane),
 		conn:      nil,
 	}
-	client.ClientLsp.Client = client
+	client.Client = client
 	return client
 }
 
 func (s *ClientLspTcp) Name() string {
-	return fmt.Sprintf("%s", s.conn.RemoteAddr())
+	if s.conn != nil {
+		return fmt.Sprintf("%s", s.conn.RemoteAddr())
+	}
+	return fmt.Sprintf("%v", nil)
+}
+
+func (s *ClientLspTcp) Close() error {
+	if err := s.ClientLsp.Close(); err != nil {
+		return err
+	}
+	if s.conn != nil {
+		if err := s.conn.Close(); err != nil {
+			return err
+		}
+		s.conn = nil
+	}
+	return nil
 }
 
 func (s *ClientLspTcp) Bind(conn net.Conn) error {
-	if s.conn != nil {
-		if err := s.Unbind(); err != nil {
-			return err
-		}
-	}
+	s.Unbind()
 	s.conn = conn
 	return s.ClientLsp.Bind(bufio.NewScanner(conn), bufio.NewWriter(conn))
 }
@@ -40,12 +52,11 @@ func (s *ClientLspTcp) Unbind() error {
 	if err := s.ClientLsp.Unbind(); err != nil {
 		return err
 	}
-	return s.conn.Close()
-}
-
-func (s *ClientLspTcp) Close() error {
-	if err := s.Unbind(); err != nil {
-		return err
+	if s.conn != nil {
+		if err := s.conn.Close(); err != nil {
+			return err
+		}
+		s.conn = nil
 	}
 	return nil
 }

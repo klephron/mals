@@ -25,6 +25,10 @@ func New(plane plane.Plane) *ClientLsp {
 	return s
 }
 
+func (s *ClientLsp) Name() string {
+	return s.Client.Name()
+}
+
 func (s *ClientLsp) Bind(scanner *bufio.Scanner, writer *bufio.Writer) error {
 	if err := s.Unbind(); err != nil {
 		return err
@@ -32,19 +36,6 @@ func (s *ClientLsp) Bind(scanner *bufio.Scanner, writer *bufio.Writer) error {
 	s.scanner = scanner
 	s.scanner.Split(jsonrpc.ScannerSplit)
 	s.writer = writer
-	return nil
-}
-
-func (s *ClientLsp) Unbind() error {
-	if s.scanner == nil || s.writer == nil {
-		return nil
-	}
-
-	s.scanner = nil
-	if err := s.writer.Flush(); err != nil {
-		return err
-	}
-	s.writer = nil
 	return nil
 }
 
@@ -93,5 +84,18 @@ func (s *ClientLsp) Close() error {
 		return err
 	}
 	s.plane.Log().Infof("%s: closed", s.Name())
+	return nil
+}
+
+func (s *ClientLsp) Unbind() error {
+	if s.scanner == nil || s.writer == nil {
+		return nil
+	}
+
+	s.scanner = nil
+	if err := s.writer.Flush(); err != nil {
+		return err
+	}
+	s.writer = nil
 	return nil
 }
