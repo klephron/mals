@@ -75,6 +75,11 @@ func (s *ClientController) handleDelete(t *TaskDelete) {
 		return
 	}
 
+	if err := t.Client.Close(); err != nil {
+		t.Result <- err
+		return
+	}
+
 	s.state.Clients.Delete(t.Client)
 
 	t.Result <- nil
@@ -100,6 +105,7 @@ func (s *ClientController) handleStart(t *TaskStart) {
 	value.CancelFunc = cancel
 	go func() {
 		t.Client.Serve(ctx)
+		value.CancelFunc = nil
 	}()
 
 	t.Result <- nil

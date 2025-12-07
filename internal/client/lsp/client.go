@@ -88,6 +88,7 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 }
 
 func (s *ClientLsp) Close() error {
+	s.plane.Log().Infof("%s: closing", s.Name())
 	if err := s.Unbind(); err != nil {
 		return err
 	}
