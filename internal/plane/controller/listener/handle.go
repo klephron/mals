@@ -14,6 +14,7 @@ import (
 
 func (s *ListenerController) handleShutdown(t *TaskShutdown) error {
 	defer close(t.Result)
+
 	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
 		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
 		s.handleStop(ts)
@@ -25,6 +26,8 @@ func (s *ListenerController) handleShutdown(t *TaskShutdown) error {
 
 		return true
 	})
+
+	t.Result <- nil
 	return nil
 }
 
@@ -184,12 +187,8 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 	}
 
 	value.Clients.Range(func(key client.Client, value struct{}) bool {
-		if err := s.plane.Client().Stop(key); err != nil {
-			s.plane.Log().Errorf("%v", err)
-		}
-		if err := s.plane.Client().Delete(key); err != nil {
-			s.plane.Log().Errorf("%v", err)
-		}
+		s.plane.Client().Stop(key)
+		s.plane.Client().Delete(key)
 		return true
 	})
 
@@ -222,9 +221,11 @@ func (s *ListenerController) handleClientAdd(t *TaskClientAdd) {
 	_, ok = value.Clients.Load(t.Client)
 	if ok {
 		t.Result <- fmt.Errorf("listener %v client %v exists", name, t.Client.Name())
+		return
 	}
 
 	value.Clients.Store(t.Client, struct{}{})
+	t.Result <- nil
 }
 
 func (s *ListenerController) handleClientRemove(t *TaskClientRemove) {
@@ -250,5 +251,7 @@ func (s *ListenerController) handleClientRemove(t *TaskClientRemove) {
 	_, ok = value.Clients.LoadAndDelete(t.Client)
 	if !ok {
 		t.Result <- fmt.Errorf("listener %v client %v does not exist", name, t.Client.Name())
+		return
 	}
+	t.Result <- nil
 }

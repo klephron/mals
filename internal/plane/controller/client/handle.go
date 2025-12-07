@@ -9,6 +9,7 @@ import (
 
 func (s *ClientController) handleShutdown(t *TaskShutdown) error {
 	defer close(t.Result)
+
 	s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
 		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
 		s.handleStop(ts)
@@ -17,8 +18,11 @@ func (s *ClientController) handleShutdown(t *TaskShutdown) error {
 		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
 		s.handleDelete(td)
 		<-td.Result
+
 		return true
 	})
+
+	t.Result <- nil
 	return nil
 }
 
@@ -31,7 +35,7 @@ func (s *ClientController) handleOwn(t *TaskOwn) {
 		return
 	}
 
-	if err := s.plane.Listener().ClientRemove(t.Listener, t.Client); err != nil {
+	if err := s.plane.Listener().ClientAdd(t.Listener, t.Client); err != nil {
 		t.Result <- err
 		return
 	}

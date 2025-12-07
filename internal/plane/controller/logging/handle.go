@@ -10,6 +10,7 @@ import (
 
 func (s *LogController) handleShutdown(t *TaskShutdown) error {
 	defer close(t.Result)
+
 	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
 		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
 		s.handleStop(ts)
@@ -21,6 +22,8 @@ func (s *LogController) handleShutdown(t *TaskShutdown) error {
 
 		return true
 	})
+
+	t.Result <- nil
 	return nil
 }
 
