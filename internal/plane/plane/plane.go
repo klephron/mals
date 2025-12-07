@@ -5,7 +5,6 @@ import (
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
 	"mals/internal/plane/controller/client"
-	"mals/internal/plane/controller/lifecycle"
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/logging"
 	"mals/internal/plane/event"
@@ -17,12 +16,11 @@ import (
 
 type Plane struct {
 	plane.Plane
-	state     *state.State
-	bus       *event.EventBus
-	client    controller.ClientController
-	lifecycle controller.LifecycleController
-	listener  controller.ListenerController
-	log       controller.LogController
+	state    *state.State
+	bus      *event.EventBus
+	client   controller.ClientController
+	listener controller.ListenerController
+	log      controller.LogController
 }
 
 func New() plane.Plane {
@@ -36,7 +34,6 @@ func New() plane.Plane {
 	}
 
 	plane.client = client.New(plane, plane.state, plane.bus)
-	plane.lifecycle = lifecycle.New(plane, plane.state, plane.bus)
 	plane.listener = listener.New(plane, plane.state, plane.bus)
 	plane.log = logging.New(plane, plane.state, plane.bus)
 
@@ -45,10 +42,6 @@ func New() plane.Plane {
 
 func (s *Plane) Client() controller.ClientController {
 	return s.client
-}
-
-func (s *Plane) Lifecycle() controller.LifecycleController {
-	return s.lifecycle
 }
 
 func (s *Plane) Listener() controller.ListenerController {

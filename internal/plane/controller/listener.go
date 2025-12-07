@@ -3,6 +3,7 @@ package controller
 import "mals/pkg/config"
 
 type ListenerController interface {
+	Shutdown() error
 	Serve(onReady func()) error
 
 	Register(config config.Listener) error

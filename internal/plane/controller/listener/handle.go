@@ -169,9 +169,14 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 
 	value.CancelFunc()
 	value.CancelFunc = nil
+
 	value.Clients.Range(func(key client.Client, value struct{}) bool {
-		s.plane.Client().Stop(key)
-		s.plane.Client().Delete(key)
+		if err := s.plane.Client().Stop(key); err != nil {
+			s.plane.Log().Errorf("%v", err)
+		}
+		if err := s.plane.Client().Delete(key); err != nil {
+			s.plane.Log().Errorf("%v", err)
+		}
 		return true
 	})
 	t.Result <- nil

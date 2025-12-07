@@ -3,6 +3,7 @@ package controller
 import "mals/pkg/config"
 
 type LogController interface {
+	Shutdown() error
 	Serve(onReady func()) error
 
 	Register(config config.Log) error
