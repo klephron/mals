@@ -14,7 +14,7 @@ type LogController struct {
 	state    *state.State
 	bus      *event.EventBus
 	external <-chan event.Event
-	internal chan Event
+	internal chan Task
 }
 
 func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LogController {
@@ -23,7 +23,7 @@ func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LogControl
 		state:    state,
 		bus:      bus,
 		external: nil,
-		internal: make(chan Event),
+		internal: make(chan Task),
 	}
 }
 
@@ -56,24 +56,24 @@ func (s *LogController) Serve(onReady func()) error {
 				s.Warnf("%T unhandled message %T, %v", s, e, e)
 			}
 
-		case e := <-s.internal:
-			switch e := e.(type) {
-			case *EventLog:
-				s.handleLog(e)
-			case *EventRegister:
-				s.handleRegister(e)
-			case *EventUnregister:
-				s.handleUnregister(e)
-			case *EventCreate:
-				s.handleCreate(e)
-			case *EventDelete:
-				s.handleDelete(e)
-			case *EventStart:
-				s.handleStart(e)
-			case *EventStop:
-				s.handleStop(e)
+		case t := <-s.internal:
+			switch t := t.(type) {
+			case *TaskLog:
+				s.handleLog(t)
+			case *TaskRegister:
+				s.handleRegister(t)
+			case *TaskUnregister:
+				s.handleUnregister(t)
+			case *TaskCreate:
+				s.handleCreate(t)
+			case *TaskDelete:
+				s.handleDelete(t)
+			case *TaskStart:
+				s.handleStart(t)
+			case *TaskStop:
+				s.handleStop(t)
 			default:
-				s.Warnf("%T unhandled internal message %T, %v", s, e, e)
+				s.Warnf("%T unhandled internal message %T, %v", s, t, t)
 			}
 		}
 	}

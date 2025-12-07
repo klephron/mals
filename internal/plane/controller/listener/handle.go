@@ -12,8 +12,8 @@ import (
 
 func (s *ListenerController) handleShutdown(_ *event.EventShutdown) {
 	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-		s.handleStop(&EventStop{EventGeneric: NewEventSingle(), Name: key})
-		s.handleDelete(&EventDelete{EventGeneric: NewEventSingle(), Name: key})
+		s.handleStop(&TaskStop{TaskGeneric: NewTaskSingle(), Name: key})
+		s.handleDelete(&TaskDelete{TaskGeneric: NewTaskSingle(), Name: key})
 		return true
 	})
 }
@@ -25,60 +25,60 @@ func (s *ListenerController) handleTerminate(_ *event.EventTerminate) {
 	})
 }
 
-func (s *ListenerController) handleRegister(e *EventRegister) {
-	defer close(e.Result)
-	name := e.Config.Name()
+func (s *ListenerController) handleRegister(t *TaskRegister) {
+	defer close(t.Result)
+	name := t.Config.Name()
 
 	if _, ok := s.state.Listeners.Load(name); ok {
-		e.Result <- fmt.Errorf("listener %v exists", name)
+		t.Result <- fmt.Errorf("listener %v exists", name)
 		return
 	}
 
-	switch config := e.Config.(type) {
+	switch config := t.Config.(type) {
 	case *config.ListenerTcp:
 		s.state.Listeners.Store(name, &state.ListenerValue{
 			Config:     config,
 			Listener:   nil,
 			CancelFunc: nil,
 		})
-		e.Result <- nil
+		t.Result <- nil
 
 	default:
-		e.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
+		t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
 	}
 }
 
-func (s *ListenerController) handleUnregister(e *EventUnregister) {
-	defer close(e.Result)
-	name := e.Name
+func (s *ListenerController) handleUnregister(t *TaskUnregister) {
+	defer close(t.Result)
+	name := t.Name
 
 	value, ok := s.state.Listeners.Load(name)
 	if !ok {
-		e.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
 
 	if value.Listener != nil {
-		e.Result <- fmt.Errorf("listener %v is already created", name)
+		t.Result <- fmt.Errorf("listener %v is already created", name)
 		return
 	}
 
 	s.state.Listeners.Delete(name)
-	e.Result <- nil
+	t.Result <- nil
 }
 
-func (s *ListenerController) handleCreate(e *EventCreate) {
-	defer close(e.Result)
-	name := e.Name
+func (s *ListenerController) handleCreate(t *TaskCreate) {
+	defer close(t.Result)
+	name := t.Name
 
 	value, ok := s.state.Listeners.Load(name)
 	if !ok {
-		e.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
 
 	if value.Listener != nil {
-		e.Result <- fmt.Errorf("listener %v is already created", name)
+		t.Result <- fmt.Errorf("listener %v is already created", name)
 		return
 	}
 
@@ -87,65 +87,65 @@ func (s *ListenerController) handleCreate(e *EventCreate) {
 		switch config.Kind() {
 		case lsp.Kind():
 			if listener, err := lsp.New(name, config.Port, s.plane); err != nil {
-				e.Result <- err
+				t.Result <- err
 			} else {
 				value.Listener = listener
-				e.Result <- nil
+				t.Result <- nil
 			}
 
 		case api.Kind():
 			if listener, err := api.New(name, config.Port, s.plane); err != nil {
-				e.Result <- err
+				t.Result <- err
 			} else {
 				value.Listener = listener
-				e.Result <- nil
+				t.Result <- nil
 			}
 
 		default:
-			e.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
+			t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
 		}
 
 	default:
-		e.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
+		t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
 	}
 }
 
-func (s *ListenerController) handleDelete(e *EventDelete) {
-	defer close(e.Result)
-	name := e.Name
+func (s *ListenerController) handleDelete(t *TaskDelete) {
+	defer close(t.Result)
+	name := t.Name
 
 	value, ok := s.state.Listeners.Load(name)
 	if !ok {
-		e.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
 
 	if value.Listener == nil {
-		e.Result <- fmt.Errorf("listener %v is not created", name)
+		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
 
 	if value.CancelFunc != nil {
-		e.Result <- fmt.Errorf("listener %v is running", name)
+		t.Result <- fmt.Errorf("listener %v is running", name)
 		return
 	}
 
 	value.Listener = nil
-	e.Result <- nil
+	t.Result <- nil
 }
 
-func (s *ListenerController) handleStart(e *EventStart) {
-	defer close(e.Result)
-	name := e.Name
+func (s *ListenerController) handleStart(t *TaskStart) {
+	defer close(t.Result)
+	name := t.Name
 
 	value, ok := s.state.Listeners.Load(name)
 	if !ok {
-		e.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
 
 	if value.Listener == nil {
-		e.Result <- fmt.Errorf("listener %v is not created", name)
+		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
 
@@ -156,30 +156,30 @@ func (s *ListenerController) handleStart(e *EventStart) {
 		value.Listener.Listen(ctx)
 	}()
 
-	e.Result <- nil
+	t.Result <- nil
 }
 
-func (s *ListenerController) handleStop(e *EventStop) {
-	defer close(e.Result)
-	name := e.Name
+func (s *ListenerController) handleStop(t *TaskStop) {
+	defer close(t.Result)
+	name := t.Name
 
 	value, ok := s.state.Listeners.Load(name)
 	if !ok {
-		e.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
 
 	if value.Listener == nil {
-		e.Result <- fmt.Errorf("listener %v is not created", name)
+		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
 
 	if value.CancelFunc == nil {
-		e.Result <- fmt.Errorf("listener %v is not running", name)
+		t.Result <- fmt.Errorf("listener %v is not running", name)
 		return
 	}
 
 	value.CancelFunc()
 	value.CancelFunc = nil
-	e.Result <- nil
+	t.Result <- nil
 }
