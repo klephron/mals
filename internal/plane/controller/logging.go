@@ -12,8 +12,8 @@ type LogController interface {
 	Start(name string) error
 	Stop(name string) error
 
-	Debugf(format string, a ...any)
-	Infof(format string, a ...any)
-	Warnf(format string, a ...any)
-	Errorf(format string, a ...any)
+	Debugf(format string, a ...any) error
+	Infof(format string, a ...any) error
+	Warnf(format string, a ...any) error
+	Errorf(format string, a ...any) error
 }

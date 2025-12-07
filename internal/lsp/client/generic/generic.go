@@ -4,23 +4,23 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"mals/internal/control/controller"
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/client"
+	"mals/internal/plane"
 )
 
 type ClientGeneric struct {
 	client.Client
-	controller *controller.Controller
-	scanner    *bufio.Scanner
-	writer     *bufio.Writer
+	plane   plane.Plane
+	scanner *bufio.Scanner
+	writer  *bufio.Writer
 }
 
-func New(controller *controller.Controller) *ClientGeneric {
+func New(plane plane.Plane) *ClientGeneric {
 	s := &ClientGeneric{
-		controller: controller,
-		scanner:    nil,
-		writer:     nil,
+		plane:   plane,
+		scanner: nil,
+		writer:  nil,
 	}
 	return s
 }
@@ -53,7 +53,7 @@ func (s *ClientGeneric) ServeBinded(ctx context.Context) error {
 	ch := make(chan []byte)
 	defer close(ch)
 
-	s.controller.Info(fmt.Sprintf("%s: listening", s.Name()))
+	s.plane.Log().Infof("%s: listening", s.Name())
 
 	scanCtx, scanCancel := context.WithCancel(ctx)
 
@@ -68,7 +68,7 @@ func (s *ClientGeneric) ServeBinded(ctx context.Context) error {
 					return
 				}
 				ch <- s.scanner.Bytes()
-				s.controller.Debug(fmt.Sprintf("%s: scanned %s", s.Name(), string(s.scanner.Bytes())))
+				s.plane.Log().Debugf("%s: scanned %s", s.Name(), string(s.scanner.Bytes()))
 			}
 		}
 	}()
@@ -76,7 +76,7 @@ func (s *ClientGeneric) ServeBinded(ctx context.Context) error {
 	for {
 		select {
 		case <-scanCtx.Done():
-			s.controller.Info("%s: scanner done", s.Name())
+			s.plane.Log().Infof("%s: scanner done", s.Name())
 			return nil
 		case bytes := <-ch:
 			s.LspHandle(bytes)
@@ -86,6 +86,6 @@ func (s *ClientGeneric) ServeBinded(ctx context.Context) error {
 
 func (s *ClientGeneric) Close() error {
 	s.Unbind()
-	s.controller.Info("%s: closed", s.Name())
+	s.plane.Log().Infof("%s: closed", s.Name())
 	return nil
 }

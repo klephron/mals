@@ -2,19 +2,21 @@ package lifecycle
 
 import (
 	"fmt"
-	"mals/internal/log"
+	"mals/internal/plane"
 	"mals/internal/plane/event"
 	"mals/internal/plane/state"
 )
 
 type LifecycleController struct {
+	plane    plane.Plane
 	state    *state.State
 	bus      *event.EventBus
 	external <-chan event.Event
 }
 
-func New(state *state.State, bus *event.EventBus) *LifecycleController {
+func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LifecycleController {
 	return &LifecycleController{
+		plane:    plane,
 		state:    state,
 		bus:      bus,
 		external: nil,
@@ -24,12 +26,7 @@ func New(state *state.State, bus *event.EventBus) *LifecycleController {
 func (s *LifecycleController) Serve(onReady func()) error {
 	if s.external != nil {
 		err := fmt.Errorf("%T is already serving", s)
-
-		s.bus.Broadcast(event.EventLog{
-			Level: log.LevelError,
-			Msg:   fmt.Sprintf("%v", err),
-		}, s.external)
-
+		s.plane.Log().Errorf("%v", err)
 		return err
 	}
 
@@ -48,10 +45,7 @@ func (s *LifecycleController) Serve(onReady func()) error {
 		case *event.EventTerminate:
 			return nil
 		default:
-			s.bus.Broadcast(&event.EventLog{
-				Level: log.LevelDebug,
-				Msg:   fmt.Sprintf("%T unhandled message %T, %v", s, e, e),
-			}, s.external)
+			s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
 		}
 	}
 

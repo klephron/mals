@@ -1,4 +1,4 @@
-package logging
+package listener
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	"mals/internal/plane/state"
 )
 
-type LogController struct {
-	controller.LogController
+type ListenerController struct {
+	controller.ListenerController
 	plane    plane.Plane
 	state    *state.State
 	bus      *event.EventBus
@@ -17,8 +17,8 @@ type LogController struct {
 	internal chan Event
 }
 
-func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LogController {
-	return &LogController{
+func New(plane plane.Plane, state *state.State, bus *event.EventBus) *ListenerController {
+	return &ListenerController{
 		plane:    plane,
 		state:    state,
 		bus:      bus,
@@ -27,10 +27,10 @@ func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LogControl
 	}
 }
 
-func (s *LogController) Serve(onReady func()) error {
+func (s *ListenerController) Serve(onReady func()) error {
 	if s.external != nil {
 		err := fmt.Errorf("%T is already serving", s)
-		s.Errorf("%v", err)
+		s.plane.Log().Errorf("%v", err)
 		return err
 	}
 
@@ -59,13 +59,11 @@ func (s *LogController) Serve(onReady func()) error {
 				s.handleTerminate(e)
 				return nil
 			default:
-				s.Warnf("%T unhandled message %T, %v", s, e, e)
+				s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
 			}
 
 		case e := <-s.internal:
 			switch e := e.(type) {
-			case *EventLog:
-				s.handleLog(e)
 			case *EventRegister:
 				s.handleRegister(e)
 			case *EventUnregister:
@@ -79,7 +77,7 @@ func (s *LogController) Serve(onReady func()) error {
 			case *EventStop:
 				s.handleStop(e)
 			default:
-				s.Warnf("%T unhandled internal message %T, %v", s, e, e)
+				s.plane.Log().Warnf("%T unhandled internal message %T, %v", s, e, e)
 			}
 		}
 	}

@@ -2,13 +2,15 @@
   "loggers": [
     {
       "name": "l1",
-      "type": "file",
+      "kind": "file",
       "file": "/dev/stderr"
     }
   ],
   "listeners": [
     {
-      "type": "lsp",
+      "name": "lsp-tcp:9651",
+      "kind": "lsp",
+      "ipc": "tcp",
       "port": 9651
     }
   ]

@@ -21,6 +21,7 @@ type LogValue struct {
 }
 
 type ListenerValue struct {
+	Config     config.Listener
 	Listener   listener.Listener
 	CancelFunc context.CancelFunc
 }

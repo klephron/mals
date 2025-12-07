@@ -3,7 +3,6 @@ package logging
 import (
 	"fmt"
 	"mals/internal/log"
-	"mals/internal/plane/event"
 	"mals/pkg/config"
 )
 
@@ -43,30 +42,26 @@ func (s *LogController) Stop(name string) error {
 	return e.Error
 }
 
-func (s *LogController) Debugf(format string, a ...any) {
-	s.bus.Unicast(&event.EventLog{
-		Level: log.LevelDebug,
-		Msg:   fmt.Sprintf(format, a...),
-	}, s.external)
+func (s *LogController) Debugf(format string, a ...any) error {
+	e := EventLog{Level: log.LevelDebug, Msg: fmt.Sprintf(format, a...)}
+	s.internal <- &e
+	return e.Error
 }
 
-func (s *LogController) Infof(format string, a ...any) {
-	s.bus.Unicast(&event.EventLog{
-		Level: log.LevelInfo,
-		Msg:   fmt.Sprintf(format, a...),
-	}, s.external)
+func (s *LogController) Infof(format string, a ...any) error {
+	e := EventLog{Level: log.LevelInfo, Msg: fmt.Sprintf(format, a...)}
+	s.internal <- &e
+	return e.Error
 }
 
-func (s *LogController) Warnf(format string, a ...any) {
-	s.bus.Unicast(&event.EventLog{
-		Level: log.LevelWarn,
-		Msg:   fmt.Sprintf(format, a...),
-	}, s.external)
+func (s *LogController) Warnf(format string, a ...any) error {
+	e := EventLog{Level: log.LevelWarn, Msg: fmt.Sprintf(format, a...)}
+	s.internal <- &e
+	return e.Error
 }
 
-func (s *LogController) Errorf(format string, a ...any) {
-	s.bus.Unicast(&event.EventLog{
-		Level: log.LevelError,
-		Msg:   fmt.Sprintf(format, a...),
-	}, s.external)
+func (s *LogController) Errorf(format string, a ...any) error {
+	e := EventLog{Level: log.LevelError, Msg: fmt.Sprintf(format, a...)}
+	s.internal <- &e
+	return e.Error
 }

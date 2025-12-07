@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"mals/internal/plane"
+	"mals/internal/plane/plane"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	plane.Serve(func() {
 		go func() {
 			<-ctx.Done()
-			plane.Lifecycle.Shutdown()
+			plane.Lifecycle().Shutdown()
 		}()
 
 		configInit(config, plane)

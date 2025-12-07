@@ -6,9 +6,9 @@ type Listener interface {
 }
 
 type ListenerGeneric struct {
-	Listener
-	name string
-	kind string
+	Listener `json:"listener,omitempty"`
+	name     string
+	kind     string
 }
 
 func (s *ListenerGeneric) Name() string {

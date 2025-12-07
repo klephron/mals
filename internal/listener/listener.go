@@ -5,8 +5,8 @@ import (
 )
 
 type Listener interface {
-	Type() string
 	Name() string
+	Kind() string
+	Ipc() string
 	Listen(ctx context.Context) error
-	Listening() bool
 }

@@ -5,7 +5,7 @@ type Step interface {
 }
 
 type StepGeneric struct {
-	Step
+	Step       `json:"step,omitempty"`
 	Name       string
 	Conditions []*Condition
 	Scope      string

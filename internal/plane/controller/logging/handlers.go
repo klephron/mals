@@ -24,7 +24,7 @@ func (s *LogController) handleTerminate(_ *event.EventTerminate) {
 	})
 }
 
-func (s *LogController) handleLog(e *event.EventLog) {
+func (s *LogController) handleLog(e *EventLog) {
 	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
 		if value.Log == nil && value.Enabled {
 			return true

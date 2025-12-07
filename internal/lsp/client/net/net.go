@@ -3,8 +3,8 @@ package client
 import (
 	"bufio"
 	"fmt"
-	"mals/internal/control/controller"
 	"mals/internal/lsp/client/generic"
+	"mals/internal/plane"
 	"net"
 )
 
@@ -13,9 +13,9 @@ type ClientNet struct {
 	conn net.Conn
 }
 
-func New(controller *controller.Controller) *ClientNet {
+func New(plane plane.Plane) *ClientNet {
 	return &ClientNet{
-		ClientGeneric: *client.New(controller),
+		ClientGeneric: *client.New(plane),
 		conn:          nil,
 	}
 }

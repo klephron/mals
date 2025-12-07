@@ -34,25 +34,25 @@ func configLoad(params *Params) (*config.Config, error) {
 	return &c, nil
 }
 
-func configInit(config *config.Config, plane *plane.Plane) {
+func configInit(config *config.Config, plane plane.Plane) {
 	for _, log := range config.Loggers {
-		if err := plane.Log.Register(log); err != nil {
-			plane.Log.Errorf("%v", err)
+		if err := plane.Log().Register(log); err != nil {
+			plane.Log().Errorf("%v", err)
 		}
-		if err := plane.Log.Create(log.Name()); err != nil {
-			plane.Log.Errorf("%v", err)
+		if err := plane.Log().Create(log.Name()); err != nil {
+			plane.Log().Errorf("%v", err)
 		}
-		if err := plane.Log.Start(log.Name()); err != nil {
-			plane.Log.Errorf("%v", err)
+		if err := plane.Log().Start(log.Name()); err != nil {
+			plane.Log().Errorf("%v", err)
 		}
 	}
 }
 
-func configLog(config *config.Config, plane *plane.Plane) {
+func configLog(config *config.Config, plane plane.Plane) {
 	bytes, err := json.Marshal(config)
 	if err != nil {
 		panic(err)
 	}
 
-	plane.Log.Debugf("config: %v", string(bytes))
+	plane.Log().Debugf("config: %v", string(bytes))
 }

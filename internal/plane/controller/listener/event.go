@@ -1,9 +1,6 @@
-package logging
+package listener
 
-import (
-	"mals/internal/log"
-	"mals/pkg/config"
-)
+import "mals/pkg/config"
 
 type Event interface {
 	event()
@@ -17,7 +14,7 @@ func (*EventGeneric) event() {}
 
 type EventRegister struct {
 	EventGeneric
-	Config config.Log
+	Config config.Listener
 
 	Error error
 }
@@ -53,14 +50,6 @@ type EventStart struct {
 type EventStop struct {
 	EventGeneric
 	Name string
-
-	Error error
-}
-
-type EventLog struct {
-	EventGeneric
-	Level log.Level
-	Msg   string
 
 	Error error
 }

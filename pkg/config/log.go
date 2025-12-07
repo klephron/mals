@@ -5,7 +5,7 @@ type Log interface {
 }
 
 type LogGeneric struct {
-	Log
+	Log  `json:"log,omitempty"`
 	name string
 }
 
