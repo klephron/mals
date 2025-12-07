@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/client"
+	"mals/internal/listener"
 	"mals/internal/listener/api/tcp"
 	"mals/internal/listener/lsp/tcp"
 	"mals/internal/plane/state"
@@ -159,9 +160,12 @@ func (s *ListenerController) handleStart(t *TaskStart) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	value.CancelFunc = cancel
-	go func() {
-		value.Listener.Listen(ctx)
-	}()
+
+	go func(listener listener.Listener) {
+		listener.Listen(ctx)
+		// avoid race conditions
+		s.Stop(listener.Name())
+	}(value.Listener)
 
 	t.Result <- nil
 }

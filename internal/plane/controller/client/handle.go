@@ -92,13 +92,13 @@ func (s *ClientController) handleStart(t *TaskStart) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	value.CancelFunc = cancel
-	go func() {
-		t.Client.Serve(ctx)
+	go func(client client.Client) {
+		client.Serve(ctx)
 		// NOTE: to avoid race conditions
-		s.Stop(t.Client)
+		s.Stop(client)
 		// NOTE:  automatically delete when stopped
-		s.Delete(t.Client)
-	}()
+		s.Delete(client)
+	}(t.Client)
 
 	t.Result <- nil
 }
