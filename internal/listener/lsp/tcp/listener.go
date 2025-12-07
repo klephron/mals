@@ -75,5 +75,7 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 			continue
 		}
 
+		s.plane.Client().Own(client, s)
+		s.plane.Client().Start(client)
 	}
 }
