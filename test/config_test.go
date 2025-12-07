@@ -19,7 +19,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte("{}"),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages:    []*Usage{},
@@ -37,7 +37,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"models":[], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages:    []*Usage{},
@@ -46,7 +46,7 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "log",
-			input: []byte(`{"loggers": [{"name": "l1", "type": "file", "file": "logFile", "level": "debug"}], "models":[], "lsps":[], "usages":[]}`),
+			input: []byte(`{"loggers": [{"name": "l1", "kind": "file", "file": "logFile", "level": "debug"}], "models":[], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers: []Log{
 					&LogFile{
@@ -55,7 +55,7 @@ func Test_Unmarshall(t *testing.T) {
 						Level:      "debug",
 					},
 				},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages:    []*Usage{},
@@ -63,7 +63,7 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "log error no type",
+			name:          "log error no kind",
 			input:         []byte(`{"loggers": [{"file": "logFile", "level": "debug"}], "models":[], "lsps":[], "usages":[]}`),
 			expected:      nil,
 			expectedError: true,
@@ -73,7 +73,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"listeners": [], "models":[], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages:    []*Usage{},
@@ -82,18 +82,16 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "listeners",
-			input: []byte(`{"listeners": [{"name": "l1", "type": "rest", "port": 12},{"type": "lsp", "port": 999}], "models":[], "lsps":[], "usages":[]}`),
+			input: []byte(`{"listeners": [{"name": "l1", "kind": "api", "ipc": "tcp", "port": 12},{"kind": "lsp", "ipc": "stdio"}], "models":[], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers: []Log{},
-				Listeners: []*Listener{
-					&Listener{
-						Name: "l1",
-						Type: "rest",
-						Port: 12,
+				Listeners: []Listener{
+					&ListenerTcp{
+						ListenerGeneric: NewListenerGeneric("l1", "api"),
+						Port:            12,
 					},
-					&Listener{
-						Type: "lsp",
-						Port: 999,
+					&ListenerStdio{
+						ListenerGeneric: NewListenerGeneric("", "lsp"),
 					},
 				},
 				Models: []*Model{},
@@ -103,11 +101,23 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: false,
 		},
 		{
+			name:          "listener error no ipc 1",
+			input:         []byte(`{"listeners": [{"name": "l1", "kind": "api", "port": 12}], "models":[], "lsps":[], "usages":[]}`),
+			expected:      nil,
+			expectedError: true,
+		},
+		{
+			name:          "listener error no ipc 2",
+			input:         []byte(`{"listeners": [{"name": "l1", "kind": "lsp"}], "models":[], "lsps":[], "usages":[]}`),
+			expected:      nil,
+			expectedError: true,
+		},
+		{
 			name:  "model spec OpenAI",
 			input: []byte(`{"models":[{"name": "1", "spec": "openai", "settings": {"url": "something", "max_tokens": 12, "temperature": 1}}], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models: []*Model{
 					&Model{
 						Name: "1",
@@ -128,7 +138,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"models":[{"name": "1", "spec": "openai", "settings": {}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models: []*Model{
 					&Model{
 						Name:     "1",
@@ -145,7 +155,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"models":[], "lsps":[{"name": "1", "spec": "stdio", "settings": {"cmd": ["something", "arg1", "arg2"]}}], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps: []*Lsp{
 					&Lsp{
@@ -164,7 +174,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"models":[], "lsps":[{"name": "1", "spec": "stdio", "settings": {"cmd": []}}], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps: []*Lsp{
 					&Lsp{
@@ -183,7 +193,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"lsps":[{"name": "1", "spec": "stdio", "settings": {}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps: []*Lsp{
 					&Lsp{
@@ -202,7 +212,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"name": "1"}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -220,7 +230,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"name": "1", "conditions": []}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -238,7 +248,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"name": "1", "conditions": [{}]}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -248,7 +258,7 @@ func Test_Unmarshall(t *testing.T) {
 							&Condition{
 								Filetypes: []string{},
 								Paths:     []string{},
-								Types:     []string{},
+								Events:    []string{},
 							},
 						},
 						Workflow: nil,
@@ -259,10 +269,10 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "usage condition",
-			input: []byte(`{"usages":[{"name": "1", "conditions": [{"filetypes": ["s1"], "paths": ["s2", "s3"], "types": ["s4", "s5", "s6"]}]}]}`),
+			input: []byte(`{"usages":[{"name": "1", "conditions": [{"filetypes": ["s1"], "paths": ["s2", "s3"], "events": ["s4", "s5", "s6"]}]}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -272,7 +282,7 @@ func Test_Unmarshall(t *testing.T) {
 							&Condition{
 								Filetypes: []string{"s1"},
 								Paths:     []string{"s2", "s3"},
-								Types:     []string{"s4", "s5", "s6"},
+								Events:    []string{"s4", "s5", "s6"},
 							},
 						},
 						Workflow: nil,
@@ -286,7 +296,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"name": "1", "workflow": {}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -306,7 +316,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"workflow": {"name": "w1"}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -326,7 +336,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"workflow": {"steps":[]}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -345,7 +355,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"workflow": {"steps":[{"lsp": "1"}]}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -371,7 +381,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"workflow": {"steps":[{"name": "1", "conditions": [], "lsp": "l1", "template": "t1"}]}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
@@ -399,7 +409,7 @@ func Test_Unmarshall(t *testing.T) {
 			input: []byte(`{"usages":[{"workflow": {"steps":[{"name": "1", "conditions": [], "model": "m1", "template": "t1"}]}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
-				Listeners: []*Listener{},
+				Listeners: []Listener{},
 				Models:    []*Model{},
 				Lsps:      []*Lsp{},
 				Usages: []*Usage{
