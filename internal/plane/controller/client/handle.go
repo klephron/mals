@@ -31,10 +31,16 @@ func (s *ClientController) handleOwn(t *TaskOwn) {
 		return
 	}
 
+	if err := s.plane.Listener().ClientRemove(t.Listener, t.Client); err != nil {
+		t.Result <- err
+		return
+	}
+
 	s.state.Clients.Store(t.Client, &state.ClientValue{
 		Listener:   t.Listener,
 		CancelFunc: nil,
 	})
+
 	t.Result <- nil
 }
 
@@ -53,7 +59,13 @@ func (s *ClientController) handleDelete(t *TaskDelete) {
 		return
 	}
 
+	if err := s.plane.Listener().ClientRemove(value.Listener, t.Client); err != nil {
+		t.Result <- err
+		return
+	}
+
 	s.state.Clients.Delete(t.Client)
+
 	t.Result <- nil
 }
 

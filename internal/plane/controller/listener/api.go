@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"mals/internal/client"
 	"mals/pkg/config"
 )
 
@@ -42,6 +43,18 @@ func (s *ListenerController) Start(name string) error {
 
 func (s *ListenerController) Stop(name string) error {
 	e := TaskStop{TaskGeneric: NewTaskSingle(), Name: name}
+	s.internal <- &e
+	return <-e.Result
+}
+
+func (s *ListenerController) ClientAdd(name string, client client.Client) error {
+	e := TaskClientAdd{TaskGeneric: NewTaskSingle(), Name: name, Client: client}
+	s.internal <- &e
+	return <-e.Result
+}
+
+func (s *ListenerController) ClientRemove(name string, client client.Client) error {
+	e := TaskClientRemove{TaskGeneric: NewTaskSingle(), Name: name, Client: client}
 	s.internal <- &e
 	return <-e.Result
 }

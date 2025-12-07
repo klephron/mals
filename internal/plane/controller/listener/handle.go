@@ -198,3 +198,57 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 
 	t.Result <- nil
 }
+
+func (s *ListenerController) handleClientAdd(t *TaskClientAdd) {
+	defer close(t.Result)
+	name := t.Name
+
+	value, ok := s.state.Listeners.Load(name)
+	if !ok {
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		return
+	}
+
+	if value.Listener == nil {
+		t.Result <- fmt.Errorf("listener %v is not created", name)
+		return
+	}
+
+	if value.CancelFunc == nil {
+		t.Result <- fmt.Errorf("listener %v is not running", name)
+		return
+	}
+
+	_, ok = value.Clients.Load(t.Client)
+	if ok {
+		t.Result <- fmt.Errorf("listener %v client %v exists", name, t.Client.Name())
+	}
+
+	value.Clients.Store(t.Client, struct{}{})
+}
+
+func (s *ListenerController) handleClientRemove(t *TaskClientRemove) {
+	defer close(t.Result)
+	name := t.Name
+
+	value, ok := s.state.Listeners.Load(name)
+	if !ok {
+		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		return
+	}
+
+	if value.Listener == nil {
+		t.Result <- fmt.Errorf("listener %v is not created", name)
+		return
+	}
+
+	if value.CancelFunc == nil {
+		t.Result <- fmt.Errorf("listener %v is not running", name)
+		return
+	}
+
+	_, ok = value.Clients.LoadAndDelete(t.Client)
+	if !ok {
+		t.Result <- fmt.Errorf("listener %v client %v does not exist", name, t.Client.Name())
+	}
+}

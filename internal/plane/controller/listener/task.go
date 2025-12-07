@@ -1,6 +1,9 @@
 package listener
 
-import "mals/pkg/config"
+import (
+	"mals/internal/client"
+	"mals/pkg/config"
+)
 
 type Task interface {
 	task()
@@ -49,4 +52,16 @@ type TaskStart struct {
 type TaskStop struct {
 	TaskGeneric
 	Name string
+}
+
+type TaskClientAdd struct {
+	TaskGeneric
+	Name   string
+	Client client.Client
+}
+
+type TaskClientRemove struct {
+	TaskGeneric
+	Name   string
+	Client client.Client
 }

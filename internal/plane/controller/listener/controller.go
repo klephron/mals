@@ -66,6 +66,10 @@ func (s *ListenerController) Serve(onReady func()) error {
 				s.handleStart(t)
 			case *TaskStop:
 				s.handleStop(t)
+			case *TaskClientAdd:
+				s.handleClientAdd(t)
+			case *TaskClientRemove:
+				s.handleClientRemove(t)
 			default:
 				s.plane.Log().Warnf("%T unhandled internal message %T, %v", s, t, t)
 			}
