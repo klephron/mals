@@ -3,8 +3,8 @@ package listener
 import (
 	"context"
 	"fmt"
-	"mals/internal/listener/api"
-	"mals/internal/listener/lsp"
+	"mals/internal/listener/api/tcp"
+	"mals/internal/listener/lsp/tcp"
 	"mals/internal/plane/event"
 	"mals/internal/plane/state"
 	"mals/pkg/config"
@@ -85,16 +85,16 @@ func (s *ListenerController) handleCreate(t *TaskCreate) {
 	switch config := value.Config.(type) {
 	case *config.ListenerTcp:
 		switch config.Kind() {
-		case lsp.Kind():
-			if listener, err := lsp.New(name, config.Port, s.plane); err != nil {
+		case apitcp.Kind():
+			if listener, err := apitcp.NewListener(name, config.Port, s.plane); err != nil {
 				t.Result <- err
 			} else {
 				value.Listener = listener
 				t.Result <- nil
 			}
 
-		case api.Kind():
-			if listener, err := api.New(name, config.Port, s.plane); err != nil {
+		case lsptcp.Kind():
+			if listener, err := lsptcp.NewListener(name, config.Port, s.plane); err != nil {
 				t.Result <- err
 			} else {
 				value.Listener = listener

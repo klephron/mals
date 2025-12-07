@@ -1,4 +1,4 @@
-package api
+package apitcp
 
 import (
 	"context"
@@ -14,21 +14,13 @@ type ListenerApiTcp struct {
 	plane plane.Plane
 }
 
-func New(name string, port int, plane plane.Plane) (*ListenerApiTcp, error) {
+func NewListener(name string, port int, plane plane.Plane) (*ListenerApiTcp, error) {
 	l := &ListenerApiTcp{
 		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
 	}
 	return l, nil
-}
-
-func Kind() string {
-	return "lsp"
-}
-
-func Ipc() string {
-	return "tcp"
 }
 
 func (s *ListenerApiTcp) Name() string {

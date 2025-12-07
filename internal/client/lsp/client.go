@@ -1,23 +1,23 @@
-package client
+package lsp
 
 import (
 	"bufio"
 	"context"
 	"fmt"
+	"mals/internal/client"
 	"mals/internal/jsonrpc"
-	"mals/internal/lsp/client"
 	"mals/internal/plane"
 )
 
-type ClientGeneric struct {
+type ClientLsp struct {
 	client.Client
 	plane   plane.Plane
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
 }
 
-func New(plane plane.Plane) *ClientGeneric {
-	s := &ClientGeneric{
+func New(plane plane.Plane) *ClientLsp {
+	s := &ClientLsp{
 		plane:   plane,
 		scanner: nil,
 		writer:  nil,
@@ -25,18 +25,21 @@ func New(plane plane.Plane) *ClientGeneric {
 	return s
 }
 
-func (s *ClientGeneric) Name() string {
-	return "client"
-}
-
-func (s *ClientGeneric) Bind(scanner *bufio.Scanner, writer *bufio.Writer) {
-	s.Unbind()
+func (s *ClientLsp) Bind(scanner *bufio.Scanner, writer *bufio.Writer) error {
+	if err := s.Unbind(); err != nil {
+		return err
+	}
 	s.scanner = scanner
 	s.scanner.Split(jsonrpc.ScannerSplit)
 	s.writer = writer
+	return nil
 }
 
-func (s *ClientGeneric) Unbind() error {
+func (s *ClientLsp) Unbind() error {
+	if s.scanner == nil || s.writer == nil {
+		return nil
+	}
+
 	s.scanner = nil
 	if err := s.writer.Flush(); err != nil {
 		return err
@@ -45,7 +48,7 @@ func (s *ClientGeneric) Unbind() error {
 	return nil
 }
 
-func (s *ClientGeneric) ServeBinded(ctx context.Context) error {
+func (s *ClientLsp) Serve(ctx context.Context) error {
 	if s.scanner == nil || s.writer == nil {
 		return fmt.Errorf("%s: must be binded before serve: scanner or writer is nil", s.Name())
 	}
@@ -76,16 +79,18 @@ func (s *ClientGeneric) ServeBinded(ctx context.Context) error {
 	for {
 		select {
 		case <-scanCtx.Done():
-			s.plane.Log().Infof("%s: scanner done", s.Name())
+			s.plane.Log().Infof("%s: done", s.Name())
 			return nil
 		case bytes := <-ch:
-			s.LspHandle(bytes)
+			s.handle(bytes)
 		}
 	}
 }
 
-func (s *ClientGeneric) Close() error {
-	s.Unbind()
+func (s *ClientLsp) Close() error {
+	if err := s.Unbind(); err != nil {
+		return err
+	}
 	s.plane.Log().Infof("%s: closed", s.Name())
 	return nil
 }

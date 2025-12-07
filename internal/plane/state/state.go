@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"mals/internal/client"
 	"mals/internal/listener"
 	"mals/internal/log"
 	"mals/pkg/config"
@@ -12,6 +13,7 @@ import (
 type State struct {
 	Logs      *xsync.Map[string, *LogValue]
 	Listeners *xsync.Map[string, *ListenerValue]
+	Clients   *xsync.Map[client.Client, *ClientValue]
 }
 
 type LogValue struct {
@@ -22,6 +24,12 @@ type LogValue struct {
 
 type ListenerValue struct {
 	Config     config.Listener
+	Listener   listener.Listener
+	CancelFunc context.CancelFunc
+	Clients    *xsync.Map[client.Client, struct{}]
+}
+
+type ClientValue struct {
 	Listener   listener.Listener
 	CancelFunc context.CancelFunc
 }

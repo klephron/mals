@@ -1,24 +1,23 @@
-package lsp
+package lsptcp
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"mals/internal/listener"
-	client "mals/internal/lsp/client/net"
 	"mals/internal/plane"
 	"net"
 )
 
-type ListenerLspTcp struct {
+type ListenerLsp struct {
 	listener.Listener
 	name  string
 	addr  string
 	plane plane.Plane
 }
 
-func New(name string, port int, plane plane.Plane) (*ListenerLspTcp, error) {
-	l := &ListenerLspTcp{
+func NewListener(name string, port int, plane plane.Plane) (*ListenerLsp, error) {
+	l := &ListenerLsp{
 		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
@@ -26,27 +25,19 @@ func New(name string, port int, plane plane.Plane) (*ListenerLspTcp, error) {
 	return l, nil
 }
 
-func Kind() string {
-	return "lsp"
-}
-
-func Ipc() string {
-	return "tcp"
-}
-
-func (s *ListenerLspTcp) Name() string {
+func (s *ListenerLsp) Name() string {
 	return s.name
 }
 
-func (s *ListenerLspTcp) Kind() string {
+func (s *ListenerLsp) Kind() string {
 	return Kind()
 }
 
-func (s *ListenerLspTcp) Ipc() string {
+func (s *ListenerLsp) Ipc() string {
 	return Ipc()
 }
 
-func (s *ListenerLspTcp) Listen(ctx context.Context) error {
+func (s *ListenerLsp) Listen(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
@@ -77,7 +68,12 @@ func (s *ListenerLspTcp) Listen(ctx context.Context) error {
 
 		s.plane.Log().Infof("%s: accepted %v", s.Name(), conn.RemoteAddr())
 
-		client := client.New(s.plane)
-		client.Bind(conn)
+		client := NewClient(s.plane)
+
+		if err := client.Bind(conn); err != nil {
+			s.plane.Log().Errorf("%v", err)
+			continue
+		}
+
 	}
 }

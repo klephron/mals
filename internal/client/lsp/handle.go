@@ -1,4 +1,4 @@
-package client
+package lsp
 
 // import (
 // 	"encoding/json"
@@ -173,7 +173,7 @@ package client
 // 	}()
 // }
 
-func (s *ClientGeneric) LspHandle(bytes []byte) {
+func (s *ClientLsp) handle(bytes []byte) {
 	// msg, data, err := jsonrpc.DecodeNotification(bytes)
 
 	// if err != nil {
