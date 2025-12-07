@@ -1,7 +1,7 @@
 package apitcp
 
 func Kind() string {
-	return "lsp"
+	return "api"
 }
 
 func Ipc() string {

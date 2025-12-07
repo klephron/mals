@@ -81,5 +81,6 @@ func (s *ClientController) handleStop(t *TaskStop) {
 	}
 
 	value.CancelFunc()
+	value.CancelFunc = nil
 	t.Result <- nil
 }

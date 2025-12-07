@@ -14,14 +14,16 @@ type ClientLspTcp struct {
 }
 
 func NewClient(plane plane.Plane) *ClientLspTcp {
-	return &ClientLspTcp{
+	client := &ClientLspTcp{
 		ClientLsp: *lsp.New(plane),
 		conn:      nil,
 	}
+	client.ClientLsp.Client = client
+	return client
 }
 
 func (s *ClientLspTcp) Name() string {
-	return fmt.Sprintf("client:%s", s.conn.RemoteAddr())
+	return fmt.Sprintf("%s", s.conn.RemoteAddr())
 }
 
 func (s *ClientLspTcp) Bind(conn net.Conn) error {

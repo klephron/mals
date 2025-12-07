@@ -1,6 +1,7 @@
 package plane
 
 import (
+	c "mals/internal/client"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
 	"mals/internal/plane/controller/client"
@@ -29,6 +30,7 @@ func New() plane.Plane {
 		state: &state.State{
 			Logs:      xsync.NewMap[string, *state.LogValue](),
 			Listeners: xsync.NewMap[string, *state.ListenerValue](),
+			Clients:   xsync.NewMap[c.Client, *state.ClientValue](),
 		},
 		bus: event.NewEventBus(),
 	}
