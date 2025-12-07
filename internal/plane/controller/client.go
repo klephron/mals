@@ -12,6 +12,7 @@ type ClientController interface {
 
 	Own(client client.Client, listener listener.Listener) error
 	Delete(client client.Client) error
+	DeleteSilent(client client.Client) error
 	Start(client client.Client) error
 	Stop(client client.Client) error
 }

@@ -8,22 +8,23 @@ import (
 )
 
 func (s *ClientController) handleShutdown(t *TaskShutdown) {
+	defer close(t.Result)
+
+	s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
+		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
+		s.handleStop(ts)
+		<-ts.Result
+
+		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
+		s.handleDelete(td)
+		<-td.Result
+
+		return true
+	})
+
+	t.Result <- nil
+
 	go func() {
-		defer close(t.Result)
-
-		s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
-			ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
-			s.handleStop(ts)
-			<-ts.Result
-
-			td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
-			s.handleDelete(td)
-			<-td.Result
-
-			return true
-		})
-
-		t.Result <- nil
 		s.Terminate()
 	}()
 }
@@ -70,9 +71,11 @@ func (s *ClientController) handleDelete(t *TaskDelete) {
 		return
 	}
 
-	if err := s.plane.Listener().ClientRemove(value.Listener, t.Client); err != nil {
-		t.Result <- err
-		return
+	if t.Notify {
+		if err := s.plane.Listener().ClientRemove(value.Listener, t.Client); err != nil {
+			t.Result <- err
+			return
+		}
 	}
 
 	s.state.Clients.Delete(t.Client)

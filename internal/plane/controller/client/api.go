@@ -24,7 +24,13 @@ func (s *ClientController) Own(client client.Client, listener listener.Listener)
 }
 
 func (s *ClientController) Delete(client client.Client) error {
-	e := TaskDelete{TaskGeneric: NewTaskSingle(), Client: client}
+	e := TaskDelete{TaskGeneric: NewTaskSingle(), Client: client, Notify: true}
+	s.internal <- &e
+	return <-e.Result
+}
+
+func (s *ClientController) DeleteSilent(client client.Client) error {
+	e := TaskDelete{TaskGeneric: NewTaskSingle(), Client: client, Notify: false}
 	s.internal <- &e
 	return <-e.Result
 }

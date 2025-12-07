@@ -13,22 +13,23 @@ import (
 )
 
 func (s *ListenerController) handleShutdown(t *TaskShutdown) {
+	defer close(t.Result)
+
+	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
+		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
+		s.handleStop(ts)
+		<-ts.Result
+
+		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Name: key}
+		s.handleDelete(td)
+		<-td.Result
+
+		return true
+	})
+
+	t.Result <- nil
+
 	go func() {
-		defer close(t.Result)
-
-		s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-			ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
-			s.handleStop(ts)
-			<-ts.Result
-
-			td := &TaskDelete{TaskGeneric: NewTaskSingle(), Name: key}
-			s.handleDelete(td)
-			<-td.Result
-
-			return true
-		})
-
-		t.Result <- nil
 		s.Terminate()
 	}()
 }
@@ -196,7 +197,7 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 
 	value.Clients.Range(func(key client.Client, value struct{}) bool {
 		s.plane.Client().Stop(key)
-		s.plane.Client().Delete(key)
+		s.plane.Client().DeleteSilent(key)
 		return true
 	})
 

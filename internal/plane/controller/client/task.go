@@ -36,6 +36,7 @@ type TaskOwn struct {
 type TaskDelete struct {
 	TaskGeneric
 	Client client.Client
+	Notify bool
 }
 
 type TaskStart struct {
