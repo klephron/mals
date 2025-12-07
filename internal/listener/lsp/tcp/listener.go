@@ -68,12 +68,7 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 
 		s.plane.Log().Infof("%s: accepted %v", s.Name(), conn.RemoteAddr())
 
-		client := NewClient(s.plane)
-
-		if err := client.Bind(conn); err != nil {
-			s.plane.Log().Errorf("%v", err)
-			continue
-		}
+		client := NewClient(s.plane, conn)
 
 		s.plane.Client().Own(client, s)
 		s.plane.Client().Start(client)
