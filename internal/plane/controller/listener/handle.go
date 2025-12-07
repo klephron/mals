@@ -12,7 +12,19 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-func (s *ListenerController) handleShutdown(_ *TaskShutdown) error {
+func (s *ListenerController) handleShutdown(t *TaskShutdown) error {
+	defer close(t.Result)
+	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
+		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
+		s.handleStop(ts)
+		<-ts.Result
+
+		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Name: key}
+		s.handleDelete(td)
+		<-td.Result
+
+		return true
+	})
 	return nil
 }
 

@@ -56,7 +56,7 @@ func (s *Plane) Serve(onReady func()) {
 	var wg sync.WaitGroup
 	var wgReady sync.WaitGroup
 
-	wgReady.Add(4)
+	wgReady.Add(3)
 
 	wg.Go(func() {
 		s.client.Serve(func() { wgReady.Done() })

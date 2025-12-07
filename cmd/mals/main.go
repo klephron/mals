@@ -21,7 +21,9 @@ func main() {
 	plane.Serve(func() {
 		go func() {
 			<-ctx.Done()
-			plane.Shutdown()
+			if err := plane.Shutdown(); err != nil {
+				panic(err)
+			}
 		}()
 
 		configInit(config, plane)

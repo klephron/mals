@@ -3,10 +3,22 @@ package client
 import (
 	"context"
 	"fmt"
+	"mals/internal/client"
 	"mals/internal/plane/state"
 )
 
-func (s *ClientController) handleShutdown(_ *TaskShutdown) error {
+func (s *ClientController) handleShutdown(t *TaskShutdown) error {
+	defer close(t.Result)
+	s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
+		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
+		s.handleStop(ts)
+		<-ts.Result
+
+		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
+		s.handleDelete(td)
+		<-td.Result
+		return true
+	})
 	return nil
 }
 
