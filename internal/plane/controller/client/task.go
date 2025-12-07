@@ -2,7 +2,6 @@ package client
 
 import (
 	"mals/internal/client"
-	"mals/internal/listener"
 )
 
 type Task interface {
@@ -23,13 +22,12 @@ func NewTaskSingle() TaskGeneric {
 type TaskOwn struct {
 	TaskGeneric
 	Client   client.Client
-	Listener listener.Listener
+	Listener string
 }
 
 type TaskDelete struct {
 	TaskGeneric
-	Client   client.Client
-	Listener listener.Listener
+	Client client.Client
 }
 
 type TaskStart struct {

@@ -4,25 +4,9 @@ import (
 	"fmt"
 	"mals/internal/log"
 	"mals/internal/log/file"
-	"mals/internal/plane/event"
 	"mals/internal/plane/state"
 	"mals/pkg/config"
 )
-
-func (s *LogController) handleShutdown(_ *event.EventShutdown) {
-	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		s.handleStop(&TaskStop{TaskGeneric: NewTaskSingle(), Name: key})
-		s.handleDelete(&TaskDelete{TaskGeneric: NewTaskSingle(), Name: key})
-		return true
-	})
-}
-
-func (s *LogController) handleTerminate(_ *event.EventTerminate) {
-	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		s.state.Logs.Delete(key)
-		return true
-	})
-}
 
 func (s *LogController) handleLog(t *TaskLog) {
 	defer close(t.Result)

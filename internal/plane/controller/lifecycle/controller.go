@@ -12,6 +12,7 @@ type LifecycleController struct {
 	state    *state.State
 	bus      *event.EventBus
 	external <-chan event.Event
+	internal chan Task
 }
 
 func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LifecycleController {
@@ -20,6 +21,7 @@ func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LifecycleC
 		state:    state,
 		bus:      bus,
 		external: nil,
+		internal: make(chan Task),
 	}
 }
 
@@ -38,16 +40,23 @@ func (s *LifecycleController) Serve(onReady func()) error {
 
 	onReady()
 
-	for e := range s.external {
-		switch e := e.(type) {
-		case *event.EventShutdown:
-			return nil
-		case *event.EventTerminate:
-			return nil
-		default:
-			s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
+	for {
+		select {
+		case e := <-s.external:
+			switch e := e.(type) {
+			default:
+				s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
+			}
+
+		case t := <-s.internal:
+			switch t := t.(type) {
+			case *TaskShutdown:
+				s.handleShutdown(t)
+			case *TaskTerminate:
+				s.handleTerminate(t)
+			default:
+				s.plane.Log().Warnf("%T unhandled internal message %T, %v", s, t, t)
+			}
 		}
 	}
-
-	return nil
 }

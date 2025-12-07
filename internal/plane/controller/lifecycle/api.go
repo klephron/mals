@@ -1,11 +1,13 @@
 package lifecycle
 
-import "mals/internal/plane/event"
-
-func (s *LifecycleController) Shutdown() {
-	s.bus.Allcast(&event.EventShutdown{})
+func (s *LifecycleController) Shutdown() error {
+	e := TaskShutdown{TaskGeneric: NewTaskSingle()}
+	s.internal <- &e
+	return <-e.Result
 }
 
-func (s *LifecycleController) Terminate() {
-	s.bus.Allcast(&event.EventTerminate{})
+func (s *LifecycleController) Terminate() error {
+	e := TaskTerminate{TaskGeneric: NewTaskSingle()}
+	s.internal <- &e
+	return <-e.Result
 }

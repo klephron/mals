@@ -6,7 +6,7 @@ import (
 )
 
 func (s *ClientController) Own(client client.Client, listener listener.Listener) error {
-	e := TaskOwn{TaskGeneric: NewTaskSingle(), Client: client, Listener: listener}
+	e := TaskOwn{TaskGeneric: NewTaskSingle(), Client: client, Listener: listener.Name()}
 	s.internal <- &e
 	return <-e.Result
 }

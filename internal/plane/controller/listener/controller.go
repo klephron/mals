@@ -46,12 +46,6 @@ func (s *ListenerController) Serve(onReady func()) error {
 		select {
 		case e := <-s.external:
 			switch e := e.(type) {
-			case *event.EventShutdown:
-				s.handleShutdown(e)
-				return nil
-			case *event.EventTerminate:
-				s.handleTerminate(e)
-				return nil
 			default:
 				s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
 			}

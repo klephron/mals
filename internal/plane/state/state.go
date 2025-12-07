@@ -30,6 +30,6 @@ type ListenerValue struct {
 }
 
 type ClientValue struct {
-	Listener   listener.Listener
+	Listener   string
 	CancelFunc context.CancelFunc
 }

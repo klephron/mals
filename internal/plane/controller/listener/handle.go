@@ -5,25 +5,9 @@ import (
 	"fmt"
 	"mals/internal/listener/api/tcp"
 	"mals/internal/listener/lsp/tcp"
-	"mals/internal/plane/event"
 	"mals/internal/plane/state"
 	"mals/pkg/config"
 )
-
-func (s *ListenerController) handleShutdown(_ *event.EventShutdown) {
-	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-		s.handleStop(&TaskStop{TaskGeneric: NewTaskSingle(), Name: key})
-		s.handleDelete(&TaskDelete{TaskGeneric: NewTaskSingle(), Name: key})
-		return true
-	})
-}
-
-func (s *ListenerController) handleTerminate(_ *event.EventTerminate) {
-	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-		s.state.Listeners.Delete(key)
-		return true
-	})
-}
 
 func (s *ListenerController) handleRegister(t *TaskRegister) {
 	defer close(t.Result)
