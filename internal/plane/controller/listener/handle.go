@@ -183,9 +183,6 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 		return
 	}
 
-	value.CancelFunc()
-	value.CancelFunc = nil
-
 	value.Clients.Range(func(key client.Client, value struct{}) bool {
 		if err := s.plane.Client().Stop(key); err != nil {
 			s.plane.Log().Errorf("%v", err)
@@ -195,5 +192,9 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 		}
 		return true
 	})
+
+	value.CancelFunc()
+	value.CancelFunc = nil
+
 	t.Result <- nil
 }
