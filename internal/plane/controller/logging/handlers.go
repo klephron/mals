@@ -11,8 +11,8 @@ import (
 
 func (s *LogController) handleShutdown(_ *event.EventShutdown) {
 	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		s.handleStop(&EventStop{Name: key})
-		s.handleDelete(&EventDelete{Name: key})
+		s.handleStop(&EventStop{EventGeneric: NewEventSingle(), Name: key})
+		s.handleDelete(&EventDelete{EventGeneric: NewEventSingle(), Name: key})
 		return true
 	})
 }
