@@ -46,6 +46,17 @@ func configInit(config *config.Config, plane plane.Plane) {
 			plane.Log().Errorf("%v", err)
 		}
 	}
+	for _, listener := range config.Listeners {
+		if err := plane.Listener().Register(listener); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+		if err := plane.Listener().Create(listener.Name()); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+		if err := plane.Listener().Start(listener.Name()); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+	}
 }
 
 func configLog(config *config.Config, plane plane.Plane) {

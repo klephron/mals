@@ -19,7 +19,7 @@ func (s *LogController) handleShutdown(_ *event.EventShutdown) {
 
 func (s *LogController) handleTerminate(_ *event.EventTerminate) {
 	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		s.handleDelete(&EventDelete{Name: key})
+		s.state.Logs.Delete(key)
 		return true
 	})
 }

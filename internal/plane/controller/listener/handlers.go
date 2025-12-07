@@ -20,7 +20,7 @@ func (s *ListenerController) handleShutdown(_ *event.EventShutdown) {
 
 func (s *ListenerController) handleTerminate(_ *event.EventTerminate) {
 	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-		s.handleDelete(&EventDelete{Name: key})
+		s.state.Listeners.Delete(key)
 		return true
 	})
 }
