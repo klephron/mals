@@ -83,7 +83,7 @@ func (s *ListenerController) handleCreate(e *EventCreate) {
 	case *config.ListenerTcp:
 		switch config.Kind() {
 		case lsp.Kind():
-			if listener, err := lsp.New(config.Port, s.plane); err != nil {
+			if listener, err := lsp.New(name, config.Port, s.plane); err != nil {
 				e.Error = err
 			} else {
 				value.Listener = listener
@@ -91,7 +91,7 @@ func (s *ListenerController) handleCreate(e *EventCreate) {
 			}
 
 		case api.Kind():
-			if listener, err := api.New(config.Port, s.plane); err != nil {
+			if listener, err := api.New(name, config.Port, s.plane); err != nil {
 				e.Error = err
 			} else {
 				value.Listener = listener

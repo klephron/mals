@@ -14,8 +14,9 @@ type ListenerApiTcp struct {
 	plane plane.Plane
 }
 
-func New(port int, plane plane.Plane) (*ListenerApiTcp, error) {
+func New(name string, port int, plane plane.Plane) (*ListenerApiTcp, error) {
 	l := &ListenerApiTcp{
+		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
 	}
