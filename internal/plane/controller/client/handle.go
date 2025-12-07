@@ -7,23 +7,30 @@ import (
 	"mals/internal/plane/state"
 )
 
-func (s *ClientController) handleShutdown(t *TaskShutdown) error {
+func (s *ClientController) handleShutdown(t *TaskShutdown) {
+	go func() {
+		defer close(t.Result)
+
+		s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
+			ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
+			s.handleStop(ts)
+			<-ts.Result
+
+			td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
+			s.handleDelete(td)
+			<-td.Result
+
+			return true
+		})
+
+		t.Result <- nil
+		s.Terminate()
+	}()
+}
+
+func (s *ClientController) handleTerminate(t *TaskTerminate) {
 	defer close(t.Result)
-
-	s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
-		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
-		s.handleStop(ts)
-		<-ts.Result
-
-		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
-		s.handleDelete(td)
-		<-td.Result
-
-		return true
-	})
-
 	t.Result <- nil
-	return nil
 }
 
 func (s *ClientController) handleOwn(t *TaskOwn) {

@@ -7,6 +7,7 @@ import (
 
 type ClientController interface {
 	Shutdown() error
+	Terminate() error
 	Serve(onReady func()) error
 
 	Own(client client.Client, listener listener.Listener) error

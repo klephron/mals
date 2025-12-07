@@ -52,8 +52,11 @@ func (s *LogController) Serve(onReady func()) error {
 
 		case t := <-s.internal:
 			switch t := t.(type) {
+			case *TaskTerminate:
+				s.handleTerminate(t)
+				return nil
 			case *TaskShutdown:
-				return s.handleShutdown(t)
+				s.handleShutdown(t)
 			case *TaskLog:
 				s.handleLog(t)
 			case *TaskRegister:

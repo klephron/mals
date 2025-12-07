@@ -8,23 +8,30 @@ import (
 	"mals/pkg/config"
 )
 
-func (s *LogController) handleShutdown(t *TaskShutdown) error {
+func (s *LogController) handleShutdown(t *TaskShutdown) {
+	go func() {
+		defer close(t.Result)
+
+		s.state.Logs.Range(func(key string, value *state.LogValue) bool {
+			ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
+			s.handleStop(ts)
+			<-ts.Result
+
+			td := &TaskDelete{TaskGeneric: NewTaskSingle(), Name: key}
+			s.handleDelete(td)
+			<-td.Result
+
+			return true
+		})
+
+		t.Result <- nil
+		s.Terminate()
+	}()
+}
+
+func (s *LogController) handleTerminate(t *TaskTerminate) {
 	defer close(t.Result)
-
-	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
-		s.handleStop(ts)
-		<-ts.Result
-
-		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Name: key}
-		s.handleDelete(td)
-		<-td.Result
-
-		return true
-	})
-
 	t.Result <- nil
-	return nil
 }
 
 func (s *LogController) handleLog(t *TaskLog) {

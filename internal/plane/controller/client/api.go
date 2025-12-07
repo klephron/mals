@@ -11,6 +11,12 @@ func (s *ClientController) Shutdown() error {
 	return <-e.Result
 }
 
+func (s *ClientController) Terminate() error {
+	e := TaskTerminate{TaskGeneric: NewTaskSingle()}
+	s.internal <- &e
+	return <-e.Result
+}
+
 func (s *ClientController) Own(client client.Client, listener listener.Listener) error {
 	e := TaskOwn{TaskGeneric: NewTaskSingle(), Client: client, Listener: listener.Name()}
 	s.internal <- &e
