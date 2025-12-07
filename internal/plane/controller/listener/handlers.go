@@ -145,9 +145,14 @@ func (s *ListenerController) handleStart(e *EventStart) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	value.Listener.Listen(ctx)
+
 	value.CancelFunc = cancel
+	go func() {
+		value.Listener.Listen(ctx)
+	}()
+
 	e.Error = nil
+
 }
 
 func (s *ListenerController) handleStop(e *EventStop) {
