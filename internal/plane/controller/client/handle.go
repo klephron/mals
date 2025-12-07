@@ -94,6 +94,7 @@ func (s *ClientController) handleStart(t *TaskStart) {
 	go func() {
 		t.Client.Serve(ctx)
 	}()
+
 	t.Result <- nil
 }
 
@@ -114,5 +115,6 @@ func (s *ClientController) handleStop(t *TaskStop) {
 
 	value.CancelFunc()
 	value.CancelFunc = nil
+
 	t.Result <- nil
 }

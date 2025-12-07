@@ -71,6 +71,7 @@ func (s *ListenerController) handleUnregister(t *TaskUnregister) {
 	}
 
 	s.state.Listeners.Delete(name)
+
 	t.Result <- nil
 }
 
@@ -225,6 +226,7 @@ func (s *ListenerController) handleClientAdd(t *TaskClientAdd) {
 	}
 
 	value.Clients.Store(t.Client, struct{}{})
+
 	t.Result <- nil
 }
 
@@ -253,5 +255,6 @@ func (s *ListenerController) handleClientRemove(t *TaskClientRemove) {
 		t.Result <- fmt.Errorf("listener %v client %v does not exist", name, t.Client.Name())
 		return
 	}
+
 	t.Result <- nil
 }

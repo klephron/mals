@@ -45,6 +45,7 @@ func (s *LogController) handleLog(t *TaskLog) {
 		}
 		return true
 	})
+
 	t.Result <- nil
 }
 
@@ -87,6 +88,7 @@ func (s *LogController) handleUnregister(t *TaskUnregister) {
 	}
 
 	s.state.Logs.Delete(name)
+
 	t.Result <- nil
 }
 
@@ -160,6 +162,7 @@ func (s *LogController) handleStart(t *TaskStart) {
 	}
 
 	value.Enabled = true
+
 	t.Result <- nil
 }
 
@@ -179,5 +182,6 @@ func (s *LogController) handleStop(t *TaskStop) {
 	}
 
 	value.Enabled = false
+
 	t.Result <- nil
 }
