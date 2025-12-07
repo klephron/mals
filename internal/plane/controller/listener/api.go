@@ -11,12 +11,6 @@ func (s *ListenerController) Shutdown() error {
 	return <-e.Result
 }
 
-func (s *ListenerController) Terminate() error {
-	e := TaskTerminate{TaskGeneric: NewTaskSingle()}
-	s.internal <- &e
-	return <-e.Result
-}
-
 func (s *ListenerController) Register(config config.Listener) error {
 	e := TaskRegister{TaskGeneric: NewTaskSingle(), Config: config}
 	s.internal <- &e

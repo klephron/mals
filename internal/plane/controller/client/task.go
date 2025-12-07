@@ -23,10 +23,6 @@ type TaskShutdown struct {
 	TaskGeneric
 }
 
-type TaskTerminate struct {
-	TaskGeneric
-}
-
 type TaskOwn struct {
 	TaskGeneric
 	Client   client.Client

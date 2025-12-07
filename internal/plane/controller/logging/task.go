@@ -24,10 +24,6 @@ type TaskShutdown struct {
 	TaskGeneric
 }
 
-type TaskTerminate struct {
-	TaskGeneric
-}
-
 type TaskRegister struct {
 	TaskGeneric
 	Config config.Log

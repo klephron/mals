@@ -86,10 +86,3 @@ func (s *Plane) Shutdown() error {
 	}
 	return nil
 }
-
-func (s *Plane) Terminate() error {
-	s.listener.Terminate()
-	s.client.Terminate()
-	s.log.Terminate()
-	return nil
-}

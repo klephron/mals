@@ -23,15 +23,6 @@ func (s *LogController) handleShutdown(t *TaskShutdown) {
 	})
 
 	t.Result <- nil
-
-	go func() {
-		s.Terminate()
-	}()
-}
-
-func (s *LogController) handleTerminate(t *TaskTerminate) {
-	defer close(t.Result)
-	t.Result <- nil
 }
 
 func (s *LogController) handleLog(t *TaskLog) {

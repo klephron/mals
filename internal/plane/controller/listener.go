@@ -7,7 +7,6 @@ import (
 
 type ListenerController interface {
 	Shutdown() error
-	Terminate() error
 	Serve(onReady func()) error
 
 	Register(config config.Listener) error

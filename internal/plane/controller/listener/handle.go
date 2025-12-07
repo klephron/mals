@@ -28,15 +28,6 @@ func (s *ListenerController) handleShutdown(t *TaskShutdown) {
 	})
 
 	t.Result <- nil
-
-	go func() {
-		s.Terminate()
-	}()
-}
-
-func (s *ListenerController) handleTerminate(t *TaskTerminate) {
-	defer close(t.Result)
-	t.Result <- nil
 }
 
 func (s *ListenerController) handleRegister(t *TaskRegister) {

@@ -23,15 +23,6 @@ func (s *ClientController) handleShutdown(t *TaskShutdown) {
 	})
 
 	t.Result <- nil
-
-	go func() {
-		s.Terminate()
-	}()
-}
-
-func (s *ClientController) handleTerminate(t *TaskTerminate) {
-	defer close(t.Result)
-	t.Result <- nil
 }
 
 func (s *ClientController) handleOwn(t *TaskOwn) {

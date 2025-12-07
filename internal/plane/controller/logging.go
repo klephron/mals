@@ -4,7 +4,6 @@ import "mals/pkg/config"
 
 type LogController interface {
 	Shutdown() error
-	Terminate() error
 	Serve(onReady func()) error
 
 	Register(config config.Log) error
