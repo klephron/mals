@@ -5,6 +5,12 @@ import (
 	"mals/internal/listener"
 )
 
+func (s *ClientController) Shutdown() error {
+	e := TaskShutdown{TaskGeneric: NewTaskSingle()}
+	s.internal <- &e
+	return <-e.Result
+}
+
 func (s *ClientController) Own(client client.Client, listener listener.Listener) error {
 	e := TaskOwn{TaskGeneric: NewTaskSingle(), Client: client, Listener: listener.Name()}
 	s.internal <- &e

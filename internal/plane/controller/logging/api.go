@@ -6,6 +6,12 @@ import (
 	"mals/pkg/config"
 )
 
+func (s *LogController) Shutdown() error {
+	e := TaskShutdown{TaskGeneric: NewTaskSingle()}
+	s.internal <- &e
+	return <-e.Result
+}
+
 func (s *LogController) Register(config config.Log) error {
 	e := TaskRegister{TaskGeneric: NewTaskSingle(), Config: config}
 	s.internal <- &e

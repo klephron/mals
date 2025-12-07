@@ -62,9 +62,6 @@ func (s *Plane) Serve(onReady func()) {
 		s.client.Serve(func() { wgReady.Done() })
 	})
 	wg.Go(func() {
-		s.lifecycle.Serve(func() { wgReady.Done() })
-	})
-	wg.Go(func() {
 		s.listener.Serve(func() { wgReady.Done() })
 	})
 	wg.Go(func() {
@@ -75,4 +72,17 @@ func (s *Plane) Serve(onReady func()) {
 	onReady()
 
 	wg.Wait()
+}
+
+func (s *Plane) Shutdown() error {
+	if err := s.listener.Shutdown(); err != nil {
+		return err
+	}
+	if err := s.client.Shutdown(); err != nil {
+		return err
+	}
+	if err := s.log.Shutdown(); err != nil {
+		return err
+	}
+	return nil
 }

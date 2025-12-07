@@ -21,7 +21,7 @@ func main() {
 	plane.Serve(func() {
 		go func() {
 			<-ctx.Done()
-			plane.Lifecycle().Shutdown()
+			plane.Shutdown()
 		}()
 
 		configInit(config, plane)

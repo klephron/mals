@@ -4,6 +4,12 @@ import (
 	"mals/pkg/config"
 )
 
+func (s *ListenerController) Shutdown() error {
+	e := TaskShutdown{TaskGeneric: NewTaskSingle()}
+	s.internal <- &e
+	return <-e.Result
+}
+
 func (s *ListenerController) Register(config config.Listener) error {
 	e := TaskRegister{TaskGeneric: NewTaskSingle(), Config: config}
 	s.internal <- &e

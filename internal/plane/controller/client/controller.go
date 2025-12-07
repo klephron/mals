@@ -50,6 +50,8 @@ func (s *ClientController) Serve(onReady func()) error {
 
 		case t := <-s.internal:
 			switch t := t.(type) {
+			case *TaskShutdown:
+				return s.handleShutdown(t)
 			case *TaskOwn:
 				s.handleOwn(t)
 			case *TaskDelete:

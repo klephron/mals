@@ -19,6 +19,10 @@ func NewTaskSingle() TaskGeneric {
 	return TaskGeneric{Result: make(chan error, 1)}
 }
 
+type TaskShutdown struct {
+	TaskGeneric
+}
+
 type TaskOwn struct {
 	TaskGeneric
 	Client   client.Client

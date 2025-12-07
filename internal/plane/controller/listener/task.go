@@ -17,6 +17,10 @@ func NewTaskSingle() TaskGeneric {
 	return TaskGeneric{Result: make(chan error, 1)}
 }
 
+type TaskShutdown struct {
+	TaskGeneric
+}
+
 type TaskRegister struct {
 	TaskGeneric
 	Config config.Listener

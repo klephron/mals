@@ -6,6 +6,10 @@ import (
 	"mals/internal/plane/state"
 )
 
+func (s *ClientController) handleShutdown(_ *TaskShutdown) error {
+	return nil
+}
+
 func (s *ClientController) handleOwn(t *TaskOwn) {
 	defer close(t.Result)
 	name := t.Client.Name()

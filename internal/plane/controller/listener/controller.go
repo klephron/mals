@@ -52,6 +52,8 @@ func (s *ListenerController) Serve(onReady func()) error {
 
 		case t := <-s.internal:
 			switch t := t.(type) {
+			case *TaskShutdown:
+				return s.handleShutdown(t)
 			case *TaskRegister:
 				s.handleRegister(t)
 			case *TaskUnregister:

@@ -12,6 +12,10 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+func (s *ListenerController) handleShutdown(_ *TaskShutdown) error {
+	return nil
+}
+
 func (s *ListenerController) handleRegister(t *TaskRegister) {
 	defer close(t.Result)
 	name := t.Config.Name()

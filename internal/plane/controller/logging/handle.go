@@ -8,6 +8,10 @@ import (
 	"mals/pkg/config"
 )
 
+func (s *LogController) handleShutdown(_ *TaskShutdown) error {
+	return nil
+}
+
 func (s *LogController) handleLog(t *TaskLog) {
 	defer close(t.Result)
 	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
