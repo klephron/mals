@@ -8,90 +8,90 @@ import (
 
 func (s *LogController) Register(config config.Log) error {
 	if s.internal != nil {
-		e := EventRegister{Config: config}
+		e := EventRegister{EventGeneric: NewEventSingle(), Config: config}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Unregister(name string) error {
 	if s.internal != nil {
-		e := EventUnregister{Name: name}
+		e := EventUnregister{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Create(name string) error {
 	if s.internal != nil {
-		e := EventCreate{Name: name}
+		e := EventCreate{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Delete(name string) error {
 	if s.internal != nil {
-		e := EventDelete{Name: name}
+		e := EventDelete{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Start(name string) error {
 	if s.internal != nil {
-		e := EventStart{Name: name}
+		e := EventStart{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Stop(name string) error {
 	if s.internal != nil {
-		e := EventStop{Name: name}
+		e := EventStop{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Debugf(format string, a ...any) error {
 	if s.internal != nil {
-		e := EventLog{Level: log.LevelDebug, Msg: fmt.Sprintf(format, a...)}
+		e := EventLog{EventGeneric: NewEventSingle(), Level: log.LevelDebug, Msg: fmt.Sprintf(format, a...)}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Infof(format string, a ...any) error {
 	if s.internal != nil {
-		e := EventLog{Level: log.LevelInfo, Msg: fmt.Sprintf(format, a...)}
+		e := EventLog{EventGeneric: NewEventSingle(), Level: log.LevelInfo, Msg: fmt.Sprintf(format, a...)}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Warnf(format string, a ...any) error {
 	if s.internal != nil {
-		e := EventLog{Level: log.LevelWarn, Msg: fmt.Sprintf(format, a...)}
+		e := EventLog{EventGeneric: NewEventSingle(), Level: log.LevelWarn, Msg: fmt.Sprintf(format, a...)}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *LogController) Errorf(format string, a ...any) error {
 	if s.internal != nil {
-		e := EventLog{Level: log.LevelError, Msg: fmt.Sprintf(format, a...)}
+		e := EventLog{EventGeneric: NewEventSingle(), Level: log.LevelError, Msg: fmt.Sprintf(format, a...)}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }

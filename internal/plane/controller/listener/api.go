@@ -7,54 +7,54 @@ import (
 
 func (s *ListenerController) Register(config config.Listener) error {
 	if s.internal != nil {
-		e := EventRegister{Config: config}
+		e := EventRegister{EventGeneric: NewEventSingle(), Config: config}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *ListenerController) Unregister(name string) error {
 	if s.internal != nil {
-		e := EventUnregister{Name: name}
+		e := EventUnregister{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *ListenerController) Create(name string) error {
 	if s.internal != nil {
-		e := EventCreate{Name: name}
+		e := EventCreate{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *ListenerController) Delete(name string) error {
 	if s.internal != nil {
-		e := EventDelete{Name: name}
+		e := EventDelete{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *ListenerController) Start(name string) error {
 	if s.internal != nil {
-		e := EventStart{Name: name}
+		e := EventStart{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }
 
 func (s *ListenerController) Stop(name string) error {
 	if s.internal != nil {
-		e := EventStop{Name: name}
+		e := EventStop{EventGeneric: NewEventSingle(), Name: name}
 		s.internal <- &e
-		return e.Error
+		return <-e.Result
 	}
 	return fmt.Errorf("%T done", s)
 }

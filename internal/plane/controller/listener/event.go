@@ -8,48 +8,41 @@ type Event interface {
 
 type EventGeneric struct {
 	Event
+	Result chan error
 }
 
 func (*EventGeneric) event() {}
 
+func NewEventSingle() EventGeneric {
+	return EventGeneric{Result: make(chan error, 1)}
+}
+
 type EventRegister struct {
 	EventGeneric
 	Config config.Listener
-
-	Error error
 }
 
 type EventUnregister struct {
 	EventGeneric
 	Name string
-
-	Error error
 }
 
 type EventCreate struct {
 	EventGeneric
 	Name string
-
-	Error error
 }
 
 type EventDelete struct {
 	EventGeneric
 	Name string
-
-	Error error
 }
 
 type EventStart struct {
 	EventGeneric
 	Name string
-
-	Error error
 }
 
 type EventStop struct {
 	EventGeneric
 	Name string
-
-	Error error
 }
