@@ -3,10 +3,13 @@ package listener
 import (
 	"context"
 	"fmt"
+	"mals/internal/client"
 	"mals/internal/listener/api/tcp"
 	"mals/internal/listener/lsp/tcp"
 	"mals/internal/plane/state"
 	"mals/pkg/config"
+
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 func (s *ListenerController) handleRegister(t *TaskRegister) {
@@ -24,6 +27,7 @@ func (s *ListenerController) handleRegister(t *TaskRegister) {
 			Config:     config,
 			Listener:   nil,
 			CancelFunc: nil,
+			Clients:    xsync.NewMap[client.Client, struct{}](),
 		})
 		t.Result <- nil
 
@@ -165,5 +169,10 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 
 	value.CancelFunc()
 	value.CancelFunc = nil
+	value.Clients.Range(func(key client.Client, value struct{}) bool {
+		s.plane.Client().Stop(key)
+		s.plane.Client().Delete(key)
+		return true
+	})
 	t.Result <- nil
 }
