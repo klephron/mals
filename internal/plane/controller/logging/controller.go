@@ -23,7 +23,7 @@ func New(plane plane.Plane, state *state.State, bus *event.EventBus) *LogControl
 		state:    state,
 		bus:      bus,
 		external: nil,
-		internal: nil,
+		internal: make(chan Event),
 	}
 }
 
@@ -38,12 +38,6 @@ func (s *LogController) Serve(onReady func()) error {
 	defer func() {
 		s.bus.Unsubscribe(s.external)
 		s.external = nil
-	}()
-
-	s.internal = make(chan Event)
-	defer func() {
-		close(s.internal)
-		s.internal = nil
 	}()
 
 	onReady()

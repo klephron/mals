@@ -1,60 +1,41 @@
 package listener
 
 import (
-	"fmt"
 	"mals/pkg/config"
 )
 
 func (s *ListenerController) Register(config config.Listener) error {
-	if s.internal != nil {
-		e := EventRegister{EventGeneric: NewEventSingle(), Config: config}
-		s.internal <- &e
-		return <-e.Result
-	}
-	return fmt.Errorf("%T done", s)
+	e := EventRegister{EventGeneric: NewEventSingle(), Config: config}
+	s.internal <- &e
+	return <-e.Result
 }
 
 func (s *ListenerController) Unregister(name string) error {
-	if s.internal != nil {
-		e := EventUnregister{EventGeneric: NewEventSingle(), Name: name}
-		s.internal <- &e
-		return <-e.Result
-	}
-	return fmt.Errorf("%T done", s)
+	e := EventUnregister{EventGeneric: NewEventSingle(), Name: name}
+	s.internal <- &e
+	return <-e.Result
 }
 
 func (s *ListenerController) Create(name string) error {
-	if s.internal != nil {
-		e := EventCreate{EventGeneric: NewEventSingle(), Name: name}
-		s.internal <- &e
-		return <-e.Result
-	}
-	return fmt.Errorf("%T done", s)
+	e := EventCreate{EventGeneric: NewEventSingle(), Name: name}
+	s.internal <- &e
+	return <-e.Result
 }
 
 func (s *ListenerController) Delete(name string) error {
-	if s.internal != nil {
-		e := EventDelete{EventGeneric: NewEventSingle(), Name: name}
-		s.internal <- &e
-		return <-e.Result
-	}
-	return fmt.Errorf("%T done", s)
+	e := EventDelete{EventGeneric: NewEventSingle(), Name: name}
+	s.internal <- &e
+	return <-e.Result
 }
 
 func (s *ListenerController) Start(name string) error {
-	if s.internal != nil {
-		e := EventStart{EventGeneric: NewEventSingle(), Name: name}
-		s.internal <- &e
-		return <-e.Result
-	}
-	return fmt.Errorf("%T done", s)
+	e := EventStart{EventGeneric: NewEventSingle(), Name: name}
+	s.internal <- &e
+	return <-e.Result
 }
 
 func (s *ListenerController) Stop(name string) error {
-	if s.internal != nil {
-		e := EventStop{EventGeneric: NewEventSingle(), Name: name}
-		s.internal <- &e
-		return <-e.Result
-	}
-	return fmt.Errorf("%T done", s)
+	e := EventStop{EventGeneric: NewEventSingle(), Name: name}
+	s.internal <- &e
+	return <-e.Result
 }
