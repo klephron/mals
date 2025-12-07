@@ -43,7 +43,9 @@ func (s *ClientLspTcp) Close() error {
 }
 
 func (s *ClientLspTcp) Bind(conn net.Conn) error {
-	s.Unbind()
+	if err := s.Unbind(); err != nil {
+		return err
+	}
 	s.conn = conn
 	return s.ClientLsp.Bind(bufio.NewScanner(conn), bufio.NewWriter(conn))
 }

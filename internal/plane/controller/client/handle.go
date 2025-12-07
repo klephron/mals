@@ -106,6 +106,8 @@ func (s *ClientController) handleStart(t *TaskStart) {
 	go func() {
 		t.Client.Serve(ctx)
 		value.CancelFunc = nil
+		// NOTE: automatically delete when stopped
+		s.Delete(t.Client)
 	}()
 
 	t.Result <- nil

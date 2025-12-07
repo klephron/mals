@@ -91,7 +91,6 @@ func (s *ClientLsp) Unbind() error {
 	if s.scanner == nil || s.writer == nil {
 		return nil
 	}
-
 	s.scanner = nil
 	if err := s.writer.Flush(); err != nil {
 		return err
