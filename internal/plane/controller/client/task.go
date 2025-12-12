@@ -15,7 +15,7 @@ type TaskGeneric struct {
 
 func (*TaskGeneric) task() {}
 
-func NewTaskSingle() TaskGeneric {
+func NewTask() TaskGeneric {
 	return TaskGeneric{Result: make(chan error, 1)}
 }
 

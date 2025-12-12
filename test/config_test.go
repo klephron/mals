@@ -113,8 +113,8 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name:  "model spec OpenAI",
-			input: []byte(`{"models":[{"name": "1", "spec": "openai", "settings": {"url": "something", "max_tokens": 12, "temperature": 1}}], "lsps":[], "usages":[]}`),
+			name:  "model kind OpenAI",
+			input: []byte(`{"models":[{"name": "1", "kind": "openai", "settings": {"url": "something", "max_tokens": 12, "temperature": 1}}], "lsps":[], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
 				Listeners: []Listener{},
@@ -134,8 +134,8 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:  "model spec OpenAI default",
-			input: []byte(`{"models":[{"name": "1", "spec": "openai", "settings": {}}]}`),
+			name:  "model kind OpenAI default",
+			input: []byte(`{"models":[{"name": "1", "kind": "openai", "settings": {}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
 				Listeners: []Listener{},
@@ -151,8 +151,8 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:  "lsp spec stdio",
-			input: []byte(`{"models":[], "lsps":[{"name": "1", "spec": "stdio", "settings": {"cmd": ["something", "arg1", "arg2"]}}], "usages":[]}`),
+			name:  "lsp kind stdio",
+			input: []byte(`{"models":[], "lsps":[{"name": "1", "kind": "stdio", "settings": {"cmd": ["something", "arg1", "arg2"]}}], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
 				Listeners: []Listener{},
@@ -171,7 +171,7 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "lsp spec stdio empty cmd",
-			input: []byte(`{"models":[], "lsps":[{"name": "1", "spec": "stdio", "settings": {"cmd": []}}], "usages":[]}`),
+			input: []byte(`{"models":[], "lsps":[{"name": "1", "kind": "stdio", "settings": {"cmd": []}}], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
 				Listeners: []Listener{},
@@ -190,7 +190,7 @@ func Test_Unmarshall(t *testing.T) {
 		},
 		{
 			name:  "lsp spec stdio nil cmd",
-			input: []byte(`{"lsps":[{"name": "1", "spec": "stdio", "settings": {}}]}`),
+			input: []byte(`{"lsps":[{"name": "1", "kind": "stdio", "settings": {}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
 				Listeners: []Listener{},

@@ -11,11 +11,11 @@ func (s *ClientController) handleShutdown(t *TaskShutdown) {
 	defer close(t.Result)
 
 	s.state.Clients.Range(func(key client.Client, value *state.ClientValue) bool {
-		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Client: key}
+		ts := &TaskStop{TaskGeneric: NewTask(), Client: key}
 		s.handleStop(ts)
 		<-ts.Result
 
-		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Client: key}
+		td := &TaskDelete{TaskGeneric: NewTask(), Client: key}
 		s.handleDelete(td)
 		<-td.Result
 

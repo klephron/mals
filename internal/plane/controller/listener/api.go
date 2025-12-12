@@ -6,55 +6,55 @@ import (
 )
 
 func (s *ListenerController) Shutdown() error {
-	e := TaskShutdown{TaskGeneric: NewTaskSingle()}
+	e := TaskShutdown{TaskGeneric: NewTask()}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) Register(config config.Listener) error {
-	e := TaskRegister{TaskGeneric: NewTaskSingle(), Config: config}
+	e := TaskRegister{TaskGeneric: NewTask(), Config: config}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) Unregister(name string) error {
-	e := TaskUnregister{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskUnregister{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) Create(name string) error {
-	e := TaskCreate{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskCreate{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) Delete(name string) error {
-	e := TaskDelete{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskDelete{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) Start(name string) error {
-	e := TaskStart{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskStart{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) Stop(name string) error {
-	e := TaskStop{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskStop{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) ClientAdd(name string, client client.Client) error {
-	e := TaskClientAdd{TaskGeneric: NewTaskSingle(), Name: name, Client: client}
+	e := TaskClientAdd{TaskGeneric: NewTask(), Name: name, Client: client}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *ListenerController) ClientRemove(name string, client client.Client) error {
-	e := TaskClientRemove{TaskGeneric: NewTaskSingle(), Name: name, Client: client}
+	e := TaskClientRemove{TaskGeneric: NewTask(), Name: name, Client: client}
 	s.internal <- &e
 	return <-e.Result
 }

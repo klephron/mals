@@ -7,67 +7,67 @@ import (
 )
 
 func (s *LogController) Shutdown() error {
-	e := TaskShutdown{TaskGeneric: NewTaskSingle()}
+	e := TaskShutdown{TaskGeneric: NewTask()}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Register(config config.Log) error {
-	e := TaskRegister{TaskGeneric: NewTaskSingle(), Config: config}
+	e := TaskRegister{TaskGeneric: NewTask(), Config: config}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Unregister(name string) error {
-	e := TaskUnregister{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskUnregister{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Create(name string) error {
-	e := TaskCreate{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskCreate{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Delete(name string) error {
-	e := TaskDelete{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskDelete{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Start(name string) error {
-	e := TaskStart{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskStart{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Stop(name string) error {
-	e := TaskStop{TaskGeneric: NewTaskSingle(), Name: name}
+	e := TaskStop{TaskGeneric: NewTask(), Name: name}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Debugf(format string, a ...any) error {
-	e := TaskLog{TaskGeneric: NewTaskSingle(), Level: log.LevelDebug, Msg: fmt.Sprintf(format, a...)}
+	e := TaskLog{TaskGeneric: NewTask(), Level: log.LevelDebug, Msg: fmt.Sprintf(format, a...)}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Infof(format string, a ...any) error {
-	e := TaskLog{TaskGeneric: NewTaskSingle(), Level: log.LevelInfo, Msg: fmt.Sprintf(format, a...)}
+	e := TaskLog{TaskGeneric: NewTask(), Level: log.LevelInfo, Msg: fmt.Sprintf(format, a...)}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Warnf(format string, a ...any) error {
-	e := TaskLog{TaskGeneric: NewTaskSingle(), Level: log.LevelWarn, Msg: fmt.Sprintf(format, a...)}
+	e := TaskLog{TaskGeneric: NewTask(), Level: log.LevelWarn, Msg: fmt.Sprintf(format, a...)}
 	s.internal <- &e
 	return <-e.Result
 }
 
 func (s *LogController) Errorf(format string, a ...any) error {
-	e := TaskLog{TaskGeneric: NewTaskSingle(), Level: log.LevelError, Msg: fmt.Sprintf(format, a...)}
+	e := TaskLog{TaskGeneric: NewTask(), Level: log.LevelError, Msg: fmt.Sprintf(format, a...)}
 	s.internal <- &e
 	return <-e.Result
 }

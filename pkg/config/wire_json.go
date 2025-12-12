@@ -54,7 +54,7 @@ func (o *Config) UnmarshalJSON(data []byte) error {
 func (o *Model) UnmarshalJSON(data []byte) error {
 	t := &struct {
 		Name     string          `json:"name"`
-		Spec     string          `json:"spec"`
+		Kind     string          `json:"kind"`
 		Settings json.RawMessage `json:"settings"`
 	}{}
 
@@ -64,7 +64,7 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 
 	o.Name = t.Name
 
-	switch t.Spec {
+	switch t.Kind {
 	case "openai":
 		var ts struct {
 			Url         string  `json:"url"`
@@ -92,7 +92,7 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 func (o *Lsp) UnmarshalJSON(data []byte) error {
 	t := &struct {
 		Name     string          `json:"name"`
-		Spec     string          `json:"spec"`
+		Kind     string          `json:"kind"`
 		Settings json.RawMessage `json:"settings"`
 	}{}
 
@@ -102,7 +102,7 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 
 	o.Name = t.Name
 
-	switch t.Spec {
+	switch t.Kind {
 	case "stdio":
 		var ts struct {
 			Cmd []string `json:"cmd"`
@@ -114,7 +114,7 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 			return err
 		}
 
-		o.Settings = LspSpecStdio{
+		o.Settings = &LspSpecStdio{
 			Cmd: ts.Cmd,
 		}
 

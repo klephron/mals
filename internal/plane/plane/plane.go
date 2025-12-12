@@ -7,6 +7,7 @@ import (
 	"mals/internal/plane/controller/client"
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/logging"
+	"mals/internal/plane/controller/model"
 	"mals/internal/plane/event"
 	"mals/internal/plane/state"
 	"sync"
@@ -21,6 +22,7 @@ type Plane struct {
 	client   controller.ClientController
 	listener controller.ListenerController
 	log      controller.LogController
+	model    controller.ModelController
 }
 
 func New() plane.Plane {
@@ -36,6 +38,7 @@ func New() plane.Plane {
 	plane.client = client.New(plane, plane.state, plane.bus)
 	plane.listener = listener.New(plane, plane.state, plane.bus)
 	plane.log = logging.New(plane, plane.state, plane.bus)
+	plane.model = model.New(plane, plane.state, plane.bus)
 
 	return plane
 }
@@ -52,29 +55,40 @@ func (s *Plane) Log() controller.LogController {
 	return s.log
 }
 
+func (s *Plane) Model() controller.ModelController {
+	return s.model
+}
+
 func (s *Plane) Serve(onReady func()) {
 	var wg sync.WaitGroup
 	var wgReady sync.WaitGroup
 
-	wgReady.Add(3)
-
-	wg.Go(func() {
-		s.client.Serve(func() { wgReady.Done() })
-	})
-	wg.Go(func() {
-		s.listener.Serve(func() { wgReady.Done() })
-	})
-	wg.Go(func() {
-		s.log.Serve(func() { wgReady.Done() })
-	})
-
+	wgReady.Add(4)
+	{
+		wg.Go(func() {
+			s.client.Serve(func() { wgReady.Done() })
+		})
+		wg.Go(func() {
+			s.listener.Serve(func() { wgReady.Done() })
+		})
+		wg.Go(func() {
+			s.log.Serve(func() { wgReady.Done() })
+		})
+		wg.Go(func() {
+			s.model.Serve(func() { wgReady.Done() })
+		})
+	}
 	wgReady.Wait()
+
 	onReady()
 
 	wg.Wait()
 }
 
 func (s *Plane) Shutdown() error {
+	if err := s.model.Shutdown(); err != nil {
+		return err
+	}
 	if err := s.listener.Shutdown(); err != nil {
 		return err
 	}

@@ -17,11 +17,11 @@ func (s *ListenerController) handleShutdown(t *TaskShutdown) {
 	defer close(t.Result)
 
 	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-		ts := &TaskStop{TaskGeneric: NewTaskSingle(), Name: key}
+		ts := &TaskStop{TaskGeneric: NewTask(), Name: key}
 		s.handleStop(ts)
 		<-ts.Result
 
-		td := &TaskDelete{TaskGeneric: NewTaskSingle(), Name: key}
+		td := &TaskDelete{TaskGeneric: NewTask(), Name: key}
 		s.handleDelete(td)
 		<-td.Result
 
