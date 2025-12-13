@@ -1,7 +1,6 @@
 package plane
 
 import (
-	c "mals/internal/client"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
 	"mals/internal/plane/controller/client"
@@ -9,15 +8,11 @@ import (
 	"mals/internal/plane/controller/logging"
 	"mals/internal/plane/controller/model"
 	"mals/internal/plane/event"
-	"mals/internal/plane/state"
 	"sync"
-
-	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type Plane struct {
 	plane.Plane
-	state    *state.State
 	bus      *event.EventBus
 	client   controller.ClientController
 	listener controller.ListenerController
@@ -27,19 +22,13 @@ type Plane struct {
 
 func New() plane.Plane {
 	plane := &Plane{
-		state: &state.State{
-			Logs:      xsync.NewMap[string, *state.LogValue](),
-			Listeners: xsync.NewMap[string, *state.ListenerValue](),
-			Clients:   xsync.NewMap[c.Client, *state.ClientValue](),
-			Models:    xsync.NewMap[string, *state.ModelValue](),
-		},
 		bus: event.NewEventBus(),
 	}
 
-	plane.client = client.New(plane, plane.state, plane.bus)
-	plane.listener = listener.New(plane, plane.state, plane.bus)
-	plane.log = logging.New(plane, plane.state, plane.bus)
-	plane.model = model.New(plane, plane.state, plane.bus)
+	plane.client = client.New(plane, plane.bus)
+	plane.listener = listener.New(plane, plane.bus)
+	plane.log = logging.New(plane, plane.bus)
+	plane.model = model.New(plane, plane.bus)
 
 	return plane
 }

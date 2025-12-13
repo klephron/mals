@@ -5,52 +5,55 @@ import (
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
 	"mals/internal/plane/event"
-	"mals/internal/plane/state"
+
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type ListenerController struct {
 	controller.ListenerController
-	plane    plane.Plane
-	state    *state.State
-	bus      *event.EventBus
-	external <-chan event.Event
-	internal chan Task
+
+	state State
+
+	plane plane.Plane
+	bus   *event.EventBus
 }
 
-func New(plane plane.Plane, state *state.State, bus *event.EventBus) *ListenerController {
+func New(plane plane.Plane, bus *event.EventBus) *ListenerController {
 	return &ListenerController{
-		plane:    plane,
-		state:    state,
-		bus:      bus,
-		external: nil,
-		internal: make(chan Task),
+		state: State{
+			listeners: xsync.NewMap[string, *ListenerValue](),
+			external:  nil,
+			internal:  make(chan Task),
+		},
+		plane: plane,
+		bus:   bus,
 	}
 }
 
 func (s *ListenerController) Serve(onReady func()) error {
-	if s.external != nil {
+	if s.state.external != nil {
 		err := fmt.Errorf("%T is already serving", s)
 		s.plane.Log().Errorf("%v", err)
 		return err
 	}
 
-	s.external = s.bus.Subscribe()
+	s.state.external = s.bus.Subscribe()
 	defer func() {
-		s.bus.Unsubscribe(s.external)
-		s.external = nil
+		s.bus.Unsubscribe(s.state.external)
+		s.state.external = nil
 	}()
 
 	onReady()
 
 	for {
 		select {
-		case e := <-s.external:
+		case e := <-s.state.external:
 			switch e := e.(type) {
 			default:
 				s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
 			}
 
-		case t := <-s.internal:
+		case t := <-s.state.internal:
 			switch t := t.(type) {
 			case *TaskShutdown:
 				s.handleShutdown(t)

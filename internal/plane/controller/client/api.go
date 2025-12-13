@@ -6,37 +6,37 @@ import (
 )
 
 func (s *ClientController) Shutdown() error {
-	e := TaskShutdown{TaskGeneric: NewTask()}
-	s.internal <- &e
-	return <-e.Result
+	e := TaskShutdown{TaskGeneric: newTask()}
+	s.state.internal <- &e
+	return <-e.result
 }
 
 func (s *ClientController) Own(client client.Client, listener listener.Listener) error {
-	e := TaskOwn{TaskGeneric: NewTask(), Client: client, Listener: listener.Name()}
-	s.internal <- &e
-	return <-e.Result
+	e := TaskOwn{TaskGeneric: newTask(), client: client, listener: listener.Name()}
+	s.state.internal <- &e
+	return <-e.result
 }
 
 func (s *ClientController) Delete(client client.Client) error {
-	e := TaskDelete{TaskGeneric: NewTask(), Client: client, Notify: true}
-	s.internal <- &e
-	return <-e.Result
+	e := TaskDelete{TaskGeneric: newTask(), client: client, notify: true}
+	s.state.internal <- &e
+	return <-e.result
 }
 
 func (s *ClientController) DeleteSilent(client client.Client) error {
-	e := TaskDelete{TaskGeneric: NewTask(), Client: client, Notify: false}
-	s.internal <- &e
-	return <-e.Result
+	e := TaskDelete{TaskGeneric: newTask(), client: client, notify: false}
+	s.state.internal <- &e
+	return <-e.result
 }
 
 func (s *ClientController) Start(client client.Client) error {
-	e := TaskStart{TaskGeneric: NewTask(), Client: client}
-	s.internal <- &e
-	return <-e.Result
+	e := TaskStart{TaskGeneric: newTask(), client: client}
+	s.state.internal <- &e
+	return <-e.result
 }
 
 func (s *ClientController) Stop(client client.Client) error {
-	e := TaskStop{TaskGeneric: NewTask(), Client: client}
-	s.internal <- &e
-	return <-e.Result
+	e := TaskStop{TaskGeneric: newTask(), client: client}
+	s.state.internal <- &e
+	return <-e.result
 }

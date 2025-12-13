@@ -8,13 +8,13 @@ type Task interface {
 
 type TaskGeneric struct {
 	Task
-	Result chan error
+	result chan error
 }
 
 func (*TaskGeneric) task() {}
 
 func NewTask() TaskGeneric {
-	return TaskGeneric{Result: make(chan error, 1)}
+	return TaskGeneric{result: make(chan error, 1)}
 }
 
 type TaskShutdown struct {
@@ -23,30 +23,30 @@ type TaskShutdown struct {
 
 type TaskRegister struct {
 	TaskGeneric
-	Config config.Model
+	config config.Model
 }
 
 type TaskUnregister struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskCreate struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskDelete struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskStart struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskStop struct {
 	TaskGeneric
-	Name string
+	name string
 }

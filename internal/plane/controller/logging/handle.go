@@ -4,176 +4,175 @@ import (
 	"fmt"
 	"mals/internal/log"
 	"mals/internal/log/file"
-	"mals/internal/plane/state"
 	"mals/pkg/config"
 )
 
 func (s *LogController) handleShutdown(t *TaskShutdown) {
-	defer close(t.Result)
+	defer close(t.result)
 
-	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		ts := &TaskStop{TaskGeneric: NewTask(), Name: key}
+	s.state.logs.Range(func(key string, value *LogValue) bool {
+		ts := &TaskStop{TaskGeneric: newTask(), name: key}
 		s.handleStop(ts)
-		<-ts.Result
+		<-ts.result
 
-		td := &TaskDelete{TaskGeneric: NewTask(), Name: key}
+		td := &TaskDelete{TaskGeneric: newTask(), name: key}
 		s.handleDelete(td)
-		<-td.Result
+		<-td.result
 		return true
 	})
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *LogController) handleLog(t *TaskLog) {
-	defer close(t.Result)
-	s.state.Logs.Range(func(key string, value *state.LogValue) bool {
-		if value.Log == nil || !value.Enabled {
+	defer close(t.result)
+	s.state.logs.Range(func(key string, value *LogValue) bool {
+		if value.log == nil || !value.enabled {
 			return true
 		}
-		switch t.Level {
+		switch t.level {
 		case log.LevelDebug:
-			value.Log.Debug(t.Msg)
+			value.log.Debug(t.msg)
 		case log.LevelInfo:
-			value.Log.Info(t.Msg)
+			value.log.Info(t.msg)
 		case log.LevelWarn:
-			value.Log.Warn(t.Msg)
+			value.log.Warn(t.msg)
 		case log.LevelError:
-			value.Log.Error(t.Msg)
+			value.log.Error(t.msg)
 		}
 		return true
 	})
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *LogController) handleRegister(t *TaskRegister) {
-	defer close(t.Result)
-	name := t.Config.Name()
+	defer close(t.result)
+	name := t.config.Name()
 
-	if _, ok := s.state.Logs.Load(name); ok {
-		t.Result <- fmt.Errorf("log %v exists", name)
+	if _, ok := s.state.logs.Load(name); ok {
+		t.result <- fmt.Errorf("log %v exists", name)
 		return
 	}
 
-	switch config := t.Config.(type) {
+	switch config := t.config.(type) {
 	case *config.LogFile:
-		s.state.Logs.Store(name, &state.LogValue{
-			Config:  config,
-			Log:     nil,
-			Enabled: false,
+		s.state.logs.Store(name, &LogValue{
+			config:  config,
+			log:     nil,
+			enabled: false,
 		})
-		t.Result <- nil
+		t.result <- nil
 
 	default:
-		t.Result <- fmt.Errorf("unhandled log %T %v", config, config)
+		t.result <- fmt.Errorf("unhandled log %T %v", config, config)
 	}
 }
 
 func (s *LogController) handleUnregister(t *TaskUnregister) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Logs.Load(name)
+	value, ok := s.state.logs.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("log %v does not exist", name)
+		t.result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-	if value.Log != nil {
-		t.Result <- fmt.Errorf("log %v is already created", name)
+	if value.log != nil {
+		t.result <- fmt.Errorf("log %v is already created", name)
 		return
 	}
 
-	s.state.Logs.Delete(name)
+	s.state.logs.Delete(name)
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *LogController) handleCreate(t *TaskCreate) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Logs.Load(name)
+	value, ok := s.state.logs.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("log %v does not exist", name)
+		t.result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-	if value.Log != nil {
-		t.Result <- fmt.Errorf("log %v is already created", name)
+	if value.log != nil {
+		t.result <- fmt.Errorf("log %v is already created", name)
 		return
 	}
 
-	switch config := value.Config.(type) {
+	switch config := value.config.(type) {
 	case *config.LogFile:
 		log, err := file.Open(config.File, config.Level)
 		if err != nil {
-			t.Result <- err
+			t.result <- err
 			return
 		}
-		value.Log = log
-		value.Enabled = false
-		t.Result <- nil
+		value.log = log
+		value.enabled = false
+		t.result <- nil
 	default:
-		t.Result <- fmt.Errorf("unhandled log %T %v", config, config)
+		t.result <- fmt.Errorf("unhandled log %T %v", config, config)
 	}
 }
 
 func (s *LogController) handleDelete(t *TaskDelete) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Logs.Load(name)
+	value, ok := s.state.logs.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("log %v does not exist", name)
+		t.result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-	if value.Log == nil {
-		t.Result <- fmt.Errorf("log %v is not created", name)
+	if value.log == nil {
+		t.result <- fmt.Errorf("log %v is not created", name)
 		return
 	}
-	if value.Enabled {
-		t.Result <- fmt.Errorf("log %v is running", name)
+	if value.enabled {
+		t.result <- fmt.Errorf("log %v is running", name)
 		return
 	}
 
-	t.Result <- value.Log.Close()
-	value.Log = nil
+	t.result <- value.log.Close()
+	value.log = nil
 }
 
 func (s *LogController) handleStart(t *TaskStart) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Logs.Load(name)
+	value, ok := s.state.logs.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("log %v does not exist", name)
+		t.result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-	if value.Log == nil {
-		t.Result <- fmt.Errorf("log %v is not created", name)
+	if value.log == nil {
+		t.result <- fmt.Errorf("log %v is not created", name)
 		return
 	}
 
-	value.Enabled = true
+	value.enabled = true
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *LogController) handleStop(t *TaskStop) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Logs.Load(name)
+	value, ok := s.state.logs.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("log %v does not exist", name)
+		t.result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-	if value.Log == nil {
-		t.Result <- fmt.Errorf("log %v is not created", name)
+	if value.log == nil {
+		t.result <- fmt.Errorf("log %v is not created", name)
 		return
 	}
 
-	value.Enabled = false
+	value.enabled = false
 
-	t.Result <- nil
+	t.result <- nil
 }

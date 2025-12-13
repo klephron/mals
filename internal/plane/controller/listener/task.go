@@ -11,13 +11,13 @@ type Task interface {
 
 type TaskGeneric struct {
 	Task
-	Result chan error
+	result chan error
 }
 
 func (*TaskGeneric) task() {}
 
-func NewTask() TaskGeneric {
-	return TaskGeneric{Result: make(chan error, 1)}
+func newTask() TaskGeneric {
+	return TaskGeneric{result: make(chan error, 1)}
 }
 
 type TaskShutdown struct {
@@ -26,42 +26,42 @@ type TaskShutdown struct {
 
 type TaskRegister struct {
 	TaskGeneric
-	Config config.Listener
+	config config.Listener
 }
 
 type TaskUnregister struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskCreate struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskDelete struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskStart struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskStop struct {
 	TaskGeneric
-	Name string
+	name string
 }
 
 type TaskClientAdd struct {
 	TaskGeneric
-	Name   string
-	Client client.Client
+	name   string
+	client client.Client
 }
 
 type TaskClientRemove struct {
 	TaskGeneric
-	Name   string
-	Client client.Client
+	name   string
+	client client.Client
 }

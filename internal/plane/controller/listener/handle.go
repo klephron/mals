@@ -7,249 +7,248 @@ import (
 	"mals/internal/listener"
 	"mals/internal/listener/api/tcp"
 	"mals/internal/listener/lsp/tcp"
-	"mals/internal/plane/state"
 	"mals/pkg/config"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
 func (s *ListenerController) handleShutdown(t *TaskShutdown) {
-	defer close(t.Result)
+	defer close(t.result)
 
-	s.state.Listeners.Range(func(key string, value *state.ListenerValue) bool {
-		ts := &TaskStop{TaskGeneric: NewTask(), Name: key}
+	s.state.listeners.Range(func(key string, value *ListenerValue) bool {
+		ts := &TaskStop{TaskGeneric: newTask(), name: key}
 		s.handleStop(ts)
-		<-ts.Result
+		<-ts.result
 
-		td := &TaskDelete{TaskGeneric: NewTask(), Name: key}
+		td := &TaskDelete{TaskGeneric: newTask(), name: key}
 		s.handleDelete(td)
-		<-td.Result
+		<-td.result
 
 		return true
 	})
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *ListenerController) handleRegister(t *TaskRegister) {
-	defer close(t.Result)
-	name := t.Config.Name()
+	defer close(t.result)
+	name := t.config.Name()
 
-	if _, ok := s.state.Listeners.Load(name); ok {
-		t.Result <- fmt.Errorf("listener %v exists", name)
+	if _, ok := s.state.listeners.Load(name); ok {
+		t.result <- fmt.Errorf("listener %v exists", name)
 		return
 	}
 
-	switch config := t.Config.(type) {
+	switch config := t.config.(type) {
 	case *config.ListenerTcp:
-		s.state.Listeners.Store(name, &state.ListenerValue{
-			Config:     config,
-			Listener:   nil,
-			CancelFunc: nil,
-			Clients:    xsync.NewMap[client.Client, struct{}](),
+		s.state.listeners.Store(name, &ListenerValue{
+			config:     config,
+			listener:   nil,
+			cancelFunc: nil,
+			clients:    xsync.NewMap[client.Client, struct{}](),
 		})
-		t.Result <- nil
+		t.result <- nil
 
 	default:
-		t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
+		t.result <- fmt.Errorf("unhandled listener %T %v", config, config)
 	}
 }
 
 func (s *ListenerController) handleUnregister(t *TaskUnregister) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener != nil {
-		t.Result <- fmt.Errorf("listener %v is already created", name)
+	if value.listener != nil {
+		t.result <- fmt.Errorf("listener %v is already created", name)
 		return
 	}
 
-	s.state.Listeners.Delete(name)
+	s.state.listeners.Delete(name)
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *ListenerController) handleCreate(t *TaskCreate) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener != nil {
-		t.Result <- fmt.Errorf("listener %v is already created", name)
+	if value.listener != nil {
+		t.result <- fmt.Errorf("listener %v is already created", name)
 		return
 	}
 
-	switch config := value.Config.(type) {
+	switch config := value.config.(type) {
 	case *config.ListenerTcp:
 		switch config.Kind() {
 
 		case apitcp.Kind():
 			listener, err := apitcp.NewListener(name, config.Port, s.plane)
 			if err != nil {
-				t.Result <- err
+				t.result <- err
 				return
 			}
-			value.Listener = listener
-			t.Result <- nil
+			value.listener = listener
+			t.result <- nil
 
 		case lsptcp.Kind():
 			listener, err := lsptcp.NewListener(name, config.Port, s.plane)
 			if err != nil {
-				t.Result <- err
+				t.result <- err
 				return
 			}
-			value.Listener = listener
-			t.Result <- nil
+			value.listener = listener
+			t.result <- nil
 
 		default:
-			t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
+			t.result <- fmt.Errorf("unhandled listener %T %v", config, config)
 		}
 
 	default:
-		t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
+		t.result <- fmt.Errorf("unhandled listener %T %v", config, config)
 	}
 }
 
 func (s *ListenerController) handleDelete(t *TaskDelete) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener == nil {
-		t.Result <- fmt.Errorf("listener %v is not created", name)
+	if value.listener == nil {
+		t.result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-	if value.CancelFunc != nil {
-		t.Result <- fmt.Errorf("listener %v is running", name)
+	if value.cancelFunc != nil {
+		t.result <- fmt.Errorf("listener %v is running", name)
 		return
 	}
 
-	value.Listener = nil
-	t.Result <- nil
+	value.listener = nil
+	t.result <- nil
 }
 
 func (s *ListenerController) handleStart(t *TaskStart) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener == nil {
-		t.Result <- fmt.Errorf("listener %v is not created", name)
+	if value.listener == nil {
+		t.result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	value.CancelFunc = cancel
+	value.cancelFunc = cancel
 
 	go func(listener listener.Listener) {
 		listener.Listen(ctx)
 		// avoid race conditions
 		s.Stop(listener.Name())
-	}(value.Listener)
+	}(value.listener)
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *ListenerController) handleStop(t *TaskStop) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener == nil {
-		t.Result <- fmt.Errorf("listener %v is not created", name)
+	if value.listener == nil {
+		t.result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-	if value.CancelFunc == nil {
-		t.Result <- fmt.Errorf("listener %v is not running", name)
+	if value.cancelFunc == nil {
+		t.result <- fmt.Errorf("listener %v is not running", name)
 		return
 	}
 
-	value.Clients.Range(func(key client.Client, value struct{}) bool {
+	value.clients.Range(func(key client.Client, value struct{}) bool {
 		s.plane.Client().Stop(key)
 		s.plane.Client().DeleteSilent(key)
 		return true
 	})
 
-	value.CancelFunc()
-	value.CancelFunc = nil
+	value.cancelFunc()
+	value.cancelFunc = nil
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *ListenerController) handleClientAdd(t *TaskClientAdd) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener == nil {
-		t.Result <- fmt.Errorf("listener %v is not created", name)
+	if value.listener == nil {
+		t.result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-	if value.CancelFunc == nil {
-		t.Result <- fmt.Errorf("listener %v is not running", name)
+	if value.cancelFunc == nil {
+		t.result <- fmt.Errorf("listener %v is not running", name)
 		return
 	}
 
-	_, ok = value.Clients.Load(t.Client)
+	_, ok = value.clients.Load(t.client)
 	if ok {
-		t.Result <- fmt.Errorf("listener %v client %v exists", name, t.Client.Name())
+		t.result <- fmt.Errorf("listener %v client %v exists", name, t.client.Name())
 		return
 	}
 
-	value.Clients.Store(t.Client, struct{}{})
+	value.clients.Store(t.client, struct{}{})
 
-	t.Result <- nil
+	t.result <- nil
 }
 
 func (s *ListenerController) handleClientRemove(t *TaskClientRemove) {
-	defer close(t.Result)
-	name := t.Name
+	defer close(t.result)
+	name := t.name
 
-	value, ok := s.state.Listeners.Load(name)
+	value, ok := s.state.listeners.Load(name)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v does not exist", name)
+		t.result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-	if value.Listener == nil {
-		t.Result <- fmt.Errorf("listener %v is not created", name)
+	if value.listener == nil {
+		t.result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-	if value.CancelFunc == nil {
-		t.Result <- fmt.Errorf("listener %v is not running", name)
+	if value.cancelFunc == nil {
+		t.result <- fmt.Errorf("listener %v is not running", name)
 		return
 	}
 
-	_, ok = value.Clients.LoadAndDelete(t.Client)
+	_, ok = value.clients.LoadAndDelete(t.client)
 	if !ok {
-		t.Result <- fmt.Errorf("listener %v client %v does not exist", name, t.Client.Name())
+		t.result <- fmt.Errorf("listener %v client %v does not exist", name, t.client.Name())
 		return
 	}
 
-	t.Result <- nil
+	t.result <- nil
 }
