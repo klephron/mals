@@ -47,7 +47,6 @@ func (s *ModelController) Stop(name string) error {
 }
 
 // func (s *ModelController) TaskExecClient(model string, task model.Task, client client.Client) model.Result {
-
 // }
 
 // func (s *ModelController) TaskGetClient(model string, id uuid.UUID, client client.Client) (Task, error) {

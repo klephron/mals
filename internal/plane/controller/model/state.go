@@ -19,4 +19,5 @@ type ModelValue struct {
 	config     config.Model
 	model      model.Model
 	cancelFunc context.CancelFunc
+	queue      xsync.UMPSCQueue[Task]
 }

@@ -25,7 +25,7 @@ func New() plane.Plane {
 		bus: event.NewEventBus(),
 	}
 
-	plane.client = client.New(plane, plane.bus)
+	plane.client = client.New(plane)
 	plane.listener = listener.New(plane, plane.bus)
 	plane.log = logging.New(plane, plane.bus)
 	plane.model = model.New(plane, plane.bus)
@@ -53,20 +53,20 @@ func (s *Plane) Serve(onReady func()) {
 	var wg sync.WaitGroup
 	var wgReady sync.WaitGroup
 
-	wgReady.Add(4)
+	wgReady.Add(1)
 	{
 		wg.Go(func() {
 			s.client.Serve(func() { wgReady.Done() })
 		})
-		wg.Go(func() {
-			s.listener.Serve(func() { wgReady.Done() })
-		})
-		wg.Go(func() {
-			s.log.Serve(func() { wgReady.Done() })
-		})
-		wg.Go(func() {
-			s.model.Serve(func() { wgReady.Done() })
-		})
+		// wg.Go(func() {
+		// 	s.listener.Serve(func() { wgReady.Done() })
+		// })
+		// wg.Go(func() {
+		// 	s.log.Serve(func() { wgReady.Done() })
+		// })
+		// wg.Go(func() {
+		// 	s.model.Serve(func() { wgReady.Done() })
+		// })
 	}
 	wgReady.Wait()
 
@@ -76,17 +76,21 @@ func (s *Plane) Serve(onReady func()) {
 }
 
 func (s *Plane) Shutdown() error {
-	if err := s.model.Shutdown(); err != nil {
-		return err
-	}
-	if err := s.listener.Shutdown(); err != nil {
-		return err
-	}
+	// if err := s.model.Shutdown(); err != nil {
+	// 	s.Log().Errorf("%v", err)
+	// 	return err
+	// }
+	// if err := s.listener.Shutdown(); err != nil {
+	// 	s.Log().Errorf("%v", err)
+	// 	return err
+	// }
 	if err := s.client.Shutdown(); err != nil {
+		s.Log().Errorf("%v", err)
 		return err
 	}
-	if err := s.log.Shutdown(); err != nil {
-		return err
-	}
+	// if err := s.log.Shutdown(); err != nil {
+	// 	s.Log().Errorf("%v", err)
+	// 	return err
+	// }
 	return nil
 }

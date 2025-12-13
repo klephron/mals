@@ -3,18 +3,20 @@ package client
 import (
 	"context"
 	"mals/internal/client"
-	"mals/internal/plane/event"
+	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type ClientValue struct {
+	rw         sync.RWMutex
 	listener   string
 	cancelFunc context.CancelFunc
 }
 
 type State struct {
-	clients   *xsync.Map[client.Client, *ClientValue]
-	eventChan <-chan event.Event
-	taskChan  chan Task
+	statusCancel context.CancelFunc
+	statusRW     sync.RWMutex
+
+	clients *xsync.Map[client.Client, *ClientValue]
 }
