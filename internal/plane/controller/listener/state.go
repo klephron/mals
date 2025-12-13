@@ -4,19 +4,20 @@ import (
 	"context"
 	"mals/internal/client"
 	"mals/internal/listener"
-	"mals/internal/plane/event"
 	"mals/pkg/config"
+	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type State struct {
-	listeners *xsync.Map[string, *ListenerValue]
-	eventChan <-chan event.Event
-	taskChan  chan Task
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+	listeners    *xsync.Map[string, *ListenerValue]
 }
 
 type ListenerValue struct {
+	rw         sync.RWMutex
 	config     config.Listener
 	listener   listener.Listener
 	cancelFunc context.CancelFunc

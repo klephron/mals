@@ -7,13 +7,11 @@ import (
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/logging"
 	"mals/internal/plane/controller/model"
-	"mals/internal/plane/event"
 	"sync"
 )
 
 type Plane struct {
 	plane.Plane
-	bus      *event.EventBus
 	client   controller.ClientController
 	listener controller.ListenerController
 	log      controller.LogController
@@ -21,14 +19,12 @@ type Plane struct {
 }
 
 func New() plane.Plane {
-	plane := &Plane{
-		bus: event.NewEventBus(),
-	}
+	plane := &Plane{}
 
 	plane.client = client.New(plane)
-	plane.listener = listener.New(plane, plane.bus)
+	plane.listener = listener.New(plane)
 	plane.log = logging.New(plane)
-	plane.model = model.New(plane, plane.bus)
+	plane.model = model.New(plane)
 
 	return plane
 }
@@ -53,37 +49,45 @@ func (s *Plane) Serve(onReady func()) {
 	var wg sync.WaitGroup
 	var wgReady sync.WaitGroup
 
-	wgReady.Add(2)
 	{
-		wg.Go(func() {
-			s.client.Serve(func() { wgReady.Done() })
-		})
-		// wg.Go(func() {
-		// 	s.listener.Serve(func() { wgReady.Done() })
-		// })
+		wgReady.Add(1)
 		wg.Go(func() {
 			s.log.Serve(func() { wgReady.Done() })
 		})
-		// wg.Go(func() {
-		// 	s.model.Serve(func() { wgReady.Done() })
-		// })
 	}
+	{
+		wgReady.Add(1)
+		wg.Go(func() {
+			s.client.Serve(func() { wgReady.Done() })
+		})
+	}
+	{
+		wgReady.Add(1)
+		wg.Go(func() {
+			s.listener.Serve(func() { wgReady.Done() })
+		})
+	}
+	{
+		wgReady.Add(1)
+		wg.Go(func() {
+			s.model.Serve(func() { wgReady.Done() })
+		})
+	}
+
 	wgReady.Wait()
-
 	onReady()
-
 	wg.Wait()
 }
 
 func (s *Plane) Shutdown() error {
-	// if err := s.model.Shutdown(); err != nil {
-	// 	s.Log().Errorf("%v", err)
-	// 	return err
-	// }
-	// if err := s.listener.Shutdown(); err != nil {
-	// 	s.Log().Errorf("%v", err)
-	// 	return err
-	// }
+	if err := s.model.Shutdown(); err != nil {
+		s.Log().Errorf("%v", err)
+		return err
+	}
+	if err := s.listener.Shutdown(); err != nil {
+		s.Log().Errorf("%v", err)
+		return err
+	}
 	if err := s.client.Shutdown(); err != nil {
 		s.Log().Errorf("%v", err)
 		return err

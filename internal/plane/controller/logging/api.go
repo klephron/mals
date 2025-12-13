@@ -24,14 +24,14 @@ func (s *LogController) Shutdown() error {
 	return nil
 }
 
-func (s *LogController) Register(logConfig config.Log) error {
-	name := logConfig.Name()
+func (s *LogController) Register(cfg config.Log) error {
+	name := cfg.Name()
 
 	if _, ok := s.state.logs.Load(name); ok {
 		return fmt.Errorf("log %v exists", name)
 	}
 
-	switch config := logConfig.(type) {
+	switch config := cfg.(type) {
 	case *config.LogFile:
 		s.state.logs.Store(name, &LogValue{
 			rw:      sync.RWMutex{},

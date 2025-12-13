@@ -3,21 +3,22 @@ package model
 import (
 	"context"
 	"mals/internal/model"
-	"mals/internal/plane/event"
 	"mals/pkg/config"
+	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type State struct {
-	models    *xsync.Map[string, *ModelValue]
-	eventChan <-chan event.Event
-	taskChan  chan Task
-}
-
 type ModelValue struct {
+	rw         sync.RWMutex
 	config     config.Model
 	model      model.Model
 	cancelFunc context.CancelFunc
-	queue      xsync.UMPSCQueue[Task]
+}
+
+type State struct {
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+
+	models *xsync.Map[string, *ModelValue]
 }

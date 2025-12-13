@@ -8,7 +8,7 @@ import (
 func main() {
 	params := argParse()
 
-	_, err := configLoad(&params)
+	config, err := configLoad(&params)
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +26,7 @@ func main() {
 			}
 		}()
 
-		// configInit(config, plane)
-		// configLog(config, plane)
+		configInit(config, plane)
+		configLog(config, plane)
 	})
 }
