@@ -37,6 +37,7 @@ func (s *ModelController) Register(cfg config.Model) error {
 			rw:         sync.RWMutex{},
 			config:     cfg,
 			model:      nil,
+			queue:      nil,
 			cancelFunc: nil,
 		})
 	default:
@@ -89,6 +90,7 @@ func (s *ModelController) Create(name string) error {
 			return err
 		}
 		value.model = model
+		value.queue = newTaskQueue(value.model)
 
 	default:
 		return fmt.Errorf("unhandled model %T %v", settings, settings)
@@ -115,6 +117,7 @@ func (s *ModelController) Delete(name string) error {
 	}
 
 	value.model = nil
+	value.queue = nil
 	value.rw.Unlock()
 
 	return nil
@@ -136,11 +139,26 @@ func (s *ModelController) Start(name string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	value.cancelFunc = cancel
+
 	model := value.model
+	queue := value.queue
+
 	value.rw.Unlock()
 
 	go func() {
-		model.Serve(ctx)
+		go func() {
+			err := model.Serve(ctx)
+			if err != nil {
+				s.plane.Log().Errorf("%v", err)
+			}
+			cancel()
+		}()
+
+		err := queue.serve(ctx, 1)
+		if err != nil {
+			s.plane.Log().Errorf("%v", err)
+		}
+
 		s.Stop(model.Name())
 	}()
 

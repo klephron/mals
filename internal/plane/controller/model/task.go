@@ -26,15 +26,13 @@ type TaskQueue struct {
 }
 
 func newTaskQueue(model model.Model) *TaskQueue {
-	tq := &TaskQueue{
+	return &TaskQueue{
 		rw:     sync.RWMutex{},
 		mapped: xsync.NewMap[uuid.UUID, *TaskRequest](),
 		queued: nil,
 		ctx:    nil,
 		model:  model,
 	}
-
-	return tq
 }
 
 func (s *TaskQueue) serve(ctx context.Context, workers int) error {
