@@ -20,8 +20,8 @@ type ClientController struct {
 func New(plane plane.Plane) *ClientController {
 	return &ClientController{
 		state: State{
-			statusCancel: nil,
 			statusRW:     sync.RWMutex{},
+			statusCancel: nil,
 			clients:      xsync.NewMap[client.Client, *ClientValue](),
 		},
 		plane: plane,

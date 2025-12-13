@@ -51,11 +51,16 @@ func (s *ClientController) delete(client client.Client, notify bool) error {
 	if !ok {
 		return fmt.Errorf("client %v does not exist", name)
 	}
+
+	value.rw.RLock()
+
 	if value.cancelFunc != nil {
+		value.rw.RUnlock()
 		return fmt.Errorf("client %v is running", name)
 	}
 
 	s.state.clients.Delete(client)
+	value.rw.RUnlock()
 
 	if notify {
 		if err := s.plane.Listener().ClientRemove(value.listener, client); err != nil {
@@ -112,6 +117,7 @@ func (s *ClientController) Stop(client client.Client) error {
 	}
 
 	value.rw.Lock()
+
 	if value.cancelFunc == nil {
 		value.rw.Unlock()
 		return fmt.Errorf("client %v is not running", name)

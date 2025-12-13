@@ -15,8 +15,8 @@ type ClientValue struct {
 }
 
 type State struct {
-	statusCancel context.CancelFunc
 	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
 
 	clients *xsync.Map[client.Client, *ClientValue]
 }
