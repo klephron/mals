@@ -46,6 +46,20 @@ func configInit(config *config.Config, plane plane.Plane) {
 			plane.Log().Errorf("%v", err)
 		}
 	}
+	for _, model := range config.Models {
+		if model == nil {
+			continue
+		}
+		if err := plane.Model().Register(*model); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+		if err := plane.Model().Create(model.Name); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+		if err := plane.Model().Start(model.Name); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+	}
 	for _, listener := range config.Listeners {
 		if err := plane.Listener().Register(listener); err != nil {
 			plane.Log().Errorf("%v", err)

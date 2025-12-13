@@ -7,15 +7,15 @@ import (
 
 func (o *Config) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Loggers   []*json.RawMessage `json:"loggers"`
-		Listeners []*json.RawMessage `json:"listeners"`
-		Models    []*Model           `json:"models"`
-		Lsps      []*Lsp             `json:"lsps"`
-		Usages    []*Usage           `json:"usages"`
+		Loggers   []json.RawMessage `json:"loggers"`
+		Listeners []json.RawMessage `json:"listeners"`
+		Models    []*Model          `json:"models"`
+		Lsps      []*Lsp            `json:"lsps"`
+		Usages    []*Usage          `json:"usages"`
 	}
 
-	t.Loggers = []*json.RawMessage{}
-	t.Listeners = []*json.RawMessage{}
+	t.Loggers = []json.RawMessage{}
+	t.Listeners = []json.RawMessage{}
 	t.Models = []*Model{}
 	t.Lsps = []*Lsp{}
 	t.Usages = []*Usage{}
@@ -169,11 +169,11 @@ func (o *Condition) UnmarshalJSON(data []byte) error {
 
 func (o *Workflow) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Name  string             `json:"name"`
-		Steps []*json.RawMessage `json:"steps"`
+		Name  string            `json:"name"`
+		Steps []json.RawMessage `json:"steps"`
 	}
 
-	t.Steps = []*json.RawMessage{}
+	t.Steps = []json.RawMessage{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
@@ -194,7 +194,7 @@ func (o *Workflow) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
+func logUnmarshalJSON(data json.RawMessage) (Log, error) {
 	var t struct {
 		Name  string  `json:"name"`
 		Kind  string  `json:"kind"`
@@ -202,7 +202,7 @@ func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
 		File  *string `json:"file"`
 	}
 
-	if err := json.Unmarshal(*data, &t); err != nil {
+	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 
@@ -222,7 +222,7 @@ func logUnmarshalJSON(data *json.RawMessage) (Log, error) {
 	}
 }
 
-func listenerUnmarshalJSON(data *json.RawMessage) (Listener, error) {
+func listenerUnmarshalJSON(data json.RawMessage) (Listener, error) {
 	var t struct {
 		Name string `json:"name"`
 		Kind string `json:"kind"`
@@ -230,7 +230,7 @@ func listenerUnmarshalJSON(data *json.RawMessage) (Listener, error) {
 		Port *int   `json:"port"`
 	}
 
-	if err := json.Unmarshal(*data, &t); err != nil {
+	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 
@@ -255,7 +255,7 @@ func listenerUnmarshalJSON(data *json.RawMessage) (Listener, error) {
 	}
 }
 
-func stepUnmarshalJSON(data *json.RawMessage) (Step, error) {
+func stepUnmarshalJSON(data json.RawMessage) (Step, error) {
 	var t struct {
 		Name       string       `json:"name"`
 		Conditions []*Condition `json:"conditions"`
@@ -267,7 +267,7 @@ func stepUnmarshalJSON(data *json.RawMessage) (Step, error) {
 
 	t.Conditions = []*Condition{}
 
-	if err := json.Unmarshal(*data, &t); err != nil {
+	if err := json.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 

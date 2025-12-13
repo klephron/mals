@@ -9,4 +9,5 @@ type Plane interface {
 	Client() controller.ClientController
 	Listener() controller.ListenerController
 	Log() controller.LogController
+	Model() controller.ModelController
 }
