@@ -12,13 +12,12 @@ type Result struct {
 }
 
 type Task struct {
-	id     uuid.UUID
-	text   string
-	result chan Result
+	id   uuid.UUID
+	text string
 }
 
 func NewTask(text string) *Task {
-	return &Task{id: uuid.New(), text: text, result: make(chan Result, 1)}
+	return &Task{id: uuid.New(), text: text}
 }
 
 type Model interface {
