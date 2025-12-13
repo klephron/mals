@@ -12,17 +12,17 @@ type Result struct {
 }
 
 type Task struct {
-	id   uuid.UUID
-	text string
+	Id   uuid.UUID
+	Text string
 }
 
 func NewTask(text string) *Task {
-	return &Task{id: uuid.New(), text: text}
+	return &Task{Id: uuid.New(), Text: text}
 }
 
 type Model interface {
 	Name() string
 	Kind() string
 	Serve(ctx context.Context) error
-	Submit(task Task) Result
+	Execute(task Task, ctx context.Context) Result
 }

@@ -37,7 +37,7 @@ func (s *ModelOpenAI) Serve(ctx context.Context) error {
 	return nil
 }
 
-func (s *ModelOpenAI) Submit(task model.Task) model.Result {
+func (s *ModelOpenAI) Execute(task model.Task, ctx context.Context) model.Result {
 	return model.Result{
 		Text:  "",
 		Error: fmt.Errorf("connection is undefined"),
