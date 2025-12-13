@@ -17,11 +17,11 @@ type ModelOpenAI struct {
 	spec ModelOpenAISpec
 }
 
-func New(name string, spec ModelOpenAISpec) *ModelOpenAI {
+func New(name string, spec ModelOpenAISpec) (*ModelOpenAI, error) {
 	return &ModelOpenAI{
 		name: name,
 		spec: spec,
-	}
+	}, nil
 }
 
 func (s *ModelOpenAI) Name() string {

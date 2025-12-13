@@ -9,7 +9,7 @@ type LspSpec interface {
 	lspspec()
 }
 
-type LspSpecStdio struct {
+type LspSettingsStdio struct {
 	LspSpec
 	Cmd []string
 }

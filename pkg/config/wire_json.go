@@ -76,7 +76,7 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 			return err
 		}
 
-		o.Settings = &ModelSpecOpenAI{
+		o.Settings = &ModelSettingsOpenAI{
 			Url:         ts.Url,
 			MaxTokens:   ts.MaxTokens,
 			Temperature: ts.Temperature,
@@ -114,7 +114,7 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 			return err
 		}
 
-		o.Settings = &LspSpecStdio{
+		o.Settings = &LspSettingsStdio{
 			Cmd: ts.Cmd,
 		}
 

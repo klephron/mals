@@ -79,7 +79,6 @@ func (s *LogController) handleUnregister(t *TaskUnregister) {
 		t.Result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-
 	if value.Log != nil {
 		t.Result <- fmt.Errorf("log %v is already created", name)
 		return
@@ -99,7 +98,6 @@ func (s *LogController) handleCreate(t *TaskCreate) {
 		t.Result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-
 	if value.Log != nil {
 		t.Result <- fmt.Errorf("log %v is already created", name)
 		return
@@ -129,12 +127,10 @@ func (s *LogController) handleDelete(t *TaskDelete) {
 		t.Result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-
 	if value.Log == nil {
 		t.Result <- fmt.Errorf("log %v is not created", name)
 		return
 	}
-
 	if value.Enabled {
 		t.Result <- fmt.Errorf("log %v is running", name)
 		return
@@ -153,7 +149,6 @@ func (s *LogController) handleStart(t *TaskStart) {
 		t.Result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-
 	if value.Log == nil {
 		t.Result <- fmt.Errorf("log %v is not created", name)
 		return
@@ -173,7 +168,6 @@ func (s *LogController) handleStop(t *TaskStop) {
 		t.Result <- fmt.Errorf("log %v does not exist", name)
 		return
 	}
-
 	if value.Log == nil {
 		t.Result <- fmt.Errorf("log %v is not created", name)
 		return

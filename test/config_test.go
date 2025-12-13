@@ -121,7 +121,7 @@ func Test_Unmarshall(t *testing.T) {
 				Models: []*Model{
 					&Model{
 						Name: "1",
-						Settings: &ModelSpecOpenAI{
+						Settings: &ModelSettingsOpenAI{
 							Url:         "something",
 							MaxTokens:   12,
 							Temperature: 1,
@@ -142,7 +142,7 @@ func Test_Unmarshall(t *testing.T) {
 				Models: []*Model{
 					&Model{
 						Name:     "1",
-						Settings: &ModelSpecOpenAI{},
+						Settings: &ModelSettingsOpenAI{},
 					},
 				},
 				Lsps:   []*Lsp{},
@@ -160,7 +160,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps: []*Lsp{
 					&Lsp{
 						Name: "1",
-						Settings: &LspSpecStdio{
+						Settings: &LspSettingsStdio{
 							Cmd: []string{"something", "arg1", "arg2"},
 						},
 					},
@@ -170,7 +170,7 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:  "lsp spec stdio empty cmd",
+			name:  "lsp kind stdio empty cmd",
 			input: []byte(`{"models":[], "lsps":[{"name": "1", "kind": "stdio", "settings": {"cmd": []}}], "usages":[]}`),
 			expected: &Config{
 				Loggers:   []Log{},
@@ -179,7 +179,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps: []*Lsp{
 					&Lsp{
 						Name: "1",
-						Settings: &LspSpecStdio{
+						Settings: &LspSettingsStdio{
 							Cmd: []string{},
 						},
 					},
@@ -189,7 +189,7 @@ func Test_Unmarshall(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:  "lsp spec stdio nil cmd",
+			name:  "lsp kind stdio nil cmd",
 			input: []byte(`{"lsps":[{"name": "1", "kind": "stdio", "settings": {}}]}`),
 			expected: &Config{
 				Loggers:   []Log{},
@@ -198,7 +198,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps: []*Lsp{
 					&Lsp{
 						Name: "1",
-						Settings: &LspSpecStdio{
+						Settings: &LspSettingsStdio{
 							Cmd: []string{},
 						},
 					},

@@ -64,7 +64,6 @@ func (s *ListenerController) handleUnregister(t *TaskUnregister) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener != nil {
 		t.Result <- fmt.Errorf("listener %v is already created", name)
 		return
@@ -84,7 +83,6 @@ func (s *ListenerController) handleCreate(t *TaskCreate) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener != nil {
 		t.Result <- fmt.Errorf("listener %v is already created", name)
 		return
@@ -93,21 +91,24 @@ func (s *ListenerController) handleCreate(t *TaskCreate) {
 	switch config := value.Config.(type) {
 	case *config.ListenerTcp:
 		switch config.Kind() {
+
 		case apitcp.Kind():
-			if listener, err := apitcp.NewListener(name, config.Port, s.plane); err != nil {
+			listener, err := apitcp.NewListener(name, config.Port, s.plane)
+			if err != nil {
 				t.Result <- err
-			} else {
-				value.Listener = listener
-				t.Result <- nil
+				return
 			}
+			value.Listener = listener
+			t.Result <- nil
 
 		case lsptcp.Kind():
-			if listener, err := lsptcp.NewListener(name, config.Port, s.plane); err != nil {
+			listener, err := lsptcp.NewListener(name, config.Port, s.plane)
+			if err != nil {
 				t.Result <- err
-			} else {
-				value.Listener = listener
-				t.Result <- nil
+				return
 			}
+			value.Listener = listener
+			t.Result <- nil
 
 		default:
 			t.Result <- fmt.Errorf("unhandled listener %T %v", config, config)
@@ -127,12 +128,10 @@ func (s *ListenerController) handleDelete(t *TaskDelete) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener == nil {
 		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-
 	if value.CancelFunc != nil {
 		t.Result <- fmt.Errorf("listener %v is running", name)
 		return
@@ -151,7 +150,6 @@ func (s *ListenerController) handleStart(t *TaskStart) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener == nil {
 		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
@@ -179,12 +177,10 @@ func (s *ListenerController) handleStop(t *TaskStop) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener == nil {
 		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-
 	if value.CancelFunc == nil {
 		t.Result <- fmt.Errorf("listener %v is not running", name)
 		return
@@ -211,12 +207,10 @@ func (s *ListenerController) handleClientAdd(t *TaskClientAdd) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener == nil {
 		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-
 	if value.CancelFunc == nil {
 		t.Result <- fmt.Errorf("listener %v is not running", name)
 		return
@@ -242,12 +236,10 @@ func (s *ListenerController) handleClientRemove(t *TaskClientRemove) {
 		t.Result <- fmt.Errorf("listener %v does not exist", name)
 		return
 	}
-
 	if value.Listener == nil {
 		t.Result <- fmt.Errorf("listener %v is not created", name)
 		return
 	}
-
 	if value.CancelFunc == nil {
 		t.Result <- fmt.Errorf("listener %v is not running", name)
 		return

@@ -31,6 +31,7 @@ func New() plane.Plane {
 			Logs:      xsync.NewMap[string, *state.LogValue](),
 			Listeners: xsync.NewMap[string, *state.ListenerValue](),
 			Clients:   xsync.NewMap[c.Client, *state.ClientValue](),
+			Models:    xsync.NewMap[string, *state.ModelValue](),
 		},
 		bus: event.NewEventBus(),
 	}

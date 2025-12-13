@@ -56,7 +56,6 @@ func (s *ClientController) handleDelete(t *TaskDelete) {
 		t.Result <- fmt.Errorf("client %v does not exist", name)
 		return
 	}
-
 	if value.CancelFunc != nil {
 		t.Result <- fmt.Errorf("client %v is running", name)
 		return
@@ -83,7 +82,6 @@ func (s *ClientController) handleStart(t *TaskStart) {
 		t.Result <- fmt.Errorf("client %v does not exist", name)
 		return
 	}
-
 	if value.CancelFunc != nil {
 		t.Result <- fmt.Errorf("client %v is running", name)
 		return
@@ -112,7 +110,6 @@ func (s *ClientController) handleStop(t *TaskStop) {
 		t.Result <- fmt.Errorf("client %v does not exist", name)
 		return
 	}
-
 	if value.CancelFunc == nil {
 		t.Result <- fmt.Errorf("client %v is not running", name)
 		return

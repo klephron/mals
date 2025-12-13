@@ -1,16 +1,16 @@
 package config
 
-type ModelSpec interface {
+type ModelSettings interface {
 	modelspec()
 }
 
 type Model struct {
 	Name     string
-	Settings ModelSpec
+	Settings ModelSettings
 }
 
-type ModelSpecOpenAI struct {
-	ModelSpec
+type ModelSettingsOpenAI struct {
+	ModelSettings
 	Url         string
 	MaxTokens   int
 	Temperature float32
