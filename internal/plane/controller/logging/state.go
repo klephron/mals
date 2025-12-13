@@ -9,9 +9,9 @@ import (
 )
 
 type State struct {
-	logs     *xsync.Map[string, *LogValue]
-	external <-chan event.Event
-	internal chan Task
+	logs      *xsync.Map[string, *LogValue]
+	eventChan <-chan event.Event
+	taskChan  chan Task
 }
 
 type LogValue struct {

@@ -12,8 +12,8 @@ import (
 
 type State struct {
 	listeners *xsync.Map[string, *ListenerValue]
-	external  <-chan event.Event
-	internal  chan Task
+	eventChan <-chan event.Event
+	taskChan  chan Task
 }
 
 type ListenerValue struct {

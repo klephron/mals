@@ -10,9 +10,9 @@ import (
 )
 
 type State struct {
-	models   *xsync.Map[string, *ModelValue]
-	external <-chan event.Event
-	internal chan Task
+	models    *xsync.Map[string, *ModelValue]
+	eventChan <-chan event.Event
+	taskChan  chan Task
 }
 
 type ModelValue struct {

@@ -14,7 +14,7 @@ type ClientValue struct {
 }
 
 type State struct {
-	clients  *xsync.Map[client.Client, *ClientValue]
-	external <-chan event.Event
-	internal chan Task
+	clients   *xsync.Map[client.Client, *ClientValue]
+	eventChan <-chan event.Event
+	taskChan  chan Task
 }

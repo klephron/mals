@@ -21,9 +21,9 @@ type ModelController struct {
 func New(plane plane.Plane, bus *event.EventBus) *ModelController {
 	return &ModelController{
 		state: State{
-			models:   xsync.NewMap[string, *ModelValue](),
-			external: nil,
-			internal: make(chan Task),
+			models:    xsync.NewMap[string, *ModelValue](),
+			eventChan: nil,
+			taskChan:  make(chan Task),
 		},
 		plane: plane,
 		bus:   bus,
@@ -31,29 +31,29 @@ func New(plane plane.Plane, bus *event.EventBus) *ModelController {
 }
 
 func (s *ModelController) Serve(onReady func()) error {
-	if s.state.external != nil {
+	if s.state.eventChan != nil {
 		err := fmt.Errorf("%T is already serving", s)
 		s.plane.Log().Errorf("%v", err)
 		return err
 	}
 
-	s.state.external = s.bus.Subscribe()
+	s.state.eventChan = s.bus.Subscribe()
 	defer func() {
-		s.bus.Unsubscribe(s.state.external)
-		s.state.external = nil
+		s.bus.Unsubscribe(s.state.eventChan)
+		s.state.eventChan = nil
 	}()
 
 	onReady()
 
 	for {
 		select {
-		case e := <-s.state.external:
+		case e := <-s.state.eventChan:
 			switch e := e.(type) {
 			default:
 				s.plane.Log().Warnf("%T unhandled message %T, %v", s, e, e)
 			}
 
-		case t := <-s.state.internal:
+		case t := <-s.state.taskChan:
 			switch t := t.(type) {
 			case *TaskShutdown:
 				s.handleShutdown(t)
