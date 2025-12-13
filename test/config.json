@@ -1,7 +1,7 @@
 {
   "loggers": [
     {
-      "name": "l1",
+      "name": "stderr",
       "kind": "file",
       "file": "/dev/stderr"
     }
@@ -12,6 +12,17 @@
       "kind": "lsp",
       "ipc": "tcp",
       "port": 9651
+    }
+  ],
+  "models": [
+    {
+      "name": "Llama-3.2-1B-Instruct-Q6_K",
+      "kind": "openai",
+      "settings": {
+        "url": "http://localhost:9652",
+        "max_tokens": 250,
+        "temperature": 0.5
+      }
     }
   ]
 }

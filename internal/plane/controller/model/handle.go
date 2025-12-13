@@ -87,6 +87,7 @@ func (s *ModelController) handleCreate(t *TaskCreate) {
 	switch settings := value.Config.Settings.(type) {
 	case *config.ModelSettingsOpenAI:
 		model, err := openai.New(name, openai.ModelOpenAISpec{
+			Url:         settings.Url,
 			MaxTokens:   settings.MaxTokens,
 			Temperature: settings.Temperature,
 		})

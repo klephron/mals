@@ -7,6 +7,7 @@ import (
 )
 
 type ModelOpenAISpec struct {
+	Url         string
 	MaxTokens   int
 	Temperature float32
 }
