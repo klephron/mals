@@ -19,9 +19,9 @@ type ModelController interface {
 	Start(name string) error
 	Stop(name string) error
 
-	TaskExecClient(modelName string, task model.Task, client client.Client) model.Result
-	TaskGetClient(modelName string, id uuid.UUID, client client.Client) (model.Task, error)
-	TaskGetAllClient(modelName string, client client.Client) ([]model.Task, error)
-	TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (model.Task, error)
-	TaskCancelAllClient(modelName string, client client.Client) ([]model.Task, error)
+	TaskExecClient(modelName string, task *model.Task, client client.Client) model.Result
+	TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
+	TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error)
+	TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
+	TaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error)
 }

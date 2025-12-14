@@ -13,7 +13,7 @@ import (
 
 type TaskRequest struct {
 	client client.Client
-	task   model.Task
+	task   *model.Task
 	result chan model.Result
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -88,7 +88,7 @@ func (s *TaskQueue) worker() {
 	}
 }
 
-func (s *TaskQueue) taskExecClient(task model.Task, client client.Client) model.Result {
+func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) model.Result {
 	s.rw.RLock()
 
 	if s.ctx == nil {
@@ -115,17 +115,17 @@ func (s *TaskQueue) taskExecClient(task model.Task, client client.Client) model.
 	return result
 }
 
-func (s *TaskQueue) taskCancelClient(id uuid.UUID, client client.Client) (model.Task, error) {
+func (s *TaskQueue) taskCancelClient(id uuid.UUID, client client.Client) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
 	if !ok || request.client != client {
-		return model.Task{}, fmt.Errorf("task %v not found", id)
+		return nil, fmt.Errorf("task %v not found", id)
 	}
 	request.cancel()
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskCancelAllClient(client client.Client) ([]model.Task, error) {
-	ids := make([]model.Task, 0)
+func (s *TaskQueue) taskCancelAllClient(client client.Client) ([]*model.Task, error) {
+	ids := make([]*model.Task, 0)
 	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
 		if value.client != client {
 			return true
@@ -137,24 +137,24 @@ func (s *TaskQueue) taskCancelAllClient(client client.Client) ([]model.Task, err
 	return ids, nil
 }
 
-func (s *TaskQueue) taskGetClient(id uuid.UUID, client client.Client) (model.Task, error) {
+func (s *TaskQueue) taskGetClient(id uuid.UUID, client client.Client) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
 	if !ok || request.client != client {
-		return model.Task{}, fmt.Errorf("task %v not found", id)
+		return nil, fmt.Errorf("task %v not found", id)
 	}
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskGet(id uuid.UUID) (model.Task, error) {
+func (s *TaskQueue) taskGet(id uuid.UUID) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
 	if !ok {
-		return model.Task{}, fmt.Errorf("task %v not found", id)
+		return nil, fmt.Errorf("task %v not found", id)
 	}
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskGetAllClient(client client.Client) []model.Task {
-	tasks := make([]model.Task, 0)
+func (s *TaskQueue) taskGetAllClient(client client.Client) []*model.Task {
+	tasks := make([]*model.Task, 0)
 	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
 		if value.client != client {
 			return true
@@ -165,8 +165,8 @@ func (s *TaskQueue) taskGetAllClient(client client.Client) []model.Task {
 	return tasks
 }
 
-func (s *TaskQueue) taskGetAll() []model.Task {
-	tasks := make([]model.Task, 0)
+func (s *TaskQueue) taskGetAll() []*model.Task {
+	tasks := make([]*model.Task, 0)
 	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
 		tasks = append(tasks, value.task)
 		return true

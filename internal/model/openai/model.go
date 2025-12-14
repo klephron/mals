@@ -2,8 +2,12 @@ package openai
 
 import (
 	"context"
-	"fmt"
 	"mals/internal/model"
+	"mals/internal/plane"
+
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
 )
 
 type ModelOpenAISpec struct {
@@ -15,13 +19,25 @@ type ModelOpenAISpec struct {
 type ModelOpenAI struct {
 	model.Model
 	name string
-	spec ModelOpenAISpec
+
+	client      openai.Client
+	maxTokens   param.Opt[int64]
+	temperature param.Opt[float64]
+
+	plane plane.Plane
 }
 
-func New(name string, spec ModelOpenAISpec) (*ModelOpenAI, error) {
+func New(name string, spec ModelOpenAISpec, plane plane.Plane) (*ModelOpenAI, error) {
+	client := openai.NewClient(option.WithBaseURL(spec.Url), option.WithAPIKey("sk-dummy"))
+	maxTokens := openai.Int(int64(spec.MaxTokens))
+	temperature := openai.Float(float64(spec.Temperature))
+
 	return &ModelOpenAI{
-		name: name,
-		spec: spec,
+		name:        name,
+		client:      client,
+		maxTokens:   maxTokens,
+		temperature: temperature,
+		plane:       plane,
 	}, nil
 }
 
@@ -34,12 +50,45 @@ func (s *ModelOpenAI) Kind() string {
 }
 
 func (s *ModelOpenAI) Serve(ctx context.Context) error {
+	<-ctx.Done()
 	return nil
 }
 
-func (s *ModelOpenAI) Execute(task model.Task, ctx context.Context) model.Result {
+func (s *ModelOpenAI) Execute(task *model.Task, ctx context.Context) model.Result {
+
+	s.plane.Log().Infof("%T %v task %v: received", s, s.Name(), task)
+
+	schema := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+		Name:   task.SchemaName,
+		Schema: task.Schema,
+		Strict: openai.Bool(task.SchemaStrict),
+	}
+
+	resp, err := s.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(task.Text),
+		},
+		MaxTokens:   s.maxTokens,
+		Temperature: s.temperature,
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
+				JSONSchema: schema,
+			},
+		},
+	})
+
+	s.plane.Log().Infof("%T %v task %v: processed", s, s.Name(), task)
+
+	if err != nil {
+		s.plane.Log().Warnf("%T %v task %v: ", s, s.Name(), task.Id, err)
+		return model.Result{
+			Text:  "",
+			Error: err,
+		}
+	}
+
 	return model.Result{
-		Text:  "",
-		Error: fmt.Errorf("connection is undefined"),
+		Text:  resp.Choices[0].Message.Content,
+		Error: nil,
 	}
 }
