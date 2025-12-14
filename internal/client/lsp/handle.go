@@ -2,7 +2,7 @@ package lsp
 
 import (
 	"mals/internal/jsonrpc"
-	"mals/internal/lsp/protocol"
+	// "mals/internal/lsp/protocol"
 )
 
 func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
