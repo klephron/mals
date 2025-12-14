@@ -3,9 +3,13 @@ package model
 import (
 	"context"
 	"fmt"
+	"mals/internal/client"
+	"mals/internal/model"
 	"mals/internal/model/openai"
 	"mals/pkg/config"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 func (s *ModelController) Shutdown() error {
@@ -191,25 +195,85 @@ func (s *ModelController) Stop(name string) error {
 	return nil
 }
 
-// func (s *ModelController) TaskExecClient(model string, task model.Task, client client.Client) model.Result {
-// }
+func (s *ModelController) TaskExecClient(modelName string, task model.Task, client client.Client) model.Result {
+	value, ok := s.state.models.Load(modelName)
+	if !ok {
+		return model.Result{Error: fmt.Errorf("model %v does not exist", modelName)}
+	}
 
-// func (s *ModelController) TaskGetClient(model string, id uuid.UUID, client client.Client) (Task, error) {
+	value.rw.RLock()
+	defer value.rw.RUnlock()
 
-// }
+	if value.model == nil {
+		return model.Result{Error: fmt.Errorf("model %v is not created", modelName)}
+	}
+	if value.cancelFunc == nil {
+		return model.Result{Error: fmt.Errorf("model %v is not running", modelName)}
+	}
 
-// func (s *ModelController) TaskGetAllClient(model string, client client.Client) ([]Task, error) {
+	return value.queue.taskExecClient(task, client)
+}
 
-// }
+func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client client.Client) (model.Task, error) {
+	value, ok := s.state.models.Load(modelName)
+	if !ok {
+		return model.Task{}, fmt.Errorf("model %v does not exist", modelName)
+	}
 
-// func (s *ModelController) TaskGetAllClientName(model string, client string) ([]Task, error) {
+	value.rw.RLock()
+	defer value.rw.RUnlock()
 
-// }
+	if value.model == nil {
+		return model.Task{}, fmt.Errorf("model %v is not created", modelName)
+	}
 
-// func (s *ModelController) TaskDeleteClient(model string, id uuid.UUID, client client.Client) (Task, error) {
+	return value.queue.taskGetClient(id, client)
+}
 
-// }
+func (s *ModelController) TaskGetAllClient(modelName string, client client.Client) ([]model.Task, error) {
+	value, ok := s.state.models.Load(modelName)
+	if !ok {
+		return nil, fmt.Errorf("model %v does not exist", modelName)
+	}
 
-// func (s *ModelController) TaskDeleteAllClient(model string, id uuid.UUID, client client.Client) ([]Task, error) {
+	value.rw.RLock()
+	defer value.rw.RUnlock()
 
-// }
+	if value.model == nil {
+		return nil, fmt.Errorf("model %v is not created", modelName)
+	}
+
+	return value.queue.taskGetAllClient(client), nil
+}
+
+func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (model.Task, error) {
+	value, ok := s.state.models.Load(modelName)
+	if !ok {
+		return model.Task{}, fmt.Errorf("model %v does not exist", modelName)
+	}
+
+	value.rw.RLock()
+	defer value.rw.RUnlock()
+
+	if value.model == nil {
+		return model.Task{}, fmt.Errorf("model %v is not created", modelName)
+	}
+
+	return value.queue.taskCancelClient(id, client)
+}
+
+func (s *ModelController) TaskCancelAllClient(modelName string, client client.Client) ([]model.Task, error) {
+	value, ok := s.state.models.Load(modelName)
+	if !ok {
+		return nil, fmt.Errorf("model %v does not exist", modelName)
+	}
+
+	value.rw.RLock()
+	defer value.rw.RUnlock()
+
+	if value.model == nil {
+		return nil, fmt.Errorf("model %v is not created", modelName)
+	}
+
+	return value.queue.taskCancelAllClient(client)
+}
