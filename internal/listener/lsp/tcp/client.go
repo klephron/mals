@@ -13,7 +13,7 @@ type ClientLspTcp struct {
 	conn net.Conn
 }
 
-func NewClient(plane plane.Plane, conn net.Conn) *ClientLspTcp {
+func newClient(plane plane.Plane, conn net.Conn) *ClientLspTcp {
 	client := &ClientLspTcp{
 		ClientLsp: *lsp.New(plane, bufio.NewScanner(conn), bufio.NewWriter(conn)),
 		conn:      conn,

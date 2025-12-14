@@ -62,15 +62,24 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 				s.plane.Log().Infof("%s: closed", s.Name())
 				return nil
 			}
-			s.plane.Log().Warnf("%s: %v", s.Name(), err)
+			s.plane.Log().Errorf("%s: %v", s.Name(), err)
 			continue
 		}
 
 		s.plane.Log().Infof("%s: accepted %v", s.Name(), conn.RemoteAddr())
 
-		client := NewClient(s.plane, conn)
+		client := newClient(s.plane, conn)
 
-		s.plane.Client().Own(client, s)
-		s.plane.Client().Start(client)
+		if err := s.plane.Client().Own(client, s); err != nil {
+			s.plane.Log().Warnf("%s: %v", s.Name(), err)
+			continue
+		}
+
+		if err := s.plane.Client().Start(client); err != nil {
+			s.plane.Log().Warnf("%s: %v", s.Name(), err)
+			continue
+		}
+
+		s.plane.Log().Infof("%s: started %v", s.Name(), conn.RemoteAddr())
 	}
 }
