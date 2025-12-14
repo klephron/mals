@@ -20,64 +20,64 @@ func DecodeMessage(data []byte) (Message, error) {
 		return nil, err
 	}
 
-	var msg messageWire
+	var wire messageWire
 
-	if err := json.Unmarshal(body, &msg); err != nil {
+	if err := json.Unmarshal(body, &wire); err != nil {
 		return nil, fmt.Errorf("jsonrpc unmarshalling: %w", err)
 	}
 
-	if msg.Method == nil {
-		if msg.Id == nil {
+	if wire.Method == nil {
+		if wire.Id == nil {
 			return nil, fmt.Errorf("response must have id")
 		}
 		response := &Response{
-			Id: *msg.Id,
+			Id: *wire.Id,
 		}
-		response.Error = msg.Error
-		response.Result = msg.Result
+		response.Error = wire.Error
+		response.Result = wire.Result
 		return response, nil
 	}
 
-	if msg.Id == nil {
+	if wire.Id == nil {
 		notification := &Notification{
-			Method: *msg.Method,
+			Method: *wire.Method,
 		}
-		notification.Params = msg.Params
+		notification.Params = wire.Params
 
 		return notification, nil
 	}
 
 	request := &Request{
-		Id:     *msg.Id,
-		Method: *msg.Method,
+		Id:     *wire.Id,
+		Method: *wire.Method,
 	}
-	request.Params = msg.Params
+	request.Params = wire.Params
 
 	return request, nil
 }
 
 func EncodeMessage(message Message) ([]byte, error) {
-	msg := messageWire{
+	wire := messageWire{
 		VersionTag: "2.0",
 	}
 
-	switch typed := message.(type) {
+	switch message := message.(type) {
 	case *Request:
-		msg.Id = &typed.Id
-		msg.Method = &typed.Method
-		msg.Params = typed.Params
+		wire.Id = &message.Id
+		wire.Method = &message.Method
+		wire.Params = message.Params
 	case *Notification:
-		msg.Method = &typed.Method
-		msg.Params = typed.Params
+		wire.Method = &message.Method
+		wire.Params = message.Params
 	case *Response:
-		msg.Id = &typed.Id
-		msg.Result = typed.Result
-		msg.Error = typed.Error
+		wire.Id = &message.Id
+		wire.Result = message.Result
+		wire.Error = message.Error
 	default:
-		return nil, fmt.Errorf("encode unhandled type %T", typed)
+		return nil, fmt.Errorf("encode unhandled type %T", message)
 	}
 
-	body, err := json.Marshal(msg)
+	body, err := json.Marshal(wire)
 	if err != nil {
 		return nil, fmt.Errorf("jsonrpc marshalling: %w", err)
 	}
