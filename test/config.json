@@ -2,6 +2,7 @@
   "loggers": [
     {
       "name": "stderr",
+      "level": "debug",
       "kind": "file",
       "file": "/dev/stderr"
     }

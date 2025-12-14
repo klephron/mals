@@ -209,8 +209,7 @@ func logUnmarshalJSON(data json.RawMessage) (Log, error) {
 	switch t.Kind {
 	case "file":
 		file := &LogFile{
-			LogGeneric: NewLogGeneric(t.Name),
-			Level:      t.Level,
+			LogGeneric: NewLogGeneric(t.Name, t.Level),
 		}
 		if t.File != nil {
 			file.File = *t.File

@@ -50,7 +50,12 @@ func (s *ModelOpenAI) Kind() string {
 }
 
 func (s *ModelOpenAI) Serve(ctx context.Context) error {
+	s.plane.Log().Infof("%T %v: started", s, s.Name())
+
 	<-ctx.Done()
+
+	s.plane.Log().Infof("%T %v: done", s, s.Name())
+
 	return nil
 }
 

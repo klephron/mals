@@ -81,7 +81,7 @@ func (s *LogController) Create(name string) error {
 
 	switch config := value.config.(type) {
 	case *config.LogFile:
-		log, err := file.Open(config.File, config.Level)
+		log, err := file.Open(config.File, config.Level())
 		if err != nil {
 			return err
 		}
