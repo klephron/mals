@@ -7,6 +7,7 @@ import (
 	"mals/internal/client"
 	"mals/internal/jsonrpc"
 	"mals/internal/plane"
+	"strings"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
@@ -124,8 +125,22 @@ func (s *ClientLsp) workspaceAdd(uri string, name string) {
 
 func (s *ClientLsp) workspaceDelete(uri string) {
 	workspace, ok := s.workspaces.LoadAndDelete(uri)
+
 	if !ok {
 		s.plane.Log().Warnf("%s: workspace by uri %s is not present", s.Name(), uri)
 	}
 	s.plane.Log().Infof("%s: workspace %s deleted", s.Name(), workspace.name)
+}
+
+func (s *ClientLsp) workspaceFindAll(uri string) []*Workspace {
+	workspaces := make([]*Workspace, 0)
+
+	s.workspaces.Range(func(key string, value *Workspace) bool {
+		if strings.HasPrefix(uri, key) {
+			workspaces = append(workspaces, value)
+		}
+		return true
+	})
+
+	return workspaces
 }

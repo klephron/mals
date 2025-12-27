@@ -78,33 +78,70 @@ func (s *ClientLsp) handleInitialized(_ jsonrpc.Message) {
 }
 
 func (s *ClientLsp) handleTextDocumentDidOpen(msg jsonrpc.Message) {
-	_, ok := msg.(*jsonrpc.Notification)
+	ntf, ok := msg.(*jsonrpc.Notification)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Notification](s)
 		return
 	}
 
-	// _params, _ := rawDecode[protocol.DidOpenTextDocumentParams](s, ntf.Params)
+	params, _ := rawDecode[protocol.DidOpenTextDocumentParams](s, ntf.Params)
+
+	workspaces := s.workspaceFindAll(params.TextDocument.URI)
+	for _, workspace := range workspaces {
+		s.documentAdd(workspace, params.TextDocument.URI, &params.TextDocument.Text)
+	}
 }
 
 func (s *ClientLsp) handleTextDocumentDidChange(msg jsonrpc.Message) {
-	_, ok := msg.(*jsonrpc.Notification)
+	ntf, ok := msg.(*jsonrpc.Notification)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Notification](s)
 		return
 	}
 
-	// params, _ := rawDecode[protocol.DidChangeTextDocumentParams](s, ntf.Params)
+	params, _ := rawDecode[protocol.DidChangeTextDocumentParams](s, ntf.Params)
+
+	workspaces := s.workspaceFindAll(params.TextDocument.URI)
+	for _, workspace := range workspaces {
+		document := s.documentGet(workspace, params.TextDocument.URI)
+		if document == nil {
+			continue
+		}
+
+		var text *string
+		for _, change := range params.ContentChanges {
+			if change.Range != nil {
+				s.plane.Log().Warnf("%s: unsupported ContentChange Range is unsupported", s.Name())
+				continue
+			}
+
+			text = &change.Text
+		}
+
+		if text != nil {
+			s.documentUpdateFull(workspace, document, text, params.TextDocument.Version)
+		}
+	}
 }
 
 func (s *ClientLsp) handleTextDocumentDidClose(msg jsonrpc.Message) {
-	_, ok := msg.(*jsonrpc.Notification)
+	ntf, ok := msg.(*jsonrpc.Notification)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Notification](s)
 		return
 	}
 
-	// params, _ := rawDecode[protocol.DidCloseTextDocumentParams](s, ntf.Params)
+	params, _ := rawDecode[protocol.DidCloseTextDocumentParams](s, ntf.Params)
+
+	workspaces := s.workspaceFindAll(params.TextDocument.URI)
+	for _, workspace := range workspaces {
+		document := s.documentGet(workspace, params.TextDocument.URI)
+		if document == nil {
+			continue
+		}
+
+		s.documentDelete(workspace, document.uri)
+	}
 }
 
 func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
@@ -117,7 +154,7 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 	// params, _ := rawDecode[protocol.CompletionParams](s, ntf.Params)
 }
 
-func (s *ClientLsp) handleShutdown(msg jsonrpc.Message) {
+func (s *ClientLsp) handleShutdown(_ jsonrpc.Message) {
 	s.workspaces.Range(func(key string, value *Workspace) bool {
 		s.workspaceDelete(key)
 		return true
