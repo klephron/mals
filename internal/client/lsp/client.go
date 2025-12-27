@@ -7,26 +7,28 @@ import (
 	"mals/internal/client"
 	"mals/internal/jsonrpc"
 	"mals/internal/plane"
+
+	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type ClientLsp struct {
 	client.Client
 
-	state State
-
 	plane   plane.Plane
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
+
+	initialized bool
+	workspaces  *xsync.Map[string, *Workspace]
 }
 
 func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *ClientLsp {
 	s := &ClientLsp{
-		state: State{
-			initialized: false,
-		},
-		plane:   plane,
-		scanner: scanner,
-		writer:  writer,
+		plane:       plane,
+		scanner:     scanner,
+		writer:      writer,
+		initialized: false,
+		workspaces:  xsync.NewMap[string, *Workspace](),
 	}
 	s.scanner.Split(jsonrpc.ScannerSplit)
 	return s
@@ -111,4 +113,19 @@ func (s *ClientLsp) send(msg jsonrpc.Message) error {
 	s.plane.Log().Debugf("%s: sent %s", s.Name(), string(bytes))
 
 	return nil
+}
+
+func (s *ClientLsp) workspaceAdd(uri string, name string) {
+	workspace := newWorkspace(uri, name)
+	s.workspaces.Store(uri, workspace)
+
+	s.plane.Log().Infof("%s: workspace %s added", s.Name(), workspace.name)
+}
+
+func (s *ClientLsp) workspaceDelete(uri string) {
+	workspace, ok := s.workspaces.LoadAndDelete(uri)
+	if !ok {
+		s.plane.Log().Warnf("%s: workspace by uri %s is not present", s.Name(), uri)
+	}
+	s.plane.Log().Infof("%s: workspace %s deleted", s.Name(), workspace.name)
 }

@@ -1,23 +1,31 @@
 package lsp
 
 import (
+	"fmt"
 	"mals/internal/info"
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
 )
 
+func errorParseUnexpectedType[T jsonrpc.Message](s *ClientLsp) {
+	var dummy T
+
+	resp := jsonrpc.Response{
+		Error: &jsonrpc.Error{
+			Code:    int32(protocol.ParseError),
+			Message: fmt.Sprintf("message is not of type %T", dummy),
+		},
+	}
+
+	s.plane.Log().Warnf("%v", resp.Error.Message)
+	s.send(&resp)
+}
+
 func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 	req, ok := msg.(*jsonrpc.Request)
 
 	if !ok {
-		resp := jsonrpc.Response{
-			Error: &jsonrpc.Error{
-				Code:    int32(protocol.ParseError),
-				Message: "message is not of type Request",
-			},
-		}
-		s.plane.Log().Warnf("%v", resp.Error.Message)
-		s.send(resp)
+		errorParseUnexpectedType[*jsonrpc.Request](s)
 		return
 	}
 
@@ -37,7 +45,7 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 	}
 
 	for _, workspace := range params.WorkspaceFolders {
-		s.plane.Log().Infof("workspace %s", workspace)
+		s.workspaceAdd(workspace.URI, workspace.Name)
 	}
 
 	result := protocol.InitializeResult{
@@ -66,23 +74,54 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 }
 
 func (s *ClientLsp) handleInitialized(_ jsonrpc.Message) {
-	s.state.initialized = true
+	s.initialized = true
 }
 
 func (s *ClientLsp) handleTextDocumentDidOpen(msg jsonrpc.Message) {
+	_, ok := msg.(*jsonrpc.Notification)
+	if !ok {
+		errorParseUnexpectedType[*jsonrpc.Notification](s)
+		return
+	}
 
+	// _params, _ := rawDecode[protocol.DidOpenTextDocumentParams](s, ntf.Params)
 }
 
 func (s *ClientLsp) handleTextDocumentDidChange(msg jsonrpc.Message) {
+	_, ok := msg.(*jsonrpc.Notification)
+	if !ok {
+		errorParseUnexpectedType[*jsonrpc.Notification](s)
+		return
+	}
 
+	// params, _ := rawDecode[protocol.DidChangeTextDocumentParams](s, ntf.Params)
 }
 
 func (s *ClientLsp) handleTextDocumentDidClose(msg jsonrpc.Message) {
+	_, ok := msg.(*jsonrpc.Notification)
+	if !ok {
+		errorParseUnexpectedType[*jsonrpc.Notification](s)
+		return
+	}
 
+	// params, _ := rawDecode[protocol.DidCloseTextDocumentParams](s, ntf.Params)
 }
 
 func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
+	_, ok := msg.(*jsonrpc.Request)
+	if !ok {
+		errorParseUnexpectedType[*jsonrpc.Request](s)
+		return
+	}
 
+	// params, _ := rawDecode[protocol.CompletionParams](s, ntf.Params)
+}
+
+func (s *ClientLsp) handleShutdown(msg jsonrpc.Message) {
+	s.workspaces.Range(func(key string, value *Workspace) bool {
+		s.workspaceDelete(key)
+		return true
+	})
 }
 
 func (s *ClientLsp) handle(bytes []byte) {
@@ -118,6 +157,8 @@ func (s *ClientLsp) handle(bytes []byte) {
 		s.handleTextDocumentDidClose(msg)
 	case "textDocument/completion":
 		s.handleTextDocumentCompletion(msg)
+	case "shutdown":
+		s.handleShutdown(msg)
 	default:
 		s.plane.Log().Warnf("%T %v: unhandled method %v", s, s.Name(), method)
 	}
