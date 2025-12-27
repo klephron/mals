@@ -25,5 +25,28 @@
         "temperature": 0.5
       }
     }
+  ],
+  "lsps": [],
+  "usages": [
+    {
+      "name": "all-completion",
+      "conditions": [
+        {
+          "filetypes": ["*"],
+          "paths": ["*"],
+          "events": ["textDocument/completion"]
+        }
+      ],
+      "workflow": {
+        "name": "llm-completion",
+        "steps": [
+          {
+            "name": "llm-completion",
+            "model": "Llama-3.2-1B-Instruct-Q6_K",
+            "template": "<TODO>"
+          }
+        ]
+      }
+    }
   ]
 }
