@@ -83,3 +83,23 @@ func (s *ClientLsp) Close() error {
 	}
 	return nil
 }
+
+func (s *ClientLsp) send(msg jsonrpc.Message) error {
+	bytes, err := jsonrpc.EncodeMessage(msg)
+	if err != nil {
+		s.plane.Log().Errorf("%v", err)
+		return err
+	}
+	if _, err := s.writer.Write(bytes); err != nil {
+		s.plane.Log().Errorf("%v", err)
+		return err
+	}
+	if err := s.writer.Flush(); err != nil {
+		s.plane.Log().Errorf("%v", err)
+		return err
+	}
+
+	s.plane.Log().Debugf("%s: sent %s", s.Name(), string(bytes))
+
+	return nil
+}

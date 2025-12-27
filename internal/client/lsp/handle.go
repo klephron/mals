@@ -1,12 +1,68 @@
 package lsp
 
 import (
+	"mals/internal/info"
 	"mals/internal/jsonrpc"
-	// "mals/internal/lsp/protocol"
+	"mals/internal/lsp/protocol"
 )
 
 func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
+	req, ok := msg.(*jsonrpc.Request)
 
+	if !ok {
+		resp := jsonrpc.Response{
+			Error: &jsonrpc.Error{
+				Code:    int32(protocol.ParseError),
+				Message: "message is not of type Request",
+			},
+		}
+		s.plane.Log().Warnf("%v", resp.Error.Message)
+		s.send(resp)
+		return
+	}
+
+	params, _ := rawDecode[protocol.InitializeParams](s, req.Params)
+
+	if len(params.WorkspaceFolders) == 0 {
+		resp := jsonrpc.Response{
+			Id: req.Id,
+			Error: &jsonrpc.Error{
+				Code:    int32(protocol.InvalidRequest),
+				Message: "no workspace folders",
+			},
+		}
+		s.plane.Log().Warnf("%v", resp.Error.Message)
+		s.send(&resp)
+		return
+	}
+
+	for _, workspace := range params.WorkspaceFolders {
+		s.plane.Log().Infof("workspace %s", workspace)
+	}
+
+	result := protocol.InitializeResult{
+		Capabilities: protocol.ServerCapabilities{
+			TextDocumentSync: protocol.TextDocumentSyncOptions{
+				OpenClose: true,
+				Change:    protocol.Full,
+			},
+			CompletionProvider: &protocol.CompletionOptions{},
+		},
+		ServerInfo: &protocol.ServerInfo{
+			Name:    info.LspServerName,
+			Version: info.Version,
+		},
+	}
+
+	resultRaw, err := rawEncode(s, &result)
+	if err != nil {
+		return
+	}
+	resp := jsonrpc.Response{
+		Id:     req.Id,
+		Result: resultRaw,
+	}
+	s.send(&resp)
 }
 
 func (s *ClientLsp) handleInitialized(msg jsonrpc.Message) {
