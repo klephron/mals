@@ -11,6 +11,9 @@ import (
 
 type ClientLsp struct {
 	client.Client
+
+	state State
+
 	plane   plane.Plane
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
@@ -18,6 +21,9 @@ type ClientLsp struct {
 
 func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *ClientLsp {
 	s := &ClientLsp{
+		state: State{
+			initialized: false,
+		},
 		plane:   plane,
 		scanner: scanner,
 		writer:  writer,
@@ -58,17 +64,20 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 		}
 	}()
 
+	defer func() {
+		s.plane.Log().Infof("%s: closed", s.Name())
+	}()
+
 	for {
 		select {
 		case <-scanCtx.Done():
-			s.plane.Log().Infof("%s: done", s.Name())
+			s.plane.Log().Infof("%s: scanner done", s.Name())
 
 			if err := s.Client.Close(); err != nil {
 				s.plane.Log().Errorf("%s: error while closing %v", err)
 				return err
 			}
 
-			s.plane.Log().Infof("%s: closed", s.Name())
 			return nil
 
 		case bytes := <-ch:

@@ -8,15 +8,6 @@ package lsp
 // 	"mals/pkg/url"
 // )
 
-// func defaultResponse(request *lsp_message.Request) lsp_message.Response {
-// 	return lsp_message.Response{
-// 		Message: lsp_message.Message{
-// 			JsonRpc: "2.0",
-// 		},
-// 		Id: request.Id,
-// 	}
-// }
-
 // func (s *Client) writeResponse(response any) {
 // 	if bytes, err := jsonrpc.Encode(response); err == nil {
 // 		s.writer.Write(bytes)
@@ -24,48 +15,6 @@ package lsp
 // 	} else {
 // 		s.LogErrorPrintf("cannot encode message to send")
 // 	}
-// }
-
-// func (s *Client) initialize(data []byte) {
-// 	var request lsp_message.InitializeRequest
-// 	json.Unmarshal(data, &request)
-
-// 	for _, workspace := range request.Params.WorkspaceFolders {
-// 		path, err := url.UriToPath(workspace.URI)
-// 		if err != nil {
-// 			s.LogErrorPrintf("unable to get workspace %s path", workspace.URI)
-// 			continue
-// 		}
-// 		if _, created := s.NewWorkspace(path, s.config.Workspace.DefaultModel); created {
-// 			s.LogInfoPrintf("workspace %s: created", path)
-// 		} else {
-// 			s.LogInfoPrintf("workspace %s: recreated", path)
-// 		}
-// 	}
-
-// 	response := lsp_message.InitializeResponse{
-// 		Response: defaultResponse(&request.Request),
-// 		Result: lsp_message.InitializeResult{
-// 			Capabilities: lsp_message.ServerCapabilities{
-// 				TextDocumentSync: lsp_message.TextDocumentSyncOptions{
-// 					OpenClose: true,
-// 					Change:    lsp_message.FULL,
-// 				},
-// 				CompletionProvider: lsp_message.CompletionOptions{},
-// 				// HoverProvider: lsp_message.HoverOptions{},
-// 				// CodeActionProvider: lsp_message.CodeActionOptions{
-// 				// 	CodeActionKinds: []lsp_message.CodeActionKind{lsp_message.REFACTOR, lsp_message.QUICKFIX},
-// 				// },
-// 				// CodeLensProvider: lsp_message.CodeLensOptions{},
-// 			},
-// 			ServerInfo: lsp_message.ServerInfo{
-// 				Name:    "mals-engine",
-// 				Version: "0.0.1",
-// 			},
-// 		},
-// 	}
-
-// 	s.writeResponse(response)
 // }
 
 // func (s *Client) textDocumentDidOpen(data []byte) {

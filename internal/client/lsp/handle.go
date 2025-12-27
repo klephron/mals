@@ -65,8 +65,8 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 	s.send(&resp)
 }
 
-func (s *ClientLsp) handleInitialized(msg jsonrpc.Message) {
-
+func (s *ClientLsp) handleInitialized(_ jsonrpc.Message) {
+	s.state.initialized = true
 }
 
 func (s *ClientLsp) handleTextDocumentDidOpen(msg jsonrpc.Message) {
