@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/client"
-	apitcp "mals/internal/listener/api/tcp"
-	lsptcp "mals/internal/listener/lsp/tcp"
+	"mals/internal/listener/api_tcp"
+	"mals/internal/listener/lsp_tcp"
 	"mals/pkg/config"
 	"sync"
 
@@ -87,15 +87,15 @@ func (s *ListenerController) Create(name string) error {
 	case *config.ListenerTcp:
 		switch config.Kind() {
 
-		case apitcp.Kind():
-			listener, err := apitcp.NewListener(name, config.Port, s.plane)
+		case api_tcp.Kind():
+			listener, err := api_tcp.NewListener(name, config.Port, s.plane)
 			if err != nil {
 				return err
 			}
 			value.listener = listener
 
-		case lsptcp.Kind():
-			listener, err := lsptcp.NewListener(name, config.Port, s.plane)
+		case lsp_tcp.Kind():
+			listener, err := lsp_tcp.NewListener(name, config.Port, s.plane)
 			if err != nil {
 				return err
 			}

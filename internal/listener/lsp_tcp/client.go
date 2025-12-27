@@ -1,4 +1,4 @@
-package lsptcp
+package lsp_tcp
 
 import (
 	"bufio"

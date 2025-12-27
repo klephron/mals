@@ -1,4 +1,4 @@
-package apitcp
+package api_tcp
 
 import (
 	"context"
