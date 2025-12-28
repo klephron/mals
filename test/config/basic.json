@@ -42,9 +42,22 @@
         "steps": [
           {
             "name": "llm-completion",
-            "scope": "<TODO>",
+            "scope": "global",
             "model": "Llama-3.2-1B-Instruct-Q6_K",
             "template": "<TODO>"
+          },
+          {
+            "name": "<unknown>",
+            "scope": "global",
+            "model": "<unknown>",
+            "template": "<TODO>",
+            "conditions": [
+              {
+                "filetypes": ["*"],
+                "paths": ["*"],
+                "events": ["<unknown>"]
+              }
+            ]
           }
         ]
       }

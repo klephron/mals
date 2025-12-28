@@ -1,6 +1,7 @@
 package lsp
 
 import (
+	"encoding/json"
 	"fmt"
 	"mals/internal/info"
 	"mals/internal/jsonrpc"
@@ -151,6 +152,10 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 		return
 	}
 
+	usages := s.plane.Usage().Get(nil, nil, &EventTextDocumentCompletion)
+	bytes, _ := json.Marshal(usages)
+	fmt.Printf("usage: %v", string(bytes))
+
 	// params, _ := rawDecode[protocol.CompletionParams](s, ntf.Params)
 }
 
@@ -182,19 +187,19 @@ func (s *ClientLsp) handle(bytes []byte) {
 	}
 
 	switch method {
-	case "initialize":
+	case EventInitialize:
 		s.handleInitialize(msg)
-	case "initialized":
+	case EventInitialized:
 		s.handleInitialized(msg)
-	case "textDocument/didOpen":
+	case EventTextDocumentDidOpen:
 		s.handleTextDocumentDidOpen(msg)
-	case "textDocument/didChange":
+	case EventTextDocumentDidChange:
 		s.handleTextDocumentDidChange(msg)
-	case "textDocument/didClose":
+	case EventTextDocumentDidClose:
 		s.handleTextDocumentDidClose(msg)
-	case "textDocument/completion":
+	case EventTextDocumentCompletion:
 		s.handleTextDocumentCompletion(msg)
-	case "shutdown":
+	case EventShutdown:
 		s.handleShutdown(msg)
 	default:
 		s.plane.Log().Warnf("%T %v: unhandled method %v", s, s.Name(), method)

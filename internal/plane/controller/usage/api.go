@@ -2,6 +2,7 @@ package usage
 
 import (
 	"fmt"
+	"mals/internal/usage"
 	"mals/pkg/config"
 )
 
@@ -47,4 +48,15 @@ func (s *UsageController) GetAll() []*config.Usage {
 	})
 
 	return usages
+}
+
+func (s *UsageController) Get(filetype *string, path *string, event *string) []*config.Usage {
+	usages := make([]*config.Usage, 0)
+
+	s.state.usages.Range(func(key string, value *config.Usage) bool {
+		usages = append(usages, value)
+		return true
+	})
+
+	return usage.UsagesFilter(filetype, path, event, usages)
 }

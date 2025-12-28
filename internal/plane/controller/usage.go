@@ -12,4 +12,5 @@ type UsageController interface {
 	Unregister(name string) error
 
 	GetAll() []*config.Usage
+	Get(filetype *string, path *string, event *string) []*config.Usage
 }
