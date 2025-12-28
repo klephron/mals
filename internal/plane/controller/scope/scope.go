@@ -13,14 +13,14 @@ type ScopeToken struct {
 	id string
 }
 
+func (s *ScopeToken) Token() string {
+	return s.id
+}
+
 func newToken() *ScopeToken {
 	return &ScopeToken{
 		id: uuid.New().String(),
 	}
-}
-
-func (s *ScopeToken) Token() string {
-	return s.id
 }
 
 func generateName(name string, scope *scope.Scope) string {

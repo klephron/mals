@@ -37,7 +37,7 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 	for _, sc := range scope.Path() {
 		next, ok := current.children.Load(sc)
 		if !ok {
-			next = NewSpace(sc)
+			next = newSpace(sc)
 			current.children.Store(sc, next)
 		}
 		current = next
@@ -111,24 +111,66 @@ func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeTo
 
 	resource.dependencies.Delete(token.Token())
 
-	empty := true
-	resource.dependencies.Range(func(key string, value *ScopeToken) bool {
-		empty = false
-		return false
+	return nil
+}
+
+func (s *ScopeController) close(errors *[]error, current *Space) {
+	current.models.Range(func(name string, resource *ResourceModel) bool {
+		resource.rw.Lock()
+		defer resource.rw.Unlock()
+
+		if resource.dependencies.Size() > 0 {
+			err := fmt.Errorf("cannot close scope, resource %s has %d active tokens",
+				name, resource.dependencies.Size())
+
+			*errors = append(*errors, err)
+
+			return true
+		}
+
+		if err := s.plane.Model().Stop(resource.fullname); err != nil {
+			*errors = append(*errors, err)
+			return true
+		}
+		if err := s.plane.Model().Delete(resource.fullname); err != nil {
+			*errors = append(*errors, err)
+			return true
+		}
+		if err := s.plane.Model().Unregister(resource.fullname); err != nil {
+			*errors = append(*errors, err)
+			return true
+		}
+
+		current.models.Delete(name)
+
+		return true
+	})
+}
+
+func (s *ScopeController) closeDFS(errors *[]error, current *Space) {
+	current.children.Range(func(key scope.Space, value *Space) bool {
+		s.closeDFS(errors, value)
+		return true
 	})
 
-	if empty {
-		if err := s.plane.Model().Stop(fullname); err != nil {
-			return err
+	s.close(errors, current)
+}
+
+func (s *ScopeController) Close(scope *scope.Scope) []error {
+	errors := make([]error, 0)
+
+	current := s.state.root
+
+	for _, sc := range scope.Path() {
+		next, ok := current.children.Load(sc)
+		if !ok {
+			errors = append(errors, fmt.Errorf("scope %v does not exist", scope.Path()))
+			return errors
 		}
-		if err := s.plane.Model().Delete(fullname); err != nil {
-			return err
-		}
-		if err := s.plane.Model().Unregister(fullname); err != nil {
-			return err
-		}
-		current.models.Delete(name)
+		current = next
 	}
 
-	return nil
+	s.closeDFS(&errors, current)
+
+	return errors
 }

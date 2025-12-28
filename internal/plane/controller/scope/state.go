@@ -29,16 +29,18 @@ type Space struct {
 	children *xsync.Map[scope.Space, *Space]
 
 	models *xsync.Map[string, *ResourceModel]
-	lsps   *xsync.Map[string, *ResourceLsp]
 }
 
-func NewSpace(space scope.Space) *Space {
+func newSpace(space scope.Space) *Space {
 	return &Space{
 		space:    space,
 		children: xsync.NewMap[scope.Space, *Space](),
 		models:   xsync.NewMap[string, *ResourceModel](),
-		lsps:     xsync.NewMap[string, *ResourceLsp](),
 	}
+}
+
+func newSpaceRoot() *Space {
+	return newSpace(scope.NewSpace(""))
 }
 
 type State struct {
@@ -46,7 +48,6 @@ type State struct {
 	statusCancel context.CancelFunc
 
 	models *xsync.Map[string, *config.Model]
-	lsps   *xsync.Map[string, *config.Lsp]
 
 	root *Space
 }

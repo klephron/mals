@@ -18,4 +18,6 @@ type ScopeController interface {
 	ModelRegister(config config.Model) error
 	ModelAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
 	ModelRelease(name string, token ScopeToken) error
+
+	Close(scope *scope.Scope) []error
 }

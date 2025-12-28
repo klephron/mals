@@ -24,7 +24,8 @@ func New(plane plane.Plane) *ScopeController {
 			statusCancel: nil,
 
 			models: xsync.NewMap[string, *config.Model](),
-			lsps:   xsync.NewMap[string, *config.Lsp](),
+
+			root: newSpaceRoot(),
 		},
 		plane: plane,
 	}
