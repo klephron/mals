@@ -4,9 +4,52 @@ import (
 	"fmt"
 	"mals/internal/log"
 	"mals/internal/log/file"
+	"mals/internal/plane/controller"
 	"mals/pkg/config"
 	"sync"
 )
+
+func statusError(name string, actual controller.LogStatus, expected controller.LogStatus) error {
+	return fmt.Errorf("log %v expected %v, got %v", name, expected, actual)
+}
+
+func (s *LogController) status(value *LogValue) controller.LogStatus {
+	status := controller.LogAbsent
+
+	if value != nil {
+		status |= controller.LogRegistered
+
+		if value.log != nil {
+			status |= controller.LogCreated
+		}
+		if value.enabled {
+			status |= controller.LogStarted
+		}
+	}
+
+	return status
+}
+
+func (s *LogController) statusRW(value *LogValue) controller.LogStatus {
+	status := controller.LogAbsent
+
+	if value != nil {
+		status |= controller.LogRegistered
+
+		value.rw.RLock()
+
+		if value.log != nil {
+			status |= controller.LogCreated
+		}
+		if value.enabled {
+			status |= controller.LogStarted
+		}
+
+		value.rw.RUnlock()
+	}
+
+	return status
+}
 
 func (s *LogController) Shutdown() error {
 	s.state.logs.Range(func(key string, value *LogValue) bool {
@@ -24,11 +67,18 @@ func (s *LogController) Shutdown() error {
 	return nil
 }
 
+func (s *LogController) Status(name string) controller.LogStatus {
+	value, _ := s.state.logs.Load(name)
+	return s.statusRW(value)
+}
+
 func (s *LogController) Register(cfg config.Log) error {
 	name := cfg.Name()
 
-	if _, ok := s.state.logs.Load(name); ok {
-		return fmt.Errorf("log %v exists", name)
+	value, _ := s.state.logs.Load(name)
+
+	if status := s.statusRW(value); status != controller.LogAbsent {
+		return statusError(name, status, controller.LogAbsent)
 	}
 
 	switch config := cfg.(type) {
@@ -48,35 +98,32 @@ func (s *LogController) Register(cfg config.Log) error {
 }
 
 func (s *LogController) Unregister(name string) error {
-	value, ok := s.state.logs.Load(name)
-	if !ok {
-		return fmt.Errorf("log %v does not exist", name)
+	value, _ := s.state.logs.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-
-	if value.log != nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("log %v is already created", name)
+	if status := s.status(value); status != controller.LogRegistered {
+		return statusError(name, status, controller.LogRegistered)
 	}
 
 	s.state.logs.Delete(name)
-	value.rw.RUnlock()
 
 	return nil
 }
 
 func (s *LogController) Create(name string) error {
-	value, ok := s.state.logs.Load(name)
-	if !ok {
-		return fmt.Errorf("log %v does not exist", name)
+	value, _ := s.state.logs.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-	defer value.rw.Unlock()
-
-	if value.log != nil {
-		return fmt.Errorf("log %v is already created", name)
+	if status := s.status(value); status != controller.LogRegistered {
+		return statusError(name, status, controller.LogRegistered)
 	}
 
 	switch config := value.config.(type) {
@@ -95,61 +142,53 @@ func (s *LogController) Create(name string) error {
 }
 
 func (s *LogController) Delete(name string) error {
-	value, ok := s.state.logs.Load(name)
-	if !ok {
-		return fmt.Errorf("log %v does not exist", name)
+	value, _ := s.state.logs.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-
-	if value.log == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("log %v is not created", name)
-	}
-	if value.enabled {
-		value.rw.Unlock()
-		return fmt.Errorf("log %v is running", name)
+	if status := s.status(value); status != controller.LogRegistered|controller.LogCreated {
+		return statusError(name, status, controller.LogRegistered|controller.LogCreated)
 	}
 
-	log := value.log
+	value.log.Close()
 	value.log = nil
-	value.rw.Unlock()
 
-	return log.Close()
+	return nil
 }
 
 func (s *LogController) Start(name string) error {
-	value, ok := s.state.logs.Load(name)
-	if !ok {
-		return fmt.Errorf("log %v does not exist", name)
+	value, _ := s.state.logs.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-	if value.log == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("log %v is not created", name)
+	if status := s.status(value); status != controller.LogRegistered|controller.LogCreated {
+		return statusError(name, status, controller.LogRegistered|controller.LogCreated)
 	}
 
 	value.enabled = true
-	value.rw.Unlock()
 
 	return nil
 }
 
 func (s *LogController) Stop(name string) error {
-	value, ok := s.state.logs.Load(name)
-	if !ok {
-		return fmt.Errorf("log %v does not exist", name)
+	value, _ := s.state.logs.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-	if value.log == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("log %v is not created", name)
+	if status := s.status(value); status&controller.LogStarted == 0 {
+		return statusError(name, status, controller.LogStarted)
 	}
 
 	value.enabled = false
-	value.rw.Unlock()
 
 	return nil
 }
@@ -159,7 +198,7 @@ func (s *LogController) log(level log.Level, format string, a ...any) error {
 		value.rw.RLock()
 		defer value.rw.RUnlock()
 
-		if value.log == nil || !value.enabled {
+		if status := s.status(value); status&controller.LogStarted == 0 {
 			return true
 		}
 

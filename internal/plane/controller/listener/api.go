@@ -6,11 +6,54 @@ import (
 	"mals/internal/client"
 	"mals/internal/listener/api_tcp"
 	"mals/internal/listener/lsp_tcp"
+	"mals/internal/plane/controller"
 	"mals/pkg/config"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
+
+func statusError(name string, actual controller.ListenerStatus, expected controller.ListenerStatus) error {
+	return fmt.Errorf("Listener %v expected %v, got %v", name, expected, actual)
+}
+
+func (s *ListenerController) status(value *ListenerValue) controller.ListenerStatus {
+	status := controller.ListenerAbsent
+
+	if value != nil {
+		status |= controller.ListenerRegistered
+
+		if value.listener != nil {
+			status |= controller.ListenerCreated
+		}
+		if value.cancelFunc != nil {
+			status |= controller.ListenerStarted
+		}
+	}
+
+	return status
+}
+
+func (s *ListenerController) statusRW(value *ListenerValue) controller.ListenerStatus {
+	status := controller.ListenerAbsent
+
+	if value != nil {
+		status |= controller.ListenerRegistered
+
+		value.rw.RLock()
+
+		if value.listener != nil {
+			status |= controller.ListenerCreated
+		}
+		if value.cancelFunc != nil {
+			status |= controller.ListenerStarted
+		}
+
+		value.rw.RUnlock()
+	}
+
+	return status
+}
 
 func (s *ListenerController) Shutdown() error {
 	s.state.listeners.Range(func(key string, value *ListenerValue) bool {
@@ -28,11 +71,18 @@ func (s *ListenerController) Shutdown() error {
 	return nil
 }
 
+func (s *ListenerController) Status(name string) controller.ListenerStatus {
+	value, _ := s.state.listeners.Load(name)
+	return s.statusRW(value)
+}
+
 func (s *ListenerController) Register(cfg config.Listener) error {
 	name := cfg.Name()
 
-	if _, ok := s.state.listeners.Load(name); ok {
-		return fmt.Errorf("listener %v exists", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if status := s.statusRW(value); status != controller.ListenerAbsent {
+		return statusError(name, status, controller.ListenerAbsent)
 	}
 
 	switch config := cfg.(type) {
@@ -53,34 +103,32 @@ func (s *ListenerController) Register(cfg config.Listener) error {
 }
 
 func (s *ListenerController) Unregister(name string) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-	if value.listener != nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("listener %v is already created", name)
+	if status := s.status(value); status != controller.ListenerRegistered {
+		return statusError(name, status, controller.ListenerRegistered)
 	}
 
 	s.state.listeners.Delete(name)
-	value.rw.RUnlock()
 
 	return nil
 }
 
 func (s *ListenerController) Create(name string) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-	defer value.rw.Unlock()
-
-	if value.listener != nil {
-		return fmt.Errorf("listener %v is already created", name)
+	if status := s.status(value); status != controller.ListenerRegistered {
+		return statusError(name, status, controller.ListenerRegistered)
 	}
 
 	switch config := value.config.(type) {
@@ -113,46 +161,38 @@ func (s *ListenerController) Create(name string) error {
 }
 
 func (s *ListenerController) Delete(name string) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-
-	if value.listener == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("listener %v is not created", name)
-	}
-	if value.cancelFunc != nil {
-		value.rw.Unlock()
-		return fmt.Errorf("listener %v is running", name)
+	if status := s.status(value); status != controller.ListenerRegistered|controller.ListenerCreated {
+		return statusError(name, status, controller.ListenerRegistered|controller.ListenerCreated)
 	}
 
 	value.listener = nil
-	value.rw.Unlock()
 
 	return nil
 }
 
 func (s *ListenerController) Start(name string) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-
-	if value.listener == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("listener %v is not created", name)
+	if status := s.status(value); status != controller.ListenerRegistered|controller.ListenerCreated {
+		return statusError(name, status, controller.ListenerRegistered|controller.ListenerCreated)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	value.cancelFunc = cancel
 	listener := value.listener
-	value.rw.Unlock()
 
 	go func() {
 		listener.Listen(ctx)
@@ -163,20 +203,17 @@ func (s *ListenerController) Start(name string) error {
 }
 
 func (s *ListenerController) Stop(name string) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
 	}
 
-	value.rw.Lock()
-
-	if value.listener == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("listener %v is not created", name)
-	}
-	if value.cancelFunc == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("listener %v is not running", name)
+	if status := s.status(value); status&controller.ListenerStarted == 0 {
+		if value != nil {
+			value.rw.Unlock()
+		}
+		return statusError(name, status, controller.ListenerStarted)
 	}
 
 	value.clients.Range(func(key client.Client, value struct{}) bool {
@@ -195,25 +232,22 @@ func (s *ListenerController) Stop(name string) error {
 }
 
 func (s *ListenerController) ClientAdd(name string, client client.Client) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
 	}
 
-	value.rw.RLock()
-
-	if value.listener == nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("listener %v is not created", name)
-	}
-	if value.cancelFunc == nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("listener %v is not running", name)
+	if status := s.status(value); status&controller.ListenerStarted == 0 {
+		if value != nil {
+			value.rw.RUnlock()
+		}
+		return statusError(name, status, controller.ListenerStarted)
 	}
 
 	value.rw.RUnlock()
 
-	_, ok = value.clients.Load(client)
+	_, ok := value.clients.Load(client)
 	if ok {
 		return fmt.Errorf("listener %v client %v exists", name, client.Name())
 	}
@@ -224,25 +258,22 @@ func (s *ListenerController) ClientAdd(name string, client client.Client) error 
 }
 
 func (s *ListenerController) ClientRemove(name string, client client.Client) error {
-	value, ok := s.state.listeners.Load(name)
-	if !ok {
-		return fmt.Errorf("listener %v does not exist", name)
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
 	}
 
-	value.rw.RLock()
-
-	if value.listener == nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("listener %v is not created", name)
-	}
-	if value.cancelFunc == nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("listener %v is not running", name)
+	if status := s.status(value); status&controller.ListenerStarted == 0 {
+		if value != nil {
+			value.rw.RUnlock()
+		}
+		return statusError(name, status, controller.ListenerStarted)
 	}
 
 	value.rw.RUnlock()
 
-	_, ok = value.clients.LoadAndDelete(client)
+	_, ok := value.clients.LoadAndDelete(client)
 	if !ok {
 		return fmt.Errorf("listener %v client %v does not exist", name, client.Name())
 	}

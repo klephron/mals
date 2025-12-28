@@ -6,11 +6,54 @@ import (
 	"mals/internal/client"
 	"mals/internal/model"
 	"mals/internal/model/openai"
+	"mals/internal/plane/controller"
 	"mals/pkg/config"
 	"sync"
 
 	"github.com/google/uuid"
 )
+
+func statusError(name string, actual controller.ModelStatus, expected controller.ModelStatus) error {
+	return fmt.Errorf("model %v expected %v, got %v", name, expected, actual)
+}
+
+func (s *ModelController) status(value *ModelValue) controller.ModelStatus {
+	status := controller.ModelAbsent
+
+	if value != nil {
+		status |= controller.ModelRegistered
+
+		if value.model != nil {
+			status |= controller.ModelCreated
+		}
+		if value.cancelFunc != nil {
+			status |= controller.ModelStarted
+		}
+	}
+
+	return status
+}
+
+func (s *ModelController) statusRW(value *ModelValue) controller.ModelStatus {
+	status := controller.ModelAbsent
+
+	if value != nil {
+		status |= controller.ModelRegistered
+
+		value.rw.RLock()
+
+		if value.model != nil {
+			status |= controller.ModelCreated
+		}
+		if value.cancelFunc != nil {
+			status |= controller.ModelStarted
+		}
+
+		value.rw.RUnlock()
+	}
+
+	return status
+}
 
 func (s *ModelController) Shutdown() error {
 	s.state.models.Range(func(key string, value *ModelValue) bool {
@@ -28,11 +71,18 @@ func (s *ModelController) Shutdown() error {
 	return nil
 }
 
+func (s *ModelController) Status(name string) controller.ModelStatus {
+	value, _ := s.state.models.Load(name)
+	return s.statusRW(value)
+}
+
 func (s *ModelController) Register(cfg config.Model) error {
 	name := cfg.Name
 
-	if _, ok := s.state.models.Load(name); ok {
-		return fmt.Errorf("model %v exists", name)
+	value, _ := s.state.models.Load(name)
+
+	if status := s.statusRW(value); status != controller.ModelAbsent {
+		return statusError(name, status, controller.ModelAbsent)
 	}
 
 	switch settings := cfg.Settings.(type) {
@@ -52,35 +102,32 @@ func (s *ModelController) Register(cfg config.Model) error {
 }
 
 func (s *ModelController) Unregister(name string) error {
-	value, ok := s.state.models.Load(name)
-	if !ok {
-		return fmt.Errorf("model %v does not exist", name)
+	value, _ := s.state.models.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-
-	if value.model != nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("model %v is already created", name)
+	if status := s.status(value); status != controller.ModelRegistered {
+		return statusError(name, status, controller.ModelRegistered)
 	}
 
 	s.state.models.Delete(name)
-	value.rw.RUnlock()
 
 	return nil
 }
 
 func (s *ModelController) Create(name string) error {
-	value, ok := s.state.models.Load(name)
-	if !ok {
-		return fmt.Errorf("model %v does not exist", name)
+	value, _ := s.state.models.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-	defer value.rw.Unlock()
-
-	if value.model != nil {
-		return fmt.Errorf("model %v is already created", name)
+	if status := s.status(value); status != controller.ModelRegistered {
+		return statusError(name, status, controller.ModelRegistered)
 	}
 
 	switch settings := value.config.Settings.(type) {
@@ -105,40 +152,33 @@ func (s *ModelController) Create(name string) error {
 }
 
 func (s *ModelController) Delete(name string) error {
-	value, ok := s.state.models.Load(name)
-	if !ok {
-		return fmt.Errorf("model %v does not exist", name)
+	value, _ := s.state.models.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-
-	if value.model == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("model %v is not created", name)
-	}
-	if value.cancelFunc != nil {
-		value.rw.Unlock()
-		return fmt.Errorf("model %v is running", name)
+	if status := s.status(value); status != controller.ModelRegistered|controller.ModelCreated {
+		return statusError(name, status, controller.ModelRegistered|controller.ModelCreated)
 	}
 
 	value.model = nil
 	value.queue = nil
-	value.rw.Unlock()
 
 	return nil
 }
 
 func (s *ModelController) Start(name string) error {
-	value, ok := s.state.models.Load(name)
-	if !ok {
-		return fmt.Errorf("model %v does not exist", name)
+	value, _ := s.state.models.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
-	value.rw.Lock()
-
-	if value.model == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("model %v is not created", name)
+	if status := s.status(value); status != controller.ModelRegistered|controller.ModelCreated {
+		return statusError(name, status, controller.ModelRegistered|controller.ModelCreated)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -147,8 +187,6 @@ func (s *ModelController) Start(name string) error {
 
 	model := value.model
 	queue := value.queue
-
-	value.rw.Unlock()
 
 	go func() {
 		go func() {
@@ -171,20 +209,17 @@ func (s *ModelController) Start(name string) error {
 }
 
 func (s *ModelController) Stop(name string) error {
-	value, ok := s.state.models.Load(name)
-	if !ok {
-		return fmt.Errorf("model %v does not exist", name)
+	value, _ := s.state.models.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
 	}
 
-	value.rw.Lock()
-
-	if value.model == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("model %v is not created", name)
-	}
-	if value.cancelFunc == nil {
-		value.rw.Unlock()
-		return fmt.Errorf("model %v is not running", name)
+	if status := s.status(value); status&controller.ModelStarted == 0 {
+		if value != nil {
+			value.rw.Unlock()
+		}
+		return statusError(name, status, controller.ModelStarted)
 	}
 
 	cancel := value.cancelFunc
@@ -197,83 +232,75 @@ func (s *ModelController) Stop(name string) error {
 }
 
 func (s *ModelController) TaskExecClient(modelName string, task *model.Task, client client.Client) model.Result {
-	value, ok := s.state.models.Load(modelName)
-	if !ok {
-		return model.Result{Error: fmt.Errorf("model %v does not exist", modelName)}
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-	defer value.rw.RUnlock()
-
-	if value.model == nil {
-		return model.Result{Error: fmt.Errorf("model %v is not created", modelName)}
-	}
-	if value.cancelFunc == nil {
-		return model.Result{Error: fmt.Errorf("model %v is not running", modelName)}
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return model.Result{Error: statusError(modelName, status, controller.ModelCreated)}
 	}
 
 	return value.queue.taskExecClient(task, client)
 }
 
 func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
-	value, ok := s.state.models.Load(modelName)
-	if !ok {
-		return nil, fmt.Errorf("model %v does not exist", modelName)
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-	defer value.rw.RUnlock()
-
-	if value.model == nil {
-		return nil, fmt.Errorf("model %v is not created", modelName)
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return nil, statusError(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskGetClient(id, client)
 }
 
 func (s *ModelController) TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error) {
-	value, ok := s.state.models.Load(modelName)
-	if !ok {
-		return nil, fmt.Errorf("model %v does not exist", modelName)
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-	defer value.rw.RUnlock()
-
-	if value.model == nil {
-		return nil, fmt.Errorf("model %v is not created", modelName)
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return nil, statusError(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskGetAllClient(client), nil
 }
 
 func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
-	value, ok := s.state.models.Load(modelName)
-	if !ok {
-		return nil, fmt.Errorf("model %v does not exist", modelName)
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-	defer value.rw.RUnlock()
-
-	if value.model == nil {
-		return nil, fmt.Errorf("model %v is not created", modelName)
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return nil, statusError(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskCancelClient(id, client)
 }
 
 func (s *ModelController) TaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error) {
-	value, ok := s.state.models.Load(modelName)
-	if !ok {
-		return nil, fmt.Errorf("model %v does not exist", modelName)
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
 	}
 
-	value.rw.RLock()
-	defer value.rw.RUnlock()
-
-	if value.model == nil {
-		return nil, fmt.Errorf("model %v is not created", modelName)
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return nil, statusError(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskCancelAllClient(client)

@@ -8,10 +8,20 @@ import (
 	"github.com/google/uuid"
 )
 
+type ModelStatus int32
+
+const (
+	ModelAbsent     ModelStatus = 0
+	ModelRegistered ModelStatus = (1 << 0)
+	ModelCreated    ModelStatus = (1 << 1)
+	ModelStarted    ModelStatus = (1 << 2)
+)
+
 type ModelController interface {
 	Shutdown() error
 	Serve(onReady func()) error
 
+	Status(name string) ModelStatus
 	Register(config config.Model) error
 	Unregister(name string) error
 	Create(name string) error
