@@ -33,20 +33,34 @@ func configInit(config *config.Config, plane plane.Plane) {
 			plane.Log().Errorf("%v", err)
 		}
 	}
+
 	for _, model := range config.Models {
 		if model == nil {
 			continue
 		}
-		if err := plane.Model().Register(*model); err != nil {
-			plane.Log().Errorf("%v", err)
-		}
-		if err := plane.Model().Create(model.Name); err != nil {
-			plane.Log().Errorf("%v", err)
-		}
-		if err := plane.Model().Start(model.Name); err != nil {
+		if err := plane.Usage().RegisterModel(*model); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 	}
+
+	for _, lsp := range config.Lsps {
+		if lsp == nil {
+			continue
+		}
+		if err := plane.Usage().RegisterLsp(*lsp); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+	}
+
+	for _, usage := range config.Usages {
+		if usage == nil {
+			continue
+		}
+		if err := plane.Usage().RegisterUsage(*usage); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+	}
+
 	for _, listener := range config.Listeners {
 		if err := plane.Listener().Register(listener); err != nil {
 			plane.Log().Errorf("%v", err)
@@ -58,6 +72,7 @@ func configInit(config *config.Config, plane plane.Plane) {
 			plane.Log().Errorf("%v", err)
 		}
 	}
+
 }
 
 func configLog(config *config.Config, plane plane.Plane) {
