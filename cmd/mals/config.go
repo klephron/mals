@@ -38,7 +38,7 @@ func configInit(config *config.Config, plane plane.Plane) {
 		if model == nil {
 			continue
 		}
-		if err := plane.Usage().RegisterModel(*model); err != nil {
+		if err := plane.Scope().RegisterModel(*model); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 	}
@@ -47,7 +47,7 @@ func configInit(config *config.Config, plane plane.Plane) {
 		if lsp == nil {
 			continue
 		}
-		if err := plane.Usage().RegisterLsp(*lsp); err != nil {
+		if err := plane.Scope().RegisterLsp(*lsp); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 	}
@@ -56,7 +56,7 @@ func configInit(config *config.Config, plane plane.Plane) {
 		if usage == nil {
 			continue
 		}
-		if err := plane.Usage().RegisterUsage(*usage); err != nil {
+		if err := plane.Usage().Register(*usage); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 	}
