@@ -4,3 +4,4 @@ ls
 
 l
 lsp-test
+ls

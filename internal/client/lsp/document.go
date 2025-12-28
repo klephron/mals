@@ -34,6 +34,10 @@ func (s *ClientLsp) documentUpdateFull(workspace *Workspace, document *Document,
 		s.Name(), workspace.name, document.uri, document.version)
 }
 
+func (d *Document) text() string {
+	return strings.Join(d.lines, "\n")
+}
+
 func (d *Document) positionGet(line, char uint32) uint64 {
 	if line >= uint32(len(d.lines)) {
 		// Calculate total length including newlines
