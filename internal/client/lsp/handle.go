@@ -1,11 +1,11 @@
 package lsp
 
 import (
-	"encoding/json"
 	"fmt"
 	"mals/internal/info"
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
+	"mals/pkg/config"
 )
 
 func errorParseUnexpectedType[T jsonrpc.Message](s *ClientLsp) {
@@ -146,17 +146,53 @@ func (s *ClientLsp) handleTextDocumentDidClose(msg jsonrpc.Message) {
 }
 
 func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
-	_, ok := msg.(*jsonrpc.Request)
+	req, ok := msg.(*jsonrpc.Request)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Request](s)
 		return
 	}
 
-	usages := s.plane.Usage().Get(nil, nil, &EventTextDocumentCompletion)
-	bytes, _ := json.Marshal(usages)
-	fmt.Printf("usage: %v", string(bytes))
+	params, _ := rawDecode[protocol.CompletionParams](s, req.Params)
 
-	// params, _ := rawDecode[protocol.CompletionParams](s, ntf.Params)
+	workspaces := s.workspaceFindAll(params.TextDocument.URI)
+
+	for _, workspace := range workspaces {
+		document := s.documentGet(workspace, params.TextDocument.URI)
+		if document == nil {
+			continue
+		}
+
+		s.plane.Log().Infof("%T %v: workspace %v document %v: completion", s, s.Name(), workspace.name, document.uri)
+
+		usages := s.plane.Usage().Get(nil, &document.uri, &EventTextDocumentCompletion)
+
+		s.plane.Log().Infof("usages: %v", usages)
+
+		for _, usage := range usages {
+			go func(params protocol.CompletionParams, document *Document, workflow *config.Workflow) {
+				list, err := s.completionWorkflow(&params, document, workflow)
+
+				if err != nil {
+					s.plane.Log().Warnf("%T %v: workspace %v %v", s, s.Name(), workspace.name, err)
+					return
+				}
+
+				listRaw, err := rawEncode(s, &list)
+				if err != nil {
+					return
+				}
+
+				s.plane.Log().Infof("%T %v: workspace %v document %v: completion result %v", s, s.Name(), workspace.name, document.uri, string(listRaw))
+
+				resp := jsonrpc.Response{
+					Id:     req.Id,
+					Result: listRaw,
+				}
+				s.send(&resp)
+
+			}(params, document, usage.Workflow)
+		}
+	}
 }
 
 func (s *ClientLsp) handleShutdown(_ jsonrpc.Message) {

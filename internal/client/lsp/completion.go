@@ -2,10 +2,14 @@ package lsp
 
 import (
 	"fmt"
+	"mals/internal/lsp/protocol"
+	"mals/pkg/config"
+
+	"github.com/invopop/jsonschema"
 )
 
 const (
-	promptCompletionTemplate = `
+	completionTemplate = `
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
 You are an intelligent autocompletion engine. Your task is to suggest relevant text completions based on document context.
@@ -48,7 +52,33 @@ Current context:
 `
 )
 
-func promptCompletion(documentContext string, currentContext string) string {
-	prompt := fmt.Sprintf(promptCompletionTemplate, documentContext, currentContext)
+func completionPrompt(documentContext string, currentContext string) string {
+	prompt := fmt.Sprintf(completionTemplate, documentContext, currentContext)
 	return prompt
+}
+
+func completionSchema[T any]() any {
+	reflector := jsonschema.Reflector{
+		AllowAdditionalProperties: false,
+		DoNotReference:            true,
+	}
+	var v T
+	schema := reflector.Reflect(v)
+	return schema
+}
+
+func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, document *Document, workflow *config.Workflow) (protocol.CompletionList, error) {
+
+	list := protocol.CompletionList{
+		IsIncomplete: true,
+		Items: []protocol.CompletionItem{
+			{
+				Label:         "lsp-test",
+				Detail:        "lsp-details",
+				Documentation: &protocol.Or_CompletionItem_documentation{Value: "lsp-documentation"},
+			},
+		},
+	}
+
+	return list, nil
 }

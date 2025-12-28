@@ -2,7 +2,7 @@
   "loggers": [
     {
       "name": "stderr",
-      "level": "debug",
+      "level": "info",
       "kind": "file",
       "file": "/dev/stderr"
     }
@@ -32,8 +32,8 @@
       "name": "all-completion",
       "conditions": [
         {
-          "filetypes": ["*"],
-          "paths": ["*"],
+          "filetypes": [".*"],
+          "paths": [".*"],
           "events": ["textDocument/completion"]
         }
       ],
@@ -53,8 +53,8 @@
             "template": "<TODO>",
             "conditions": [
               {
-                "filetypes": ["*"],
-                "paths": ["*"],
+                "filetypes": [".*"],
+                "paths": [".*"],
                 "events": ["<unknown>"]
               }
             ]

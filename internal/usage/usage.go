@@ -2,14 +2,14 @@ package usage
 
 import (
 	"mals/pkg/config"
-	"path/filepath"
+	"regexp"
 )
 
-func wildcardMatch(value *string, pattern string) bool {
+func regexMatch(value *string, pattern string) bool {
 	if value == nil {
 		return true
 	}
-	matched, _ := filepath.Match(pattern, *value)
+	matched, _ := regexp.MatchString(pattern, *value)
 	return matched
 }
 
@@ -18,7 +18,7 @@ func filetypeMatch(filetype *string, patterns []string) bool {
 		return true
 	}
 	for _, pattern := range patterns {
-		if wildcardMatch(filetype, pattern) {
+		if regexMatch(filetype, pattern) {
 			return true
 		}
 	}
@@ -30,7 +30,7 @@ func pathMatch(filetype *string, patterns []string) bool {
 		return true
 	}
 	for _, pattern := range patterns {
-		if wildcardMatch(filetype, pattern) {
+		if regexMatch(filetype, pattern) {
 			return true
 		}
 	}
@@ -42,7 +42,7 @@ func eventMatch(filetype *string, patterns []string) bool {
 		return true
 	}
 	for _, pattern := range patterns {
-		if wildcardMatch(filetype, pattern) {
+		if regexMatch(filetype, pattern) {
 			return true
 		}
 	}
