@@ -13,8 +13,12 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-func statusError(name string, actual controller.ListenerStatus, expected controller.ListenerStatus) error {
-	return fmt.Errorf("Listener %v expected %v, got %v", name, expected, actual)
+func statusErrorEq(name string, actual controller.ListenerStatus, expected controller.ListenerStatus) error {
+	return fmt.Errorf("Listener %v expected eq %v, got %v", name, expected, actual)
+}
+
+func statusErrorFlag(name string, actual controller.ListenerStatus, expected controller.ListenerStatus) error {
+	return fmt.Errorf("Listener %v expected flag %v, got %v", name, expected, actual)
 }
 
 func (s *ListenerController) status(value *ListenerValue) controller.ListenerStatus {
@@ -82,7 +86,7 @@ func (s *ListenerController) Register(cfg config.Listener) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if status := s.statusRW(value); status != controller.ListenerAbsent {
-		return statusError(name, status, controller.ListenerAbsent)
+		return statusErrorEq(name, status, controller.ListenerAbsent)
 	}
 
 	switch config := cfg.(type) {
@@ -111,7 +115,7 @@ func (s *ListenerController) Unregister(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ListenerRegistered {
-		return statusError(name, status, controller.ListenerRegistered)
+		return statusErrorEq(name, status, controller.ListenerRegistered)
 	}
 
 	s.state.listeners.Delete(name)
@@ -128,7 +132,7 @@ func (s *ListenerController) Create(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ListenerRegistered {
-		return statusError(name, status, controller.ListenerRegistered)
+		return statusErrorEq(name, status, controller.ListenerRegistered)
 	}
 
 	switch config := value.config.(type) {
@@ -169,7 +173,7 @@ func (s *ListenerController) Delete(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ListenerRegistered|controller.ListenerCreated {
-		return statusError(name, status, controller.ListenerRegistered|controller.ListenerCreated)
+		return statusErrorEq(name, status, controller.ListenerRegistered|controller.ListenerCreated)
 	}
 
 	value.listener = nil
@@ -186,7 +190,7 @@ func (s *ListenerController) Start(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ListenerRegistered|controller.ListenerCreated {
-		return statusError(name, status, controller.ListenerRegistered|controller.ListenerCreated)
+		return statusErrorEq(name, status, controller.ListenerRegistered|controller.ListenerCreated)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -213,7 +217,7 @@ func (s *ListenerController) Stop(name string) error {
 		if value != nil {
 			value.rw.Unlock()
 		}
-		return statusError(name, status, controller.ListenerStarted)
+		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
 	value.clients.Range(func(key client.Client, value struct{}) bool {
@@ -242,7 +246,7 @@ func (s *ListenerController) ClientAdd(name string, client client.Client) error 
 		if value != nil {
 			value.rw.RUnlock()
 		}
-		return statusError(name, status, controller.ListenerStarted)
+		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
 	value.rw.RUnlock()
@@ -268,7 +272,7 @@ func (s *ListenerController) ClientRemove(name string, client client.Client) err
 		if value != nil {
 			value.rw.RUnlock()
 		}
-		return statusError(name, status, controller.ListenerStarted)
+		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
 	value.rw.RUnlock()

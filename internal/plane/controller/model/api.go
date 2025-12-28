@@ -13,8 +13,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func statusError(name string, actual controller.ModelStatus, expected controller.ModelStatus) error {
-	return fmt.Errorf("model %v expected %v, got %v", name, expected, actual)
+func statusErrorEq(name string, actual controller.ModelStatus, expected controller.ModelStatus) error {
+	return fmt.Errorf("model %v expected eq %v, got %v", name, expected, actual)
+}
+
+func statusErrorFlag(name string, actual controller.ModelStatus, expected controller.ModelStatus) error {
+	return fmt.Errorf("model %v expected flag %v, got %v", name, expected, actual)
 }
 
 func (s *ModelController) status(value *ModelValue) controller.ModelStatus {
@@ -82,7 +86,7 @@ func (s *ModelController) Register(cfg config.Model) error {
 	value, _ := s.state.models.Load(name)
 
 	if status := s.statusRW(value); status != controller.ModelAbsent {
-		return statusError(name, status, controller.ModelAbsent)
+		return statusErrorEq(name, status, controller.ModelAbsent)
 	}
 
 	switch settings := cfg.Settings.(type) {
@@ -110,7 +114,7 @@ func (s *ModelController) Unregister(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ModelRegistered {
-		return statusError(name, status, controller.ModelRegistered)
+		return statusErrorEq(name, status, controller.ModelRegistered)
 	}
 
 	s.state.models.Delete(name)
@@ -127,7 +131,7 @@ func (s *ModelController) Create(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ModelRegistered {
-		return statusError(name, status, controller.ModelRegistered)
+		return statusErrorEq(name, status, controller.ModelRegistered)
 	}
 
 	switch settings := value.config.Settings.(type) {
@@ -160,7 +164,7 @@ func (s *ModelController) Delete(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ModelRegistered|controller.ModelCreated {
-		return statusError(name, status, controller.ModelRegistered|controller.ModelCreated)
+		return statusErrorEq(name, status, controller.ModelRegistered|controller.ModelCreated)
 	}
 
 	value.model = nil
@@ -178,7 +182,7 @@ func (s *ModelController) Start(name string) error {
 	}
 
 	if status := s.status(value); status != controller.ModelRegistered|controller.ModelCreated {
-		return statusError(name, status, controller.ModelRegistered|controller.ModelCreated)
+		return statusErrorEq(name, status, controller.ModelRegistered|controller.ModelCreated)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -219,7 +223,7 @@ func (s *ModelController) Stop(name string) error {
 		if value != nil {
 			value.rw.Unlock()
 		}
-		return statusError(name, status, controller.ModelStarted)
+		return statusErrorFlag(name, status, controller.ModelStarted)
 	}
 
 	cancel := value.cancelFunc
@@ -240,7 +244,7 @@ func (s *ModelController) TaskExecClient(modelName string, task *model.Task, cli
 	}
 
 	if status := s.status(value); status&controller.ModelCreated == 0 {
-		return model.Result{Error: statusError(modelName, status, controller.ModelCreated)}
+		return model.Result{Error: statusErrorFlag(modelName, status, controller.ModelCreated)}
 	}
 
 	return value.queue.taskExecClient(task, client)
@@ -255,7 +259,7 @@ func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client c
 	}
 
 	if status := s.status(value); status&controller.ModelCreated == 0 {
-		return nil, statusError(modelName, status, controller.ModelCreated)
+		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskGetClient(id, client)
@@ -270,7 +274,7 @@ func (s *ModelController) TaskGetAllClient(modelName string, client client.Clien
 	}
 
 	if status := s.status(value); status&controller.ModelCreated == 0 {
-		return nil, statusError(modelName, status, controller.ModelCreated)
+		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskGetAllClient(client), nil
@@ -285,7 +289,7 @@ func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, clien
 	}
 
 	if status := s.status(value); status&controller.ModelCreated == 0 {
-		return nil, statusError(modelName, status, controller.ModelCreated)
+		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskCancelClient(id, client)
@@ -300,7 +304,7 @@ func (s *ModelController) TaskCancelAllClient(modelName string, client client.Cl
 	}
 
 	if status := s.status(value); status&controller.ModelCreated == 0 {
-		return nil, statusError(modelName, status, controller.ModelCreated)
+		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskCancelAllClient(client)

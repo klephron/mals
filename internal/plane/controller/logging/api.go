@@ -9,8 +9,12 @@ import (
 	"sync"
 )
 
-func statusError(name string, actual controller.LogStatus, expected controller.LogStatus) error {
-	return fmt.Errorf("log %v expected %v, got %v", name, expected, actual)
+func statusErrorEq(name string, actual controller.LogStatus, expected controller.LogStatus) error {
+	return fmt.Errorf("log %v expected eq %v, got %v", name, expected, actual)
+}
+
+func statusErrorFlag(name string, actual controller.LogStatus, expected controller.LogStatus) error {
+	return fmt.Errorf("log %v expected flag %v, got %v", name, expected, actual)
 }
 
 func (s *LogController) status(value *LogValue) controller.LogStatus {
@@ -78,7 +82,7 @@ func (s *LogController) Register(cfg config.Log) error {
 	value, _ := s.state.logs.Load(name)
 
 	if status := s.statusRW(value); status != controller.LogAbsent {
-		return statusError(name, status, controller.LogAbsent)
+		return statusErrorEq(name, status, controller.LogAbsent)
 	}
 
 	switch config := cfg.(type) {
@@ -106,7 +110,7 @@ func (s *LogController) Unregister(name string) error {
 	}
 
 	if status := s.status(value); status != controller.LogRegistered {
-		return statusError(name, status, controller.LogRegistered)
+		return statusErrorEq(name, status, controller.LogRegistered)
 	}
 
 	s.state.logs.Delete(name)
@@ -123,7 +127,7 @@ func (s *LogController) Create(name string) error {
 	}
 
 	if status := s.status(value); status != controller.LogRegistered {
-		return statusError(name, status, controller.LogRegistered)
+		return statusErrorEq(name, status, controller.LogRegistered)
 	}
 
 	switch config := value.config.(type) {
@@ -150,7 +154,7 @@ func (s *LogController) Delete(name string) error {
 	}
 
 	if status := s.status(value); status != controller.LogRegistered|controller.LogCreated {
-		return statusError(name, status, controller.LogRegistered|controller.LogCreated)
+		return statusErrorEq(name, status, controller.LogRegistered|controller.LogCreated)
 	}
 
 	value.log.Close()
@@ -168,7 +172,7 @@ func (s *LogController) Start(name string) error {
 	}
 
 	if status := s.status(value); status != controller.LogRegistered|controller.LogCreated {
-		return statusError(name, status, controller.LogRegistered|controller.LogCreated)
+		return statusErrorEq(name, status, controller.LogRegistered|controller.LogCreated)
 	}
 
 	value.enabled = true
@@ -185,7 +189,7 @@ func (s *LogController) Stop(name string) error {
 	}
 
 	if status := s.status(value); status&controller.LogStarted == 0 {
-		return statusError(name, status, controller.LogStarted)
+		return statusErrorFlag(name, status, controller.LogStarted)
 	}
 
 	value.enabled = false
