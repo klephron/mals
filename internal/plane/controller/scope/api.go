@@ -46,6 +46,7 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 	}
 
 	resource, exists := current.models.Load(name)
+
 	if !exists {
 		config, ok := s.state.models.Load(name)
 
@@ -59,20 +60,16 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 			dependencies: xsync.NewMap[string, *ScopeToken](),
 		}
 
-		current.models.Store(name, r)
 		resource = r
+		current.models.Store(name, resource)
+
+		s.plane.Log().Infof("ModelAcquire new model stored %v", resource.fullname)
 	}
 
 	resource.rw.Lock()
 	defer resource.rw.Unlock()
 
-	empty := true
-	resource.dependencies.Range(func(key string, value *ScopeToken) bool {
-		empty = false
-		return false
-	})
-
-	if empty {
+	if !exists {
 		if err := s.plane.Model().Register(resource.fullname, resource.config); err != nil {
 			return "", nil, err
 		}
@@ -86,6 +83,8 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 
 	token := newToken()
 	resource.dependencies.Store(token.Token(), token)
+
+	s.plane.Log().Infof("ModelAcquire %v in scope %v token %v assigned", resource.fullname, scope, token)
 
 	return resource.fullname, token, nil
 }
@@ -112,6 +111,8 @@ func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeTo
 	defer resource.rw.Unlock()
 
 	resource.dependencies.Delete(token.Token())
+
+	s.plane.Log().Infof("ModelRelease %v in scope %v token %v released", resource.fullname, scope, token)
 
 	return nil
 }
@@ -144,6 +145,8 @@ func (s *ScopeController) close(errors *[]error, current *Space) {
 		}
 
 		current.models.Delete(name)
+
+		s.plane.Log().Infof("Close %v", resource.fullname)
 
 		return true
 	})

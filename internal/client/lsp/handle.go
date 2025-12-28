@@ -166,8 +166,6 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 
 		usages := s.plane.Usage().Get(nil, &document.uri, &EventTextDocumentCompletion)
 
-		s.plane.Log().Infof("usages: %v", usages)
-
 		for _, usage := range usages {
 			go func(params protocol.CompletionParams, document *Document, workflow *config.Workflow) {
 				list, err := s.completionWorkflow(&params, document, workflow)

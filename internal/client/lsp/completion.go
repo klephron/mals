@@ -3,6 +3,7 @@ package lsp
 import (
 	"fmt"
 	"mals/internal/lsp/protocol"
+	"mals/internal/scope"
 	"mals/pkg/config"
 
 	"github.com/invopop/jsonschema"
@@ -67,7 +68,29 @@ func completionSchema[T any]() any {
 	return schema
 }
 
-func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, document *Document, workflow *config.Workflow) (protocol.CompletionList, error) {
+func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, document *Document, workflow *config.Workflow) (*protocol.CompletionList, error) {
+
+	for _, step := range workflow.Steps {
+		switch step := step.(type) {
+		case *config.StepModel:
+			// TODO: make it work not only on global scope
+			if step.Scope != "global" {
+				s.plane.Log().Warnf("unsupported step %T %v scope %v", step, step, step.Scope)
+			}
+
+			// acquire model with scope
+			modelName, token, err := s.plane.Scope().ModelAcquire(step.Model, scope.NewScopeGlobal())
+			if err != nil {
+				s.plane.Log().Warnf("while step %T %v: %v", step, step, err)
+				return nil, err
+			}
+
+			defer s.plane.Scope().ModelRelease(modelName, token)
+
+		default:
+			s.plane.Log().Warnf("unhandled step %T %v", step, step)
+		}
+	}
 
 	list := protocol.CompletionList{
 		IsIncomplete: true,
@@ -80,5 +103,5 @@ func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, docume
 		},
 	}
 
-	return list, nil
+	return &list, nil
 }
