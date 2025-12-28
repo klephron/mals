@@ -72,18 +72,6 @@ func (s *Plane) Serve(onReady func()) {
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.client.Serve(func() { wgReady.Done() })
-		})
-	}
-	{
-		wgReady.Add(1)
-		wg.Go(func() {
-			s.listener.Serve(func() { wgReady.Done() })
-		})
-	}
-	{
-		wgReady.Add(1)
-		wg.Go(func() {
 			s.model.Serve(func() { wgReady.Done() })
 		})
 	}
@@ -100,12 +88,34 @@ func (s *Plane) Serve(onReady func()) {
 		})
 	}
 
+	{
+		wgReady.Add(1)
+		wg.Go(func() {
+			s.client.Serve(func() { wgReady.Done() })
+		})
+	}
+	{
+		wgReady.Add(1)
+		wg.Go(func() {
+			s.listener.Serve(func() { wgReady.Done() })
+		})
+	}
+
 	wgReady.Wait()
 	onReady()
 	wg.Wait()
 }
 
 func (s *Plane) Shutdown() error {
+	if err := s.client.Shutdown(); err != nil {
+		s.Log().Errorf("%v", err)
+		return err
+	}
+	if err := s.listener.Shutdown(); err != nil {
+		s.Log().Errorf("%v", err)
+		return err
+	}
+
 	if err := s.usage.Shutdown(); err != nil {
 		s.Log().Errorf("%v", err)
 		return err
@@ -115,14 +125,6 @@ func (s *Plane) Shutdown() error {
 		return err
 	}
 	if err := s.model.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
-		return err
-	}
-	if err := s.listener.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
-		return err
-	}
-	if err := s.client.Shutdown(); err != nil {
 		s.Log().Errorf("%v", err)
 		return err
 	}

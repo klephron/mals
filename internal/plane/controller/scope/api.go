@@ -10,6 +10,8 @@ import (
 )
 
 func (s *ScopeController) Shutdown() error {
+	s.Close(scope.NewScopeGlobal())
+
 	s.state.statusRW.RLock()
 	cancel := s.state.statusCancel
 	s.state.statusRW.RUnlock()
