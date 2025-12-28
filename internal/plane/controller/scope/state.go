@@ -11,9 +11,7 @@ import (
 
 // rw?
 type Resource[T any] struct {
-	resource   T
-	registered bool
-	started    bool
+	resource T
 }
 
 type Scope struct {
