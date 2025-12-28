@@ -7,7 +7,7 @@ import (
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/logging"
 	"mals/internal/plane/controller/model"
-	"mals/internal/plane/controller/usage"
+	"mals/internal/plane/controller/scope"
 	"sync"
 )
 
@@ -17,7 +17,7 @@ type Plane struct {
 	listener controller.ListenerController
 	log      controller.LogController
 	model    controller.ModelController
-	usage    controller.UsageController
+	scope    controller.ScopeController
 }
 
 func New() plane.Plane {
@@ -27,7 +27,7 @@ func New() plane.Plane {
 	plane.listener = listener.New(plane)
 	plane.log = logging.New(plane)
 	plane.model = model.New(plane)
-	plane.usage = usage.New(plane)
+	plane.scope = scope.New(plane)
 
 	return plane
 }
@@ -48,8 +48,8 @@ func (s *Plane) Model() controller.ModelController {
 	return s.model
 }
 
-func (s *Plane) Usage() controller.UsageController {
-	return s.usage
+func (s *Plane) Scope() controller.ScopeController {
+	return s.scope
 }
 
 func (s *Plane) Serve(onReady func()) {
@@ -83,7 +83,7 @@ func (s *Plane) Serve(onReady func()) {
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.usage.Serve(func() { wgReady.Done() })
+			s.scope.Serve(func() { wgReady.Done() })
 		})
 	}
 
@@ -93,7 +93,7 @@ func (s *Plane) Serve(onReady func()) {
 }
 
 func (s *Plane) Shutdown() error {
-	if err := s.usage.Shutdown(); err != nil {
+	if err := s.scope.Shutdown(); err != nil {
 		s.Log().Errorf("%v", err)
 		return err
 	}

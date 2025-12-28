@@ -10,5 +10,5 @@ type Plane interface {
 	Listener() controller.ListenerController
 	Log() controller.LogController
 	Model() controller.ModelController
-	Usage() controller.UsageController
+	Scope() controller.ScopeController
 }
