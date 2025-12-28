@@ -22,7 +22,7 @@ type ModelController interface {
 	Serve(onReady func()) error
 
 	Status(name string) ModelStatus
-	Register(config config.Model) error
+	Register(name string, config *config.Model) error
 	Unregister(name string) error
 	Create(name string) error
 	Delete(name string) error

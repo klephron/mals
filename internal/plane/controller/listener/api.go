@@ -80,9 +80,7 @@ func (s *ListenerController) Status(name string) controller.ListenerStatus {
 	return s.statusRW(value)
 }
 
-func (s *ListenerController) Register(cfg config.Listener) error {
-	name := cfg.Name()
-
+func (s *ListenerController) Register(name string, cfg config.Listener) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if status := s.statusRW(value); status != controller.ListenerAbsent {

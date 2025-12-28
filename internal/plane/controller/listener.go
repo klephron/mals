@@ -19,7 +19,7 @@ type ListenerController interface {
 	Serve(onReady func()) error
 
 	Status(name string) ListenerStatus
-	Register(config config.Listener) error
+	Register(name string, config config.Listener) error
 	Unregister(name string) error
 	Create(name string) error
 	Delete(name string) error

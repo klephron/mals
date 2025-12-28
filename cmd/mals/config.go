@@ -23,31 +23,13 @@ func configLoad(params *Params) (*config.Config, error) {
 
 func configInit(config *config.Config, plane plane.Plane) {
 	for _, log := range config.Loggers {
-		if err := plane.Log().Register(log); err != nil {
+		if err := plane.Log().Register(log.Name(), log); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 		if err := plane.Log().Create(log.Name()); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 		if err := plane.Log().Start(log.Name()); err != nil {
-			plane.Log().Errorf("%v", err)
-		}
-	}
-
-	for _, model := range config.Models {
-		if model == nil {
-			continue
-		}
-		if err := plane.Scope().RegisterModel(*model); err != nil {
-			plane.Log().Errorf("%v", err)
-		}
-	}
-
-	for _, lsp := range config.Lsps {
-		if lsp == nil {
-			continue
-		}
-		if err := plane.Scope().RegisterLsp(*lsp); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 	}
@@ -61,8 +43,17 @@ func configInit(config *config.Config, plane plane.Plane) {
 		}
 	}
 
+	for _, model := range config.Models {
+		if model == nil {
+			continue
+		}
+		if err := plane.Scope().ModelRegister(*model); err != nil {
+			plane.Log().Errorf("%v", err)
+		}
+	}
+
 	for _, listener := range config.Listeners {
-		if err := plane.Listener().Register(listener); err != nil {
+		if err := plane.Listener().Register(listener.Name(), listener); err != nil {
 			plane.Log().Errorf("%v", err)
 		}
 		if err := plane.Listener().Create(listener.Name()); err != nil {

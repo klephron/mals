@@ -80,9 +80,7 @@ func (s *ModelController) Status(name string) controller.ModelStatus {
 	return s.statusRW(value)
 }
 
-func (s *ModelController) Register(cfg config.Model) error {
-	name := cfg.Name
-
+func (s *ModelController) Register(name string, cfg *config.Model) error {
 	value, _ := s.state.models.Load(name)
 
 	if status := s.statusRW(value); status != controller.ModelAbsent {

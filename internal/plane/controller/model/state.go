@@ -11,7 +11,7 @@ import (
 
 type ModelValue struct {
 	rw         sync.RWMutex
-	config     config.Model
+	config     *config.Model
 	model      model.Model
 	queue      *TaskQueue
 	cancelFunc context.CancelFunc

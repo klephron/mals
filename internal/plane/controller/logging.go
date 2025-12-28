@@ -16,7 +16,7 @@ type LogController interface {
 	Serve(onReady func()) error
 
 	Status(name string) LogStatus
-	Register(config config.Log) error
+	Register(name string, config config.Log) error
 	Unregister(name string) error
 	Create(name string) error
 	Delete(name string) error
