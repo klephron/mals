@@ -1,35 +1,31 @@
 package scope
 
-type SpaceKind int32
+type ScopeKind int32
 
 const (
-	SpaceClient   SpaceKind = iota
-	SpaceWorkflow SpaceKind = iota
-	SpaceStep     SpaceKind = iota
+	ScopeClient   ScopeKind = iota
+	ScopeWorkflow ScopeKind = iota
+	ScopeStep     ScopeKind = iota
 )
 
-type Space struct {
-	kind SpaceKind
+type Scope struct {
+	kind ScopeKind
 	name string
 }
 
-type Scope struct {
-	spaces []Space
+type Path struct {
+	scopes []Scope
 }
 
-func NewSpace(kind SpaceKind, name string) Space {
-	return Space{
+func NewScope(kind ScopeKind, name string) Scope {
+	return Scope{
 		kind: kind,
 		name: name,
 	}
 }
 
-func NewScope(spaces ...Space) *Scope {
-	return &Scope{
-		spaces: spaces,
+func NewPath(scopes ...Scope) *Path {
+	return &Path{
+		scopes: scopes,
 	}
-}
-
-func (s *Scope) IsGlobal() bool {
-	return len(s.spaces) == 0
 }
