@@ -1,4 +1,4 @@
-package lsp
+package client
 
 var (
 	EventInitialize             string = "initialize"

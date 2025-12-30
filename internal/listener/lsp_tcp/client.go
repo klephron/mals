@@ -3,23 +3,23 @@ package lsp_tcp
 import (
 	"bufio"
 	"fmt"
-	"mals/internal/client/lsp"
+	"mals/internal/lsp/client"
 	"mals/internal/plane"
 	"net"
 )
 
 type ClientLspTcp struct {
-	lsp.ClientLsp
+	client.ClientLsp
 	conn net.Conn
 }
 
 func newClient(plane plane.Plane, conn net.Conn) *ClientLspTcp {
-	client := &ClientLspTcp{
-		ClientLsp: *lsp.New(plane, bufio.NewScanner(conn), bufio.NewWriter(conn)),
+	c := &ClientLspTcp{
+		ClientLsp: *client.New(plane, bufio.NewScanner(conn), bufio.NewWriter(conn)),
 		conn:      conn,
 	}
-	client.Client = client
-	return client
+	c.Client = c
+	return c
 }
 
 func (s *ClientLspTcp) Name() string {

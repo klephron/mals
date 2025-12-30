@@ -3,5 +3,3 @@ ls
 ls
 
 l
-lsp-test
-ls

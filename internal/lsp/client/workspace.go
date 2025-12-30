@@ -1,4 +1,4 @@
-package lsp
+package client
 
 import (
 	"github.com/puzpuzpuz/xsync/v4"
