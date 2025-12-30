@@ -145,7 +145,6 @@ func (s *ModelController) ModelCreate(name string) error {
 			return err
 		}
 		value.model = model
-		value.queue = newTaskQueue(value.model)
 
 	default:
 		return fmt.Errorf("unhandled model %T %v", settings, settings)
@@ -153,6 +152,7 @@ func (s *ModelController) ModelCreate(name string) error {
 
 	if value.model != nil {
 		value.model = metered.New(s.plane, value.model)
+		value.queue = newTaskQueue(value.model)
 	}
 
 	return nil

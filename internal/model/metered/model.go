@@ -59,11 +59,7 @@ func (s *ModelMetered) Run(ctx context.Context) error {
 func (s *ModelMetered) Execute(ctx context.Context, task *model.Task) (string, error) {
 	start := time.Now()
 
-	s.plane.Infof("metered model: before execution")
-
 	result, err := s.parent.Execute(ctx, task)
-
-	s.plane.Infof("metered model: after execution")
 
 	duration := time.Since(start).Seconds()
 	labels := prometheus.Labels{"model_name": s.Name(), "model_kind": s.Kind()}
