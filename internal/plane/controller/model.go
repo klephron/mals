@@ -18,16 +18,16 @@ const (
 )
 
 type ModelController interface {
+	Run(onReady func()) error
 	Shutdown() error
-	Serve(onReady func()) error
 
-	Status(name string) ModelStatus
-	Register(name string, config *config.Model) error
-	Unregister(name string) error
-	Create(name string) error
-	Delete(name string) error
-	Start(name string) error
-	Stop(name string) error
+	ModelStatus(name string) ModelStatus
+	ModelRegister(name string, config *config.Model) error
+	ModelUnregister(name string) error
+	ModelCreate(name string) error
+	ModelDelete(name string) error
+	ModelStart(name string) error
+	ModelStop(name string) error
 
 	TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error)
 	TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)

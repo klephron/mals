@@ -27,7 +27,7 @@ func New(plane plane.Plane) *ModelController {
 	}
 }
 
-func (s *ModelController) Serve(onReady func()) error {
+func (s *ModelController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {

@@ -61,8 +61,8 @@ func (s *ModelController) statusRW(value *ModelValue) controller.ModelStatus {
 
 func (s *ModelController) Shutdown() error {
 	s.state.models.Range(func(key string, value *ModelValue) bool {
-		s.Stop(key)
-		s.Delete(key)
+		s.ModelStop(key)
+		s.ModelDelete(key)
 		return true
 	})
 
@@ -75,12 +75,12 @@ func (s *ModelController) Shutdown() error {
 	return nil
 }
 
-func (s *ModelController) Status(name string) controller.ModelStatus {
+func (s *ModelController) ModelStatus(name string) controller.ModelStatus {
 	value, _ := s.state.models.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *ModelController) Register(name string, cfg *config.Model) error {
+func (s *ModelController) ModelRegister(name string, cfg *config.Model) error {
 	value, _ := s.state.models.Load(name)
 
 	if status := s.statusRW(value); status != controller.ModelAbsent {
@@ -103,7 +103,7 @@ func (s *ModelController) Register(name string, cfg *config.Model) error {
 	return nil
 }
 
-func (s *ModelController) Unregister(name string) error {
+func (s *ModelController) ModelUnregister(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -120,7 +120,7 @@ func (s *ModelController) Unregister(name string) error {
 	return nil
 }
 
-func (s *ModelController) Create(name string) error {
+func (s *ModelController) ModelCreate(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -153,7 +153,7 @@ func (s *ModelController) Create(name string) error {
 	return nil
 }
 
-func (s *ModelController) Delete(name string) error {
+func (s *ModelController) ModelDelete(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -171,7 +171,7 @@ func (s *ModelController) Delete(name string) error {
 	return nil
 }
 
-func (s *ModelController) Start(name string) error {
+func (s *ModelController) ModelStart(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -204,13 +204,13 @@ func (s *ModelController) Start(name string) error {
 			s.plane.Log().Errorf("%v", err)
 		}
 
-		s.Stop(model.Name())
+		s.ModelStop(model.Name())
 	}()
 
 	return nil
 }
 
-func (s *ModelController) Stop(name string) error {
+func (s *ModelController) ModelStop(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {

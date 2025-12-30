@@ -10,8 +10,7 @@ import (
 
 func (s *ClientController) Shutdown() error {
 	s.state.clients.Range(func(key client.Client, value *ClientValue) bool {
-		s.Stop(key)
-		s.Delete(key)
+		s.ClientShutdown(key)
 		return true
 	})
 
@@ -24,14 +23,14 @@ func (s *ClientController) Shutdown() error {
 	return nil
 }
 
-func (s *ClientController) Own(client client.Client, listener listener.Listener) error {
+func (s *ClientController) ClientOwn(client client.Client, listener listener.Listener) error {
 	name := client.Name()
 
 	if _, ok := s.state.clients.Load(client); ok {
 		return fmt.Errorf("client %v is owned", name)
 	}
 
-	if err := s.plane.Listener().ClientAdd(listener.Name(), client); err != nil {
+	if err := s.plane.Listener().ListenerClientAdd(listener.Name(), client); err != nil {
 		return err
 	}
 
@@ -44,42 +43,7 @@ func (s *ClientController) Own(client client.Client, listener listener.Listener)
 	return nil
 }
 
-func (s *ClientController) delete(client client.Client, notify bool) error {
-	name := client.Name()
-
-	value, ok := s.state.clients.Load(client)
-	if !ok {
-		return fmt.Errorf("client %v does not exist", name)
-	}
-
-	value.rw.RLock()
-
-	if value.cancelFunc != nil {
-		value.rw.RUnlock()
-		return fmt.Errorf("client %v is running", name)
-	}
-
-	s.state.clients.Delete(client)
-	value.rw.RUnlock()
-
-	if notify {
-		if err := s.plane.Listener().ClientRemove(value.listener, client); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *ClientController) Delete(client client.Client) error {
-	return s.delete(client, true)
-}
-
-func (s *ClientController) DeleteSilent(client client.Client) error {
-	return s.delete(client, false)
-}
-
-func (s *ClientController) Start(client client.Client) error {
+func (s *ClientController) ClientServe(client client.Client) error {
 	name := client.Name()
 
 	value, ok := s.state.clients.Load(client)
@@ -101,14 +65,13 @@ func (s *ClientController) Start(client client.Client) error {
 
 	go func() {
 		client.Serve(ctx)
-		s.Stop(client)
-		s.Delete(client)
+		s.ClientShutdown(client)
 	}()
 
 	return nil
 }
 
-func (s *ClientController) Stop(client client.Client) error {
+func (s *ClientController) clientShutdown(client client.Client, notify bool) error {
 	name := client.Name()
 
 	value, ok := s.state.clients.Load(client)
@@ -125,9 +88,26 @@ func (s *ClientController) Stop(client client.Client) error {
 
 	cancel := value.cancelFunc
 	value.cancelFunc = nil
+
 	value.rw.Unlock()
 
 	cancel()
 
+	s.state.clients.Delete(client)
+
+	if notify {
+		if err := s.plane.Listener().ListenerClientRemove(value.listener, client); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func (s *ClientController) ClientShutdown(client client.Client) error {
+	return s.clientShutdown(client, true)
+}
+
+func (s *ClientController) ClientShutdownSilent(client client.Client) error {
+	return s.clientShutdown(client, false)
 }

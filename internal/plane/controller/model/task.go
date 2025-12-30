@@ -88,7 +88,7 @@ func (s *TaskQueue) worker() {
 		case <-request.ctx.Done():
 			request.result <- TaskResult{error: fmt.Errorf("task %v cancelled", request.task.Id)}
 		default:
-			text, error := s.model.Execute(request.task, request.ctx)
+			text, error := s.model.Execute(request.ctx, request.task)
 			request.result <- TaskResult{text: text, error: error}
 		}
 	}

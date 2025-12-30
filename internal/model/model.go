@@ -30,5 +30,5 @@ type Model interface {
 	Name() string
 	Kind() string
 	Serve(ctx context.Context) error
-	Execute(task *Task, ctx context.Context) (string, error)
+	Execute(ctx context.Context, task *Task) (string, error)
 }

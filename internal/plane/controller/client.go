@@ -7,11 +7,10 @@ import (
 
 type ClientController interface {
 	Shutdown() error
-	Serve(onReady func()) error
+	Run(onReady func()) error
 
-	Own(client client.Client, listener listener.Listener) error
-	Delete(client client.Client) error
-	DeleteSilent(client client.Client) error
-	Start(client client.Client) error
-	Stop(client client.Client) error
+	ClientOwn(client client.Client, listener listener.Listener) error
+	ClientServe(client client.Client) error
+	ClientShutdown(client client.Client) error
+	ClientShutdownSilent(client client.Client) error
 }

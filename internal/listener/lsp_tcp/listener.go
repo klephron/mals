@@ -37,7 +37,7 @@ func (s *ListenerLsp) Ipc() string {
 	return Ipc()
 }
 
-func (s *ListenerLsp) Listen(ctx context.Context) error {
+func (s *ListenerLsp) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
@@ -70,12 +70,12 @@ func (s *ListenerLsp) Listen(ctx context.Context) error {
 
 		client := newClient(s.plane, conn)
 
-		if err := s.plane.Client().Own(client, s); err != nil {
+		if err := s.plane.Client().ClientOwn(client, s); err != nil {
 			s.plane.Log().Warnf("%s: %v", s.Name(), err)
 			continue
 		}
 
-		if err := s.plane.Client().Start(client); err != nil {
+		if err := s.plane.Client().ClientServe(client); err != nil {
 			s.plane.Log().Warnf("%s: %v", s.Name(), err)
 			continue
 		}

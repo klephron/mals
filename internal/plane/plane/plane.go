@@ -66,38 +66,38 @@ func (s *Plane) Serve(onReady func()) {
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.log.Serve(func() { wgReady.Done() })
+			s.log.Run(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.model.Serve(func() { wgReady.Done() })
+			s.model.Run(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.scope.Serve(func() { wgReady.Done() })
+			s.scope.Run(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.usage.Serve(func() { wgReady.Done() })
+			s.usage.Run(func() { wgReady.Done() })
 		})
 	}
 
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.client.Serve(func() { wgReady.Done() })
+			s.client.Run(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.listener.Serve(func() { wgReady.Done() })
+			s.listener.Run(func() { wgReady.Done() })
 		})
 	}
 

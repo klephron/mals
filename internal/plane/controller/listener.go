@@ -15,17 +15,17 @@ const (
 )
 
 type ListenerController interface {
+	Run(onReady func()) error
 	Shutdown() error
-	Serve(onReady func()) error
 
-	Status(name string) ListenerStatus
-	Register(name string, config config.Listener) error
-	Unregister(name string) error
-	Create(name string) error
-	Delete(name string) error
-	Start(name string) error
-	Stop(name string) error
+	ListenerStatus(name string) ListenerStatus
+	ListenerRegister(name string, config config.Listener) error
+	ListenerUnregister(name string) error
+	ListenerCreate(name string) error
+	ListenerDelete(name string) error
+	ListenerStart(name string) error
+	ListenerStop(name string) error
 
-	ClientAdd(name string, client client.Client) error
-	ClientRemove(name string, client client.Client) error
+	ListenerClientAdd(name string, client client.Client) error
+	ListenerClientRemove(name string, client client.Client) error
 }

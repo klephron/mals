@@ -10,7 +10,7 @@ import (
 )
 
 func (s *ScopeController) Shutdown() error {
-	s.Close(scope.NewScopeGlobal())
+	s.ScopeClose(scope.NewScopeGlobal())
 
 	s.state.statusRW.RLock()
 	cancel := s.state.statusCancel
@@ -70,13 +70,13 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 	defer resource.rw.Unlock()
 
 	if !exists {
-		if err := s.plane.Model().Register(resource.fullname, resource.config); err != nil {
+		if err := s.plane.Model().ModelRegister(resource.fullname, resource.config); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.Model().Create(resource.fullname); err != nil {
+		if err := s.plane.Model().ModelCreate(resource.fullname); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.Model().Start(resource.fullname); err != nil {
+		if err := s.plane.Model().ModelStart(resource.fullname); err != nil {
 			return "", nil, err
 		}
 	}
@@ -117,7 +117,7 @@ func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeTo
 	return nil
 }
 
-func (s *ScopeController) close(errors *[]error, current *Space) {
+func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 	current.models.Range(func(name string, resource *ResourceModel) bool {
 		resource.rw.Lock()
 		defer resource.rw.Unlock()
@@ -131,15 +131,15 @@ func (s *ScopeController) close(errors *[]error, current *Space) {
 			return true
 		}
 
-		if err := s.plane.Model().Stop(resource.fullname); err != nil {
+		if err := s.plane.Model().ModelStop(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.Model().Delete(resource.fullname); err != nil {
+		if err := s.plane.Model().ModelDelete(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.Model().Unregister(resource.fullname); err != nil {
+		if err := s.plane.Model().ModelUnregister(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
@@ -152,16 +152,16 @@ func (s *ScopeController) close(errors *[]error, current *Space) {
 	})
 }
 
-func (s *ScopeController) closeDFS(errors *[]error, current *Space) {
+func (s *ScopeController) scopeCloseDFS(errors *[]error, current *Space) {
 	current.children.Range(func(key scope.Space, value *Space) bool {
-		s.closeDFS(errors, value)
+		s.scopeCloseDFS(errors, value)
 		return true
 	})
 
-	s.close(errors, current)
+	s.scopeClose(errors, current)
 }
 
-func (s *ScopeController) Close(scope *scope.Scope) []error {
+func (s *ScopeController) ScopeClose(scope *scope.Scope) []error {
 	errors := make([]error, 0)
 
 	current := s.state.root
@@ -175,7 +175,7 @@ func (s *ScopeController) Close(scope *scope.Scope) []error {
 		current = next
 	}
 
-	s.closeDFS(&errors, current)
+	s.scopeCloseDFS(&errors, current)
 
 	return errors
 }

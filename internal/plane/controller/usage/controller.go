@@ -28,7 +28,7 @@ func New(plane plane.Plane) *UsageController {
 	}
 }
 
-func (s *UsageController) Serve(onReady func()) error {
+func (s *UsageController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {

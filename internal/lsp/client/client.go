@@ -35,6 +35,7 @@ func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *Clien
 	return s
 }
 
+// abstract
 func (s *ClientLsp) Name() string {
 	return s.Client.Name()
 }
@@ -76,8 +77,8 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 		case <-scanCtx.Done():
 			s.plane.Log().Infof("%s: scanner done", s.Name())
 
-			if err := s.Client.Close(); err != nil {
-				s.plane.Log().Errorf("%s: error while closing %v", err)
+			if err := s.writer.Flush(); err != nil {
+				s.plane.Log().Errorf("%s: flush: %v", err)
 				return err
 			}
 
@@ -87,13 +88,6 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 			s.handle(bytes)
 		}
 	}
-}
-
-func (s *ClientLsp) Close() error {
-	if err := s.writer.Flush(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (s *ClientLsp) send(msg jsonrpc.Message) error {

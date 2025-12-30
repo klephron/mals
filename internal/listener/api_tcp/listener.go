@@ -35,6 +35,6 @@ func (s *ListenerApiTcp) Ipc() string {
 	return Ipc()
 }
 
-func (s *ListenerApiTcp) Listen(ctx context.Context) error {
+func (s *ListenerApiTcp) Start(ctx context.Context) error {
 	return nil
 }

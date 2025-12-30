@@ -16,7 +16,7 @@ func (s *UsageController) Shutdown() error {
 	return nil
 }
 
-func (s *UsageController) Register(cfg config.Usage) error {
+func (s *UsageController) UsageRegister(cfg config.Usage) error {
 	name := cfg.Name
 
 	if _, ok := s.state.usages.Load(name); ok {
@@ -28,7 +28,7 @@ func (s *UsageController) Register(cfg config.Usage) error {
 	return nil
 }
 
-func (s *UsageController) Unregister(name string) error {
+func (s *UsageController) UsageUnregister(name string) error {
 	_, ok := s.state.usages.Load(name)
 	if !ok {
 		return fmt.Errorf("usage %v does not exist", name)
@@ -39,7 +39,7 @@ func (s *UsageController) Unregister(name string) error {
 	return nil
 }
 
-func (s *UsageController) GetAll() []*config.Usage {
+func (s *UsageController) UsageGetAll() []*config.Usage {
 	usages := make([]*config.Usage, 0)
 
 	s.state.usages.Range(func(key string, value *config.Usage) bool {
@@ -50,7 +50,7 @@ func (s *UsageController) GetAll() []*config.Usage {
 	return usages
 }
 
-func (s *UsageController) Get(filetype *string, path *string, event *string) []*config.Usage {
+func (s *UsageController) UsageGet(filetype *string, path *string, event *string) []*config.Usage {
 	usages := make([]*config.Usage, 0)
 
 	s.state.usages.Range(func(key string, value *config.Usage) bool {

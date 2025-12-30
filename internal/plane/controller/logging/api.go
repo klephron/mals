@@ -57,8 +57,8 @@ func (s *LogController) statusRW(value *LogValue) controller.LogStatus {
 
 func (s *LogController) Shutdown() error {
 	s.state.logs.Range(func(key string, value *LogValue) bool {
-		s.Stop(key)
-		s.Delete(key)
+		s.LogStop(key)
+		s.LogDelete(key)
 		return true
 	})
 
@@ -71,12 +71,12 @@ func (s *LogController) Shutdown() error {
 	return nil
 }
 
-func (s *LogController) Status(name string) controller.LogStatus {
+func (s *LogController) LogStatus(name string) controller.LogStatus {
 	value, _ := s.state.logs.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *LogController) Register(name string, cfg config.Log) error {
+func (s *LogController) LogRegister(name string, cfg config.Log) error {
 	value, _ := s.state.logs.Load(name)
 
 	if status := s.statusRW(value); status != controller.LogAbsent {
@@ -99,7 +99,7 @@ func (s *LogController) Register(name string, cfg config.Log) error {
 	return nil
 }
 
-func (s *LogController) Unregister(name string) error {
+func (s *LogController) LogUnregister(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -116,7 +116,7 @@ func (s *LogController) Unregister(name string) error {
 	return nil
 }
 
-func (s *LogController) Create(name string) error {
+func (s *LogController) LogCreate(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -143,7 +143,7 @@ func (s *LogController) Create(name string) error {
 	return nil
 }
 
-func (s *LogController) Delete(name string) error {
+func (s *LogController) LogDelete(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -161,7 +161,7 @@ func (s *LogController) Delete(name string) error {
 	return nil
 }
 
-func (s *LogController) Start(name string) error {
+func (s *LogController) LogStart(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -178,7 +178,7 @@ func (s *LogController) Start(name string) error {
 	return nil
 }
 
-func (s *LogController) Stop(name string) error {
+func (s *LogController) LogStop(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {

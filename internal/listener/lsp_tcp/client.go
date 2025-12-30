@@ -2,6 +2,7 @@ package lsp_tcp
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"mals/internal/lsp/client"
 	"mals/internal/plane"
@@ -26,12 +27,14 @@ func (s *ClientLspTcp) Name() string {
 	return fmt.Sprintf("%s", s.conn.RemoteAddr())
 }
 
-func (s *ClientLspTcp) Close() error {
-	if err := s.ClientLsp.Close(); err != nil {
-		return err
+func (s *ClientLspTcp) Serve(ctx context.Context) (err error) {
+	err = s.ClientLsp.Serve(ctx)
+
+	if err != nil {
+		s.conn.Close()
+	} else {
+		err = s.conn.Close()
 	}
-	if err := s.conn.Close(); err != nil {
-		return err
-	}
-	return nil
+
+	return
 }

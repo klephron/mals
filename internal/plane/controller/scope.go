@@ -10,14 +10,12 @@ type ScopeToken interface {
 }
 
 type ScopeController interface {
+	Run(onReady func()) error
 	Shutdown() error
-	Serve(onReady func()) error
-
-	// currently can't set root of object to create scopes
 
 	ModelRegister(config config.Model) error
 	ModelAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
 	ModelRelease(name string, token ScopeToken) error
 
-	Close(scope *scope.Scope) []error
+	ScopeClose(scope *scope.Scope) []error
 }

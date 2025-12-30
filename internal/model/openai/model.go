@@ -59,7 +59,7 @@ func (s *ModelOpenAI) Serve(ctx context.Context) error {
 	return nil
 }
 
-func (s *ModelOpenAI) Execute(task *model.Task, ctx context.Context) (string, error) {
+func (s *ModelOpenAI) Execute(ctx context.Context, task *model.Task) (string, error) {
 
 	s.plane.Log().Infof("%T %v task %v: received", s, s.Name(), task)
 

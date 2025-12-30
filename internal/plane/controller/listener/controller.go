@@ -27,7 +27,7 @@ func New(plane plane.Plane) *ListenerController {
 	}
 }
 
-func (s *ListenerController) Serve(onReady func()) error {
+func (s *ListenerController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {

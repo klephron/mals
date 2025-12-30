@@ -61,8 +61,8 @@ func (s *ListenerController) statusRW(value *ListenerValue) controller.ListenerS
 
 func (s *ListenerController) Shutdown() error {
 	s.state.listeners.Range(func(key string, value *ListenerValue) bool {
-		s.Stop(key)
-		s.Delete(key)
+		s.ListenerStop(key)
+		s.ListenerDelete(key)
 		return true
 	})
 
@@ -75,12 +75,12 @@ func (s *ListenerController) Shutdown() error {
 	return nil
 }
 
-func (s *ListenerController) Status(name string) controller.ListenerStatus {
+func (s *ListenerController) ListenerStatus(name string) controller.ListenerStatus {
 	value, _ := s.state.listeners.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *ListenerController) Register(name string, cfg config.Listener) error {
+func (s *ListenerController) ListenerRegister(name string, cfg config.Listener) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if status := s.statusRW(value); status != controller.ListenerAbsent {
@@ -104,7 +104,7 @@ func (s *ListenerController) Register(name string, cfg config.Listener) error {
 	return nil
 }
 
-func (s *ListenerController) Unregister(name string) error {
+func (s *ListenerController) ListenerUnregister(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -121,7 +121,7 @@ func (s *ListenerController) Unregister(name string) error {
 	return nil
 }
 
-func (s *ListenerController) Create(name string) error {
+func (s *ListenerController) ListenerCreate(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -162,7 +162,7 @@ func (s *ListenerController) Create(name string) error {
 	return nil
 }
 
-func (s *ListenerController) Delete(name string) error {
+func (s *ListenerController) ListenerDelete(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -179,7 +179,7 @@ func (s *ListenerController) Delete(name string) error {
 	return nil
 }
 
-func (s *ListenerController) Start(name string) error {
+func (s *ListenerController) ListenerStart(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -197,14 +197,14 @@ func (s *ListenerController) Start(name string) error {
 	listener := value.listener
 
 	go func() {
-		listener.Listen(ctx)
-		s.Stop(listener.Name())
+		listener.Start(ctx)
+		s.ListenerStop(listener.Name())
 	}()
 
 	return nil
 }
 
-func (s *ListenerController) Stop(name string) error {
+func (s *ListenerController) ListenerStop(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -219,8 +219,7 @@ func (s *ListenerController) Stop(name string) error {
 	}
 
 	value.clients.Range(func(key client.Client, value struct{}) bool {
-		s.plane.Client().Stop(key)
-		s.plane.Client().DeleteSilent(key)
+		s.plane.Client().ClientShutdown(key)
 		return true
 	})
 
@@ -233,7 +232,7 @@ func (s *ListenerController) Stop(name string) error {
 	return nil
 }
 
-func (s *ListenerController) ClientAdd(name string, client client.Client) error {
+func (s *ListenerController) ListenerClientAdd(name string, client client.Client) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -259,7 +258,7 @@ func (s *ListenerController) ClientAdd(name string, client client.Client) error 
 	return nil
 }
 
-func (s *ListenerController) ClientRemove(name string, client client.Client) error {
+func (s *ListenerController) ListenerClientRemove(name string, client client.Client) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {

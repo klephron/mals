@@ -31,7 +31,7 @@ func New(plane plane.Plane) *ScopeController {
 	}
 }
 
-func (s *ScopeController) Serve(onReady func()) error {
+func (s *ScopeController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
