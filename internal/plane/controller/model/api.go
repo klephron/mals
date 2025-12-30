@@ -233,7 +233,7 @@ func (s *ModelController) Stop(name string) error {
 	return nil
 }
 
-func (s *ModelController) TaskExecClient(modelName string, task *model.Task, client client.Client) model.Result {
+func (s *ModelController) TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
 	value, _ := s.state.models.Load(modelName)
 
 	if value != nil {
@@ -242,7 +242,7 @@ func (s *ModelController) TaskExecClient(modelName string, task *model.Task, cli
 	}
 
 	if status := s.status(value); status&controller.ModelCreated == 0 {
-		return model.Result{Error: statusErrorFlag(modelName, status, controller.ModelCreated)}
+		return "", statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
 	return value.queue.taskExecClient(task, client)

@@ -83,25 +83,25 @@ func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, docum
 	}
 	defer s.plane.Scope().ModelRelease(modelName, token)
 
-	text := completionPrompt(
+	taskText := completionPrompt(
 		document.text(),
 		document.lastNChars(params.Position.Line, params.Position.Character, 200),
 	)
 	task := model.NewTask(
-		text,
+		taskText,
 		completionSchema[[]string](),
 		"completion_items",
 		"Generated completion items",
 	)
 
-	res := s.plane.Model().TaskExecClient(modelName, task, s)
-	if res.Error != nil {
-		s.plane.Log().Warnf("step %T %v: %v", step, step, res.Error)
-		return nil, res.Error
+	text, err := s.plane.Model().TaskExecClient(modelName, task, s)
+	if err != nil {
+		s.plane.Log().Warnf("step %T %v: %v", step, step, err)
+		return nil, err
 	}
 
 	var resItems []string
-	if err := json.Unmarshal([]byte(res.Text), &resItems); err != nil {
+	if err := json.Unmarshal([]byte(text), &resItems); err != nil {
 		return nil, fmt.Errorf("step %T %v: %v", step, step, err)
 	}
 

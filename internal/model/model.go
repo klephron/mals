@@ -6,11 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Result struct {
-	Text  string
-	Error error
-}
-
 type Task struct {
 	Id                uuid.UUID
 	Text              string
@@ -35,5 +30,5 @@ type Model interface {
 	Name() string
 	Kind() string
 	Serve(ctx context.Context) error
-	Execute(task *Task, ctx context.Context) Result
+	Execute(task *Task, ctx context.Context) (string, error)
 }

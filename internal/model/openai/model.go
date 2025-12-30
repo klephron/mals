@@ -59,7 +59,7 @@ func (s *ModelOpenAI) Serve(ctx context.Context) error {
 	return nil
 }
 
-func (s *ModelOpenAI) Execute(task *model.Task, ctx context.Context) model.Result {
+func (s *ModelOpenAI) Execute(task *model.Task, ctx context.Context) (string, error) {
 
 	s.plane.Log().Infof("%T %v task %v: received", s, s.Name(), task)
 
@@ -86,14 +86,10 @@ func (s *ModelOpenAI) Execute(task *model.Task, ctx context.Context) model.Resul
 
 	if err != nil {
 		s.plane.Log().Warnf("%T %v task %v: ", s, s.Name(), task.Id, err)
-		return model.Result{
-			Text:  "",
-			Error: err,
-		}
+		return "", err
 	}
 
-	return model.Result{
-		Text:  resp.Choices[0].Message.Content,
-		Error: nil,
-	}
+	text := resp.Choices[0].Message.Content
+
+	return text, nil
 }

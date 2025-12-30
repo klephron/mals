@@ -11,10 +11,15 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type TaskResult struct {
+	text  string
+	error error
+}
+
 type TaskRequest struct {
 	client client.Client
 	task   *model.Task
-	result chan model.Result
+	result chan TaskResult
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -81,19 +86,20 @@ func (s *TaskQueue) worker() {
 	for request := range queued {
 		select {
 		case <-request.ctx.Done():
-			request.result <- model.Result{Error: fmt.Errorf("task %v cancelled", request.task.Id)}
+			request.result <- TaskResult{error: fmt.Errorf("task %v cancelled", request.task.Id)}
 		default:
-			request.result <- s.model.Execute(request.task, request.ctx)
+			text, error := s.model.Execute(request.task, request.ctx)
+			request.result <- TaskResult{text: text, error: error}
 		}
 	}
 }
 
-func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) model.Result {
+func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) (string, error) {
 	s.rw.RLock()
 
 	if s.ctx == nil {
 		s.rw.RUnlock()
-		return model.Result{Error: fmt.Errorf("%T %v is not serving", s, s.model.Name())}
+		return "", fmt.Errorf("%T %v is not serving", s, s.model.Name())
 	}
 
 	taskCtx, taskCancel := context.WithCancel(s.ctx)
@@ -101,7 +107,7 @@ func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) model
 	request := &TaskRequest{
 		client: client,
 		task:   task,
-		result: make(chan model.Result, 1),
+		result: make(chan TaskResult, 1),
 		ctx:    taskCtx,
 		cancel: taskCancel,
 	}
@@ -112,7 +118,7 @@ func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) model
 
 	result := <-request.result
 	s.mapped.Delete(task.Id)
-	return result
+	return result.text, result.error
 }
 
 func (s *TaskQueue) taskCancelClient(id uuid.UUID, client client.Client) (*model.Task, error) {
