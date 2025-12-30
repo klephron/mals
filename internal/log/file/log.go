@@ -39,7 +39,7 @@ func Open(path string, levelString string) (*LogFile, error) {
 	}
 
 	logger := slog.New(slog.NewTextHandler(file, &slog.HandlerOptions{
-		AddSource: true,
+		AddSource: false,
 		Level:     slogLevel,
 	}))
 

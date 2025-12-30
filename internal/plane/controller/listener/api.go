@@ -197,7 +197,7 @@ func (s *ListenerController) ListenerStart(name string) error {
 	listener := value.listener
 
 	go func() {
-		listener.Start(ctx)
+		listener.Run(ctx)
 		s.ListenerStop(listener.Name())
 	}()
 

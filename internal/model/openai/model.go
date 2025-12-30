@@ -49,7 +49,7 @@ func (s *ModelOpenAI) Kind() string {
 	return Kind()
 }
 
-func (s *ModelOpenAI) Serve(ctx context.Context) error {
+func (s *ModelOpenAI) Run(ctx context.Context) error {
 	s.plane.Infof("%T %v: started", s, s.Name())
 
 	<-ctx.Done()

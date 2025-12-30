@@ -40,7 +40,7 @@ func (s *ListenerApiTcp) Ipc() string {
 	return Ipc()
 }
 
-func (s *ListenerApiTcp) Start(ctx context.Context) error {
+func (s *ListenerApiTcp) Run(ctx context.Context) error {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 

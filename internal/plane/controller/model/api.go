@@ -152,7 +152,7 @@ func (s *ModelController) ModelCreate(name string) error {
 	}
 
 	if value.model != nil {
-		value.model = metered.New(value.model)
+		value.model = metered.New(s.plane, value.model)
 	}
 
 	return nil
@@ -197,7 +197,7 @@ func (s *ModelController) ModelStart(name string) error {
 
 	go func() {
 		go func() {
-			err := model.Serve(ctx)
+			err := model.Run(ctx)
 			if err != nil {
 				s.plane.Errorf("%v", err)
 			}

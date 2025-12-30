@@ -29,6 +29,6 @@ func NewTask(text string, schema any, schemaName string, schemaDescription strin
 type Model interface {
 	Name() string
 	Kind() string
-	Serve(ctx context.Context) error
+	Run(ctx context.Context) error
 	Execute(ctx context.Context, task *Task) (string, error)
 }

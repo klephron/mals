@@ -3,6 +3,7 @@ package metered
 import (
 	"context"
 	"mals/internal/model"
+	"mals/internal/plane"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,16 +31,39 @@ var (
 
 type ModelMetered struct {
 	model.Model
+	parent model.Model
+	plane  plane.Plane
 }
 
-func New(m model.Model) *ModelMetered {
-	return &ModelMetered{Model: m}
+func New(plane plane.Plane, model model.Model) *ModelMetered {
+	s := &ModelMetered{
+		parent: model,
+		plane:  plane,
+	}
+	s.Model = s
+	return s
+}
+
+func (s *ModelMetered) Name() string {
+	return s.parent.Name()
+}
+
+func (s *ModelMetered) Kind() string {
+	return s.parent.Kind()
+}
+
+func (s *ModelMetered) Run(ctx context.Context) error {
+	return s.parent.Run(ctx)
 }
 
 func (s *ModelMetered) Execute(ctx context.Context, task *model.Task) (string, error) {
 	start := time.Now()
 
-	result, err := s.Model.Execute(ctx, task)
+	s.plane.Infof("metered model: before execution")
+
+	result, err := s.parent.Execute(ctx, task)
+
+	s.plane.Infof("metered model: after execution")
 
 	duration := time.Since(start).Seconds()
 	labels := prometheus.Labels{"model_name": s.Name(), "model_kind": s.Kind()}

@@ -37,7 +37,7 @@ func (s *ListenerLsp) Ipc() string {
 	return Ipc()
 }
 
-func (s *ListenerLsp) Start(ctx context.Context) error {
+func (s *ListenerLsp) Run(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
