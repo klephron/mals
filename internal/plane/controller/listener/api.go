@@ -219,7 +219,7 @@ func (s *ListenerController) ListenerStop(name string) error {
 	}
 
 	value.clients.Range(func(key client.Client, value struct{}) bool {
-		s.plane.Client().ClientShutdown(key)
+		s.plane.ClientShutdown(key)
 		return true
 	})
 

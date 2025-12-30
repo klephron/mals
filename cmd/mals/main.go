@@ -18,7 +18,7 @@ func main() {
 
 	plane := plane.New()
 
-	plane.Serve(func() {
+	plane.Run(func() {
 		go func() {
 			<-ctx.Done()
 			if err := plane.Shutdown(); err != nil {

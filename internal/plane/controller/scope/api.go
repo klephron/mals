@@ -21,7 +21,7 @@ func (s *ScopeController) Shutdown() error {
 	return nil
 }
 
-func (s *ScopeController) ModelRegister(config config.Model) error {
+func (s *ScopeController) ScopeModelRegister(config config.Model) error {
 	name := config.Name
 
 	if _, ok := s.state.models.Load(name); ok {
@@ -33,7 +33,7 @@ func (s *ScopeController) ModelRegister(config config.Model) error {
 	return nil
 }
 
-func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
+func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
 	current := s.state.root
 
 	for _, sc := range scope.Path() {
@@ -63,20 +63,20 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 		resource = r
 		current.models.Store(name, resource)
 
-		s.plane.Log().Infof("ModelAcquire new model stored %v", resource.fullname)
+		s.plane.Infof("ModelAcquire new model stored %v", resource.fullname)
 	}
 
 	resource.rw.Lock()
 	defer resource.rw.Unlock()
 
 	if !exists {
-		if err := s.plane.Model().ModelRegister(resource.fullname, resource.config); err != nil {
+		if err := s.plane.ModelRegister(resource.fullname, resource.config); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.Model().ModelCreate(resource.fullname); err != nil {
+		if err := s.plane.ModelCreate(resource.fullname); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.Model().ModelStart(resource.fullname); err != nil {
+		if err := s.plane.ModelStart(resource.fullname); err != nil {
 			return "", nil, err
 		}
 	}
@@ -84,12 +84,12 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 	token := newToken()
 	resource.dependencies.Store(token.Token(), token)
 
-	s.plane.Log().Infof("ModelAcquire %v in scope %v token %v assigned", resource.fullname, scope, token)
+	s.plane.Infof("ModelAcquire %v in scope %v token %v assigned", resource.fullname, scope, token)
 
 	return resource.fullname, token, nil
 }
 
-func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeToken) error {
+func (s *ScopeController) ScopeModelRelease(fullname string, token controller.ScopeToken) error {
 	name, scope := decodeName(fullname)
 
 	current := s.state.root
@@ -112,7 +112,7 @@ func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeTo
 
 	resource.dependencies.Delete(token.Token())
 
-	s.plane.Log().Infof("ModelRelease %v in scope %v token %v released", resource.fullname, scope, token)
+	s.plane.Infof("ModelRelease %v in scope %v token %v released", resource.fullname, scope, token)
 
 	return nil
 }
@@ -131,22 +131,22 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 			return true
 		}
 
-		if err := s.plane.Model().ModelStop(resource.fullname); err != nil {
+		if err := s.plane.ModelStop(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.Model().ModelDelete(resource.fullname); err != nil {
+		if err := s.plane.ModelDelete(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.Model().ModelUnregister(resource.fullname); err != nil {
+		if err := s.plane.ModelUnregister(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
 
 		current.models.Delete(name)
 
-		s.plane.Log().Infof("Close %v", resource.fullname)
+		s.plane.Infof("Close %v", resource.fullname)
 
 		return true
 	})

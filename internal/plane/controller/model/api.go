@@ -194,14 +194,14 @@ func (s *ModelController) ModelStart(name string) error {
 		go func() {
 			err := model.Serve(ctx)
 			if err != nil {
-				s.plane.Log().Errorf("%v", err)
+				s.plane.Errorf("%v", err)
 			}
 			cancel()
 		}()
 
 		err := queue.serve(ctx, 1)
 		if err != nil {
-			s.plane.Log().Errorf("%v", err)
+			s.plane.Errorf("%v", err)
 		}
 
 		s.ModelStop(model.Name())

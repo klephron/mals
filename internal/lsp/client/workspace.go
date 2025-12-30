@@ -21,7 +21,7 @@ func newWorkspace(uri string, name string) *Workspace {
 func (s *ClientLsp) documentGet(workspace *Workspace, uri string) *Document {
 	document, ok := workspace.documents.Load(uri)
 	if !ok {
-		s.plane.Log().Warnf("%s: workspace %s document %s is not present", s.Name(), workspace.name, document.uri)
+		s.plane.Warnf("%s: workspace %s document %s is not present", s.Name(), workspace.name, document.uri)
 		return nil
 	}
 	return document
@@ -32,14 +32,14 @@ func (s *ClientLsp) documentAdd(workspace *Workspace, uri string, text *string) 
 
 	workspace.documents.Store(uri, document)
 
-	s.plane.Log().Infof("%s: workspace %s document %s added", s.Name(), workspace.name, document.uri)
+	s.plane.Infof("%s: workspace %s document %s added", s.Name(), workspace.name, document.uri)
 }
 
 func (s *ClientLsp) documentDelete(workspace *Workspace, uri string) {
 	document, ok := workspace.documents.LoadAndDelete(uri)
 
 	if !ok {
-		s.plane.Log().Warnf("%s: workspace %s document %s is not present", s.Name(), workspace.name, uri)
+		s.plane.Warnf("%s: workspace %s document %s is not present", s.Name(), workspace.name, uri)
 	}
-	s.plane.Log().Infof("%s: workspace %s document %s deleted", s.Name(), workspace.name, document.uri)
+	s.plane.Infof("%s: workspace %s document %s deleted", s.Name(), workspace.name, document.uri)
 }

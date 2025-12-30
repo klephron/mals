@@ -35,31 +35,7 @@ func New() plane.Plane {
 	return plane
 }
 
-func (s *Plane) Client() controller.ClientController {
-	return s.client
-}
-
-func (s *Plane) Listener() controller.ListenerController {
-	return s.listener
-}
-
-func (s *Plane) Log() controller.LogController {
-	return s.log
-}
-
-func (s *Plane) Model() controller.ModelController {
-	return s.model
-}
-
-func (s *Plane) Scope() controller.ScopeController {
-	return s.scope
-}
-
-func (s *Plane) Usage() controller.UsageController {
-	return s.usage
-}
-
-func (s *Plane) Serve(onReady func()) {
+func (s *Plane) Run(onReady func()) {
 	var wg sync.WaitGroup
 	var wgReady sync.WaitGroup
 
@@ -108,28 +84,28 @@ func (s *Plane) Serve(onReady func()) {
 
 func (s *Plane) Shutdown() error {
 	if err := s.client.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
+		s.Errorf("%v", err)
 		return err
 	}
 	if err := s.listener.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
+		s.Errorf("%v", err)
 		return err
 	}
 
 	if err := s.usage.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
+		s.Errorf("%v", err)
 		return err
 	}
 	if err := s.scope.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
+		s.Errorf("%v", err)
 		return err
 	}
 	if err := s.model.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
+		s.Errorf("%v", err)
 		return err
 	}
 	if err := s.log.Shutdown(); err != nil {
-		s.Log().Errorf("%v", err)
+		s.Errorf("%v", err)
 		return err
 	}
 	return nil

@@ -73,15 +73,15 @@ func completionSchema[T any]() any {
 func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, document *Document, workflow *config.Workflow, step *config.StepModel) (*protocol.CompletionList, error) {
 	// TODO: handle other scopes
 	if step.Scope != "global" {
-		s.plane.Log().Warnf("step %T %v scope %v unsupported", step, step, step.Scope)
+		s.plane.Warnf("step %T %v scope %v unsupported", step, step, step.Scope)
 	}
 
-	modelName, token, err := s.plane.Scope().ModelAcquire(step.Model, scope.NewScopeGlobal())
+	modelName, token, err := s.plane.ScopeModelAcquire(step.Model, scope.NewScopeGlobal())
 	if err != nil {
-		s.plane.Log().Warnf("step %T %v: %v", step, step, err)
+		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
 	}
-	defer s.plane.Scope().ModelRelease(modelName, token)
+	defer s.plane.ScopeModelRelease(modelName, token)
 
 	taskText := completionPrompt(
 		document.text(),
@@ -94,9 +94,9 @@ func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, docum
 		"Generated completion items",
 	)
 
-	text, err := s.plane.Model().TaskExecClient(modelName, task, s)
+	text, err := s.plane.TaskExecClient(modelName, task, s)
 	if err != nil {
-		s.plane.Log().Warnf("step %T %v: %v", step, step, err)
+		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
 	}
 
@@ -138,7 +138,7 @@ func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, docume
 
 		default:
 			err := fmt.Errorf("unhandled step %T %v", step, step)
-			s.plane.Log().Warnf("%v", err)
+			s.plane.Warnf("%v", err)
 			return nil, err
 		}
 	}

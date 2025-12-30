@@ -18,7 +18,7 @@ func errorParseUnexpectedType[T jsonrpc.Message](s *ClientLsp) {
 		},
 	}
 
-	s.plane.Log().Warnf("%v", resp.Error.Message)
+	s.plane.Warnf("%v", resp.Error.Message)
 	s.send(&resp)
 }
 
@@ -40,7 +40,7 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 				Message: "no workspace folders",
 			},
 		}
-		s.plane.Log().Warnf("%v", resp.Error.Message)
+		s.plane.Warnf("%v", resp.Error.Message)
 		s.send(&resp)
 		return
 	}
@@ -112,7 +112,7 @@ func (s *ClientLsp) handleTextDocumentDidChange(msg jsonrpc.Message) {
 		var text *string
 		for _, change := range params.ContentChanges {
 			if change.Range != nil {
-				s.plane.Log().Warnf("%s: unsupported ContentChange Range is unsupported", s.Name())
+				s.plane.Warnf("%s: unsupported ContentChange Range is unsupported", s.Name())
 				continue
 			}
 
@@ -162,16 +162,16 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 			continue
 		}
 
-		s.plane.Log().Infof("%T %v: workspace %v document %v: completion", s, s.Name(), workspace.name, document.uri)
+		s.plane.Infof("%T %v: workspace %v document %v: completion", s, s.Name(), workspace.name, document.uri)
 
-		usages := s.plane.Usage().UsageGet(nil, &document.uri, &EventTextDocumentCompletion)
+		usages := s.plane.UsageGet(nil, &document.uri, &EventTextDocumentCompletion)
 
 		for _, usage := range usages {
 			go func(params protocol.CompletionParams, document *Document, workflow *config.Workflow) {
 				list, err := s.completionWorkflow(&params, document, workflow)
 
 				if err != nil {
-					s.plane.Log().Warnf("%T %v: workspace %v %v", s, s.Name(), workspace.name, err)
+					s.plane.Warnf("%T %v: workspace %v %v", s, s.Name(), workspace.name, err)
 					return
 				}
 
@@ -180,7 +180,7 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 					return
 				}
 
-				s.plane.Log().Infof("%T %v: workspace %v document %v: completion result %v", s, s.Name(), workspace.name, document.uri, string(listRaw))
+				s.plane.Infof("%T %v: workspace %v document %v: completion result %v", s, s.Name(), workspace.name, document.uri, string(listRaw))
 
 				resp := jsonrpc.Response{
 					Id:     req.Id,
@@ -204,7 +204,7 @@ func (s *ClientLsp) handle(bytes []byte) {
 	msg, err := jsonrpc.DecodeMessage(bytes)
 
 	if err != nil {
-		s.plane.Log().Errorf("%T %v: %v", s, s.Name(), err)
+		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (s *ClientLsp) handle(bytes []byte) {
 	case *jsonrpc.Notification:
 		method = msg.Method
 	default:
-		s.plane.Log().Warnf("%T %v: unhandled type %T", s, s.Name(), msg)
+		s.plane.Warnf("%T %v: unhandled type %T", s, s.Name(), msg)
 		return
 	}
 
@@ -236,6 +236,6 @@ func (s *ClientLsp) handle(bytes []byte) {
 	case EventShutdown:
 		s.handleShutdown(msg)
 	default:
-		s.plane.Log().Warnf("%T %v: unhandled method %v", s, s.Name(), method)
+		s.plane.Warnf("%T %v: unhandled method %v", s, s.Name(), method)
 	}
 }

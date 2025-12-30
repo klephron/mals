@@ -48,7 +48,7 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 	ch := make(chan []byte)
 	defer close(ch)
 
-	s.plane.Log().Infof("%s: listening", s.Name())
+	s.plane.Infof("%s: listening", s.Name())
 
 	scanCtx, scanCancel := context.WithCancel(ctx)
 
@@ -63,22 +63,22 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 					return
 				}
 				ch <- s.scanner.Bytes()
-				s.plane.Log().Debugf("%s: scanned %s", s.Name(), string(s.scanner.Bytes()))
+				s.plane.Debugf("%s: scanned %s", s.Name(), string(s.scanner.Bytes()))
 			}
 		}
 	}()
 
 	defer func() {
-		s.plane.Log().Infof("%s: closed", s.Name())
+		s.plane.Infof("%s: closed", s.Name())
 	}()
 
 	for {
 		select {
 		case <-scanCtx.Done():
-			s.plane.Log().Infof("%s: scanner done", s.Name())
+			s.plane.Infof("%s: scanner done", s.Name())
 
 			if err := s.writer.Flush(); err != nil {
-				s.plane.Log().Errorf("%s: flush: %v", err)
+				s.plane.Errorf("%s: flush: %v", err)
 				return err
 			}
 
@@ -93,19 +93,19 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 func (s *ClientLsp) send(msg jsonrpc.Message) error {
 	bytes, err := jsonrpc.EncodeMessage(msg)
 	if err != nil {
-		s.plane.Log().Errorf("%v", err)
+		s.plane.Errorf("%v", err)
 		return err
 	}
 	if _, err := s.writer.Write(bytes); err != nil {
-		s.plane.Log().Errorf("%v", err)
+		s.plane.Errorf("%v", err)
 		return err
 	}
 	if err := s.writer.Flush(); err != nil {
-		s.plane.Log().Errorf("%v", err)
+		s.plane.Errorf("%v", err)
 		return err
 	}
 
-	s.plane.Log().Debugf("%s: sent %s", s.Name(), string(bytes))
+	s.plane.Debugf("%s: sent %s", s.Name(), string(bytes))
 
 	return nil
 }
@@ -114,16 +114,16 @@ func (s *ClientLsp) workspaceAdd(uri string, name string) {
 	workspace := newWorkspace(uri, name)
 	s.workspaces.Store(uri, workspace)
 
-	s.plane.Log().Infof("%s: workspace %s added", s.Name(), workspace.name)
+	s.plane.Infof("%s: workspace %s added", s.Name(), workspace.name)
 }
 
 func (s *ClientLsp) workspaceDelete(uri string) {
 	workspace, ok := s.workspaces.LoadAndDelete(uri)
 
 	if !ok {
-		s.plane.Log().Warnf("%s: workspace by uri %s is not present", s.Name(), uri)
+		s.plane.Warnf("%s: workspace by uri %s is not present", s.Name(), uri)
 	}
-	s.plane.Log().Infof("%s: workspace %s deleted", s.Name(), workspace.name)
+	s.plane.Infof("%s: workspace %s deleted", s.Name(), workspace.name)
 }
 
 func (s *ClientLsp) workspaceFindAll(uri string) []*Workspace {

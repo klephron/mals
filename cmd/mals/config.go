@@ -23,14 +23,14 @@ func configLoad(params *Params) (*config.Config, error) {
 
 func configInit(config *config.Config, plane plane.Plane) {
 	for _, log := range config.Loggers {
-		if err := plane.Log().LogRegister(log.Name(), log); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.LogRegister(log.Name(), log); err != nil {
+			plane.Errorf("%v", err)
 		}
-		if err := plane.Log().LogCreate(log.Name()); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.LogCreate(log.Name()); err != nil {
+			plane.Errorf("%v", err)
 		}
-		if err := plane.Log().LogStart(log.Name()); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.LogStart(log.Name()); err != nil {
+			plane.Errorf("%v", err)
 		}
 	}
 
@@ -38,8 +38,8 @@ func configInit(config *config.Config, plane plane.Plane) {
 		if usage == nil {
 			continue
 		}
-		if err := plane.Usage().UsageRegister(*usage); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.UsageRegister(*usage); err != nil {
+			plane.Errorf("%v", err)
 		}
 	}
 
@@ -47,20 +47,20 @@ func configInit(config *config.Config, plane plane.Plane) {
 		if model == nil {
 			continue
 		}
-		if err := plane.Scope().ModelRegister(*model); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.ScopeModelRegister(*model); err != nil {
+			plane.Errorf("%v", err)
 		}
 	}
 
 	for _, listener := range config.Listeners {
-		if err := plane.Listener().ListenerRegister(listener.Name(), listener); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.ListenerRegister(listener.Name(), listener); err != nil {
+			plane.Errorf("%v", err)
 		}
-		if err := plane.Listener().ListenerCreate(listener.Name()); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.ListenerCreate(listener.Name()); err != nil {
+			plane.Errorf("%v", err)
 		}
-		if err := plane.Listener().ListenerStart(listener.Name()); err != nil {
-			plane.Log().Errorf("%v", err)
+		if err := plane.ListenerStart(listener.Name()); err != nil {
+			plane.Errorf("%v", err)
 		}
 	}
 
@@ -72,5 +72,5 @@ func configLog(config *config.Config, plane plane.Plane) {
 		panic(err)
 	}
 
-	plane.Log().Debugf("config: %v", string(bytes))
+	plane.Debugf("config: %v", string(bytes))
 }

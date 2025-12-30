@@ -30,7 +30,7 @@ func (s *ClientController) ClientOwn(client client.Client, listener listener.Lis
 		return fmt.Errorf("client %v is owned", name)
 	}
 
-	if err := s.plane.Listener().ListenerClientAdd(listener.Name(), client); err != nil {
+	if err := s.plane.ListenerClientAdd(listener.Name(), client); err != nil {
 		return err
 	}
 
@@ -96,7 +96,7 @@ func (s *ClientController) clientShutdown(client client.Client, notify bool) err
 	s.state.clients.Delete(client)
 
 	if notify {
-		if err := s.plane.Listener().ListenerClientRemove(value.listener, client); err != nil {
+		if err := s.plane.ListenerClientRemove(value.listener, client); err != nil {
 			return err
 		}
 	}

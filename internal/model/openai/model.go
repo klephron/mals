@@ -50,18 +50,18 @@ func (s *ModelOpenAI) Kind() string {
 }
 
 func (s *ModelOpenAI) Serve(ctx context.Context) error {
-	s.plane.Log().Infof("%T %v: started", s, s.Name())
+	s.plane.Infof("%T %v: started", s, s.Name())
 
 	<-ctx.Done()
 
-	s.plane.Log().Infof("%T %v: done", s, s.Name())
+	s.plane.Infof("%T %v: done", s, s.Name())
 
 	return nil
 }
 
 func (s *ModelOpenAI) Execute(ctx context.Context, task *model.Task) (string, error) {
 
-	s.plane.Log().Infof("%T %v task %v: received", s, s.Name(), task)
+	s.plane.Infof("%T %v task %v: received", s, s.Name(), task)
 
 	schema := openai.ResponseFormatJSONSchemaJSONSchemaParam{
 		Name:   task.SchemaName,
@@ -82,10 +82,10 @@ func (s *ModelOpenAI) Execute(ctx context.Context, task *model.Task) (string, er
 		},
 	})
 
-	s.plane.Log().Infof("%T %v task %v: processed", s, s.Name(), task)
+	s.plane.Infof("%T %v task %v: processed", s, s.Name(), task)
 
 	if err != nil {
-		s.plane.Log().Warnf("%T %v task %v: ", s, s.Name(), task.Id, err)
+		s.plane.Warnf("%T %v task %v: ", s, s.Name(), task.Id, err)
 		return "", err
 	}
 

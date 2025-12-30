@@ -13,9 +13,9 @@ type ScopeController interface {
 	Run(onReady func()) error
 	Shutdown() error
 
-	ModelRegister(config config.Model) error
-	ModelAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
-	ModelRelease(name string, token ScopeToken) error
+	ScopeModelRegister(config config.Model) error
+	ScopeModelAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
+	ScopeModelRelease(name string, token ScopeToken) error
 
 	ScopeClose(scope *scope.Scope) []error
 }

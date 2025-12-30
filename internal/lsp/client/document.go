@@ -22,7 +22,7 @@ func newDocument(uri string, text *string) *Document {
 
 func (s *ClientLsp) documentUpdateFull(workspace *Workspace, document *Document, text *string, version int32) {
 	if document.version >= version {
-		s.plane.Log().Warnf("%s: workspace %s document %s version %d >= %d",
+		s.plane.Warnf("%s: workspace %s document %s version %d >= %d",
 			s.Name(), workspace.name, document.uri, document.version, version)
 		return
 	}
@@ -30,7 +30,7 @@ func (s *ClientLsp) documentUpdateFull(workspace *Workspace, document *Document,
 	document.version = version
 	document.lines = documentTextToLines(text)
 
-	s.plane.Log().Warnf("%s: workspace %s document %s updated version %d",
+	s.plane.Warnf("%s: workspace %s document %s updated version %d",
 		s.Name(), workspace.name, document.uri, document.version)
 }
 

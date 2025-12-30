@@ -38,7 +38,7 @@ func (s *ScopeController) Run(onReady func()) error {
 		s.state.statusRW.Unlock()
 
 		err := fmt.Errorf("%T is already serving", s)
-		s.plane.Log().Errorf("%v", err)
+		s.plane.Errorf("%v", err)
 		return err
 	}
 
