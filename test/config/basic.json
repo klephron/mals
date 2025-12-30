@@ -13,6 +13,12 @@
       "kind": "lsp",
       "ipc": "tcp",
       "port": 9651
+    },
+    {
+      "name": "lsp-tcp:9650",
+      "kind": "api",
+      "ipc": "tcp",
+      "port": 9650
     }
   ],
   "models": [

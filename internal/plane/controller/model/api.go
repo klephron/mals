@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mals/internal/client"
 	"mals/internal/model"
+	"mals/internal/model/metered"
 	"mals/internal/model/openai"
 	"mals/internal/plane/controller"
 	"mals/pkg/config"
@@ -148,6 +149,10 @@ func (s *ModelController) ModelCreate(name string) error {
 
 	default:
 		return fmt.Errorf("unhandled model %T %v", settings, settings)
+	}
+
+	if value.model != nil {
+		value.model = metered.New(value.model)
 	}
 
 	return nil

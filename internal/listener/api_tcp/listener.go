@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"mals/internal/listener"
 	"mals/internal/plane"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ListenerApiTcp struct {
@@ -36,5 +41,38 @@ func (s *ListenerApiTcp) Ipc() string {
 }
 
 func (s *ListenerApiTcp) Start(ctx context.Context) error {
-	return nil
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	srv := &http.Server{
+		Addr:    s.addr,
+		Handler: r,
+	}
+
+	errCh := make(chan error)
+	defer close(errCh)
+
+	go func() {
+		err := srv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			errCh <- err
+			return
+		}
+		s.plane.Infof("%s: closed", s.Name())
+	}()
+
+	s.plane.Infof("%s: listen", s.Name())
+
+	select {
+	case err := <-errCh:
+		s.plane.Errorf("%s: %v", s.Name(), err)
+		return err
+
+	case <-ctx.Done():
+		srvCtx, srvCancel := context.WithTimeout(context.Background(), time.Second)
+		defer srvCancel()
+		return srv.Shutdown(srvCtx)
+	}
 }
