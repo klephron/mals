@@ -1,1 +1,1 @@
-the new store opening at the mall
+if __name__ == "__main__":
