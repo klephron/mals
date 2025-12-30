@@ -195,22 +195,35 @@ func (s *ModelController) ModelStart(name string) error {
 	model := value.model
 	queue := value.queue
 
+	var wgReady sync.WaitGroup
+
+	wgReady.Add(1)
+
 	go func() {
-		go func() {
+		var wg sync.WaitGroup
+
+		wg.Go(func() {
 			err := model.Run(ctx)
 			if err != nil {
 				s.plane.Errorf("%v", err)
 			}
 			cancel()
-		}()
+		})
 
-		err := queue.serve(ctx, 1)
-		if err != nil {
-			s.plane.Errorf("%v", err)
-		}
+		wg.Go(func() {
+			err := queue.serve(ctx, 1, func() { wgReady.Done() })
+			if err != nil {
+				s.plane.Errorf("%v", err)
+			}
+			cancel()
+		})
+
+		wg.Wait()
 
 		s.ModelStop(model.Name())
 	}()
+
+	wgReady.Wait()
 
 	return nil
 }

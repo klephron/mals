@@ -42,7 +42,7 @@ func newTaskQueue(model model.Model) *TaskQueue {
 	}
 }
 
-func (s *TaskQueue) serve(ctx context.Context, workers int) error {
+func (s *TaskQueue) serve(ctx context.Context, workers int, onReady func()) error {
 	var wg sync.WaitGroup
 
 	if workers <= 0 {
@@ -52,7 +52,7 @@ func (s *TaskQueue) serve(ctx context.Context, workers int) error {
 	s.rw.Lock()
 	if s.ctx != nil {
 		s.rw.Unlock()
-		return fmt.Errorf("%T %v is serving", s, s.model.Name())
+		return fmt.Errorf("%T %v queue is serving", s, s.model.Name())
 	}
 
 	s.queued = make(chan *TaskRequest)
@@ -64,6 +64,8 @@ func (s *TaskQueue) serve(ctx context.Context, workers int) error {
 			s.worker()
 		})
 	}
+
+	onReady()
 
 	<-ctx.Done()
 
@@ -99,7 +101,7 @@ func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) (stri
 
 	if s.ctx == nil {
 		s.rw.RUnlock()
-		return "", fmt.Errorf("%T %v is not serving", s, s.model.Name())
+		return "", fmt.Errorf("%T %v queue is not serving", s, s.model.Name())
 	}
 
 	taskCtx, taskCancel := context.WithCancel(s.ctx)
