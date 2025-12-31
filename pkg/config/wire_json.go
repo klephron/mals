@@ -8,45 +8,79 @@ import (
 func (o *Config) UnmarshalJSON(data []byte) error {
 	var t struct {
 		Loggers   []json.RawMessage `json:"loggers"`
-		Listeners []json.RawMessage `json:"listeners"`
 		Models    []*Model          `json:"models"`
 		Lsps      []*Lsp            `json:"lsps"`
 		Usages    []*Usage          `json:"usages"`
+		Listeners []json.RawMessage `json:"listeners"`
 	}
 
 	t.Loggers = []json.RawMessage{}
-	t.Listeners = []json.RawMessage{}
 	t.Models = []*Model{}
 	t.Lsps = []*Lsp{}
 	t.Usages = []*Usage{}
+	t.Listeners = []json.RawMessage{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
 
-	loggers := []Log{}
+	loggers := []*Log{}
 	for _, tlogger := range t.Loggers {
-		logger, err := logUnmarshalJSON(tlogger)
+		var logger Log
+		err := json.Unmarshal(tlogger, &logger)
 		if err != nil {
 			return err
 		}
-		loggers = append(loggers, logger)
+		loggers = append(loggers, &logger)
 	}
 	o.Loggers = loggers
-
-	listeners := []Listener{}
-	for _, tlistener := range t.Listeners {
-		listener, err := listenerUnmarshalJSON(tlistener)
-		if err != nil {
-			return err
-		}
-		listeners = append(listeners, listener)
-	}
-	o.Listeners = listeners
 
 	o.Models = t.Models
 	o.Lsps = t.Lsps
 	o.Usages = t.Usages
+
+	listeners := []*Listener{}
+	for _, tlistener := range t.Listeners {
+		var listener Listener
+		err := json.Unmarshal(tlistener, &listener)
+		if err != nil {
+			return err
+		}
+		listeners = append(listeners, &listener)
+	}
+	o.Listeners = listeners
+
+	return nil
+}
+
+func (o *Log) UnmarshalJSON(data []byte) error {
+	var kindFile LogKindFile
+
+	var t struct {
+		Name  string  `json:"name"`
+		Kind  string  `json:"kind"`
+		Level string  `json:"level"`
+		File  *string `json:"file"`
+	}
+
+	if err := json.Unmarshal(data, &t); err != nil {
+		return err
+	}
+
+	o.Name = t.Name
+	o.Level = t.Level
+
+	switch t.Kind {
+	case kindFile.Kind():
+		file := &LogKindFile{}
+		if t.File != nil {
+			file.File = *t.File
+		}
+		o.Kind = file
+
+	default:
+		return fmt.Errorf(`in log: "kind" is unknown, got "%v"`, t.Kind)
+	}
 
 	return nil
 }
@@ -128,48 +162,84 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 func (o *Usage) UnmarshalJSON(data []byte) error {
 	var t struct {
 		Name       string       `json:"name"`
+		Events     []string     `json:"events"`
 		Conditions []*Condition `json:"conditions"`
 		Workflow   *Workflow    `json:"workflow"`
 	}
 
 	t.Conditions = []*Condition{}
-
-	if err := json.Unmarshal(data, &t); err != nil {
-		return err
-	}
-
-	o.Name = t.Name
-	o.Conditions = t.Conditions
-	o.Workflow = t.Workflow
-
-	return nil
-}
-
-func (o *Condition) UnmarshalJSON(data []byte) error {
-	var t struct {
-		Filetypes []string `json:"filetypes"`
-		Paths     []string `json:"paths"`
-		Events    []string `json:"events"`
-	}
-
-	t.Filetypes = []string{}
-	t.Paths = []string{}
 	t.Events = []string{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
 
-	o.Filetypes = t.Filetypes
-	o.Paths = t.Paths
+	o.Name = t.Name
 	o.Events = t.Events
+	o.Conditions = t.Conditions
+	o.Workflow = t.Workflow
+
+	return nil
+}
+
+func (o *Listener) UnmarshalJSON(data []byte) error {
+	var kindApi ListenerKindApi
+	var kindLsp ListenerKindLsp
+
+	var ipcTcp ListenerIpcTcp
+	var ipcStdio ListenerIpcStdio
+
+	var t struct {
+		Name   string   `json:"name"`
+		Kind   string   `json:"kind"`
+		Ipc    string   `json:"ipc"`
+		Port   *int     `json:"port"`
+		Usages []string `json:"usages"`
+	}
+
+	t.Usages = []string{}
+
+	if err := json.Unmarshal(data, &t); err != nil {
+		return err
+	}
+
+	o.Name = t.Name
+
+	switch t.Kind {
+	case kindApi.Kind():
+		api := &ListenerKindApi{}
+		o.Kind = api
+
+	case kindLsp.Kind():
+		lsp := &ListenerKindLsp{Usages: t.Usages}
+		o.Kind = lsp
+	default:
+		return fmt.Errorf(`in listener: "kind" is unknown, got "%v"`, t.Kind)
+	}
+
+	switch t.Ipc {
+	case ipcStdio.Ipc():
+		stdio := &ListenerIpcStdio{}
+		o.Ipc = stdio
+
+	case ipcTcp.Ipc():
+		tcp := &ListenerIpcTcp{}
+
+		if t.Port != nil {
+			tcp.Port = *t.Port
+		}
+
+		o.Ipc = tcp
+
+	default:
+		return fmt.Errorf(`in listener: "ipc" is unknown, got "%v"`, t.Ipc)
+	}
 
 	return nil
 }
 
 func (o *Workflow) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Name  string            `json:"name"`
 		Steps []json.RawMessage `json:"steps"`
 	}
 
@@ -179,132 +249,73 @@ func (o *Workflow) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	o.Name = t.Name
-
-	steps := []Step{}
+	steps := []*Step{}
 	for _, tstep := range t.Steps {
-		step, err := stepUnmarshalJSON(tstep)
+		var step Step
+		err := json.Unmarshal(tstep, &step)
 		if err != nil {
 			return err
 		}
-		steps = append(steps, step)
+		steps = append(steps, &step)
 	}
 	o.Steps = steps
 
 	return nil
 }
 
-func logUnmarshalJSON(data json.RawMessage) (Log, error) {
-	var t struct {
-		Name  string  `json:"name"`
-		Kind  string  `json:"kind"`
-		Level string  `json:"level"`
-		File  *string `json:"file"`
-	}
-
-	if err := json.Unmarshal(data, &t); err != nil {
-		return nil, err
-	}
-
-	switch t.Kind {
-	case "file":
-		file := &LogFile{
-			LogGeneric: NewLogGeneric(t.Name, t.Level),
-		}
-		if t.File != nil {
-			file.File = *t.File
-		}
-		return file, nil
-
-	default:
-		return nil, fmt.Errorf(`in log: "kind" is not or not "file", got "%v"`, t.Kind)
-	}
-}
-
-func listenerUnmarshalJSON(data json.RawMessage) (Listener, error) {
-	var t struct {
-		Name string `json:"name"`
-		Kind string `json:"kind"`
-		Ipc  string `json:"ipc"`
-		Port *int   `json:"port"`
-	}
-
-	if err := json.Unmarshal(data, &t); err != nil {
-		return nil, err
-	}
-
-	switch t.Ipc {
-	case "stdio":
-		stdio := &ListenerStdio{
-			ListenerGeneric: NewListenerGeneric(t.Name, t.Kind),
-		}
-		return stdio, nil
-
-	case "tcp":
-		socket := &ListenerTcp{
-			ListenerGeneric: NewListenerGeneric(t.Name, t.Kind),
-		}
-		if t.Port != nil {
-			socket.Port = *t.Port
-		}
-		return socket, nil
-
-	default:
-		return nil, fmt.Errorf(`in listener: "kind" is not or not "stdio"|"socket", got "%v"`, t.Kind)
-	}
-}
-
-func stepUnmarshalJSON(data json.RawMessage) (Step, error) {
+func (o *Step) UnmarshalJSON(data []byte) error {
 	var t struct {
 		Name       string       `json:"name"`
 		Conditions []*Condition `json:"conditions"`
-		Scope      string       `json:"scope"`
 		Model      *string      `json:"model"`
-		Template   *string      `json:"template"`
 		Lsp        *string      `json:"lsp"`
+		Scope      string       `json:"scope"`
 	}
 
 	t.Conditions = []*Condition{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
-		return nil, err
+		return err
 	}
 
 	if t.Model != nil && t.Lsp != nil {
-		return nil, fmt.Errorf(`in step %v: both "model" and "lsp" are set`, t.Name)
+		return fmt.Errorf(`in step %v: both "model" and "lsp" are set`, t.Name)
 	}
 
-	generic := StepGeneric{
-		Name:       t.Name,
-		Conditions: t.Conditions,
-		Scope:      t.Scope,
+	if t.Model == nil && t.Lsp == nil {
+		return fmt.Errorf(`in step %v: both "model" and "lsp" are not set`, t.Name)
 	}
+
+	o.Name = t.Name
+	o.Conditions = t.Conditions
+	o.Scope = t.Scope
 
 	if t.Model != nil {
-		model := &StepModel{
-			StepGeneric: generic,
-			Model:       *t.Model,
-		}
-
-		if t.Template != nil {
-			model.Template = *t.Template
-		}
-
-		return model, nil
+		o.Kind = &StepKindModel{Name: *t.Model}
 	}
 
 	if t.Lsp != nil {
-		lsp := &StepLsp{
-			StepGeneric: generic,
-			Lsp:         *t.Lsp,
-		}
-
-		if t.Template != nil {
-			lsp.Template = *t.Template
-		}
-
-		return lsp, nil
+		o.Kind = &StepKindLsp{Name: *t.Lsp}
 	}
 
-	return nil, fmt.Errorf(`in step %v: both "model" and "lsp" are not set`, t.Name)
+	return nil
+}
+
+func (o *Condition) UnmarshalJSON(data []byte) error {
+	var t struct {
+		Filetypes []string `json:"filetypes"`
+		Paths     []string `json:"paths"`
+	}
+
+	t.Filetypes = []string{}
+	t.Paths = []string{}
+
+	if err := json.Unmarshal(data, &t); err != nil {
+		return err
+	}
+
+	o.Filetypes = t.Filetypes
+	o.Paths = t.Paths
+
+	return nil
 }

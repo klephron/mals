@@ -3,24 +3,23 @@ package config
 type Condition struct {
 	Filetypes []string
 	Paths     []string
-	Events    []string
 }
 
 type Workflow struct {
-	Name  string
-	Steps []Step
+	Steps []*Step
 }
 
 type Usage struct {
 	Name       string
+	Events     []string
 	Conditions []*Condition
 	Workflow   *Workflow
 }
 
 type Config struct {
-	Loggers   []Log
-	Listeners []Listener
+	Loggers   []*Log
 	Models    []*Model
 	Lsps      []*Lsp
 	Usages    []*Usage
+	Listeners []*Listener
 }

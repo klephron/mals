@@ -7,20 +7,6 @@
       "file": "/dev/stderr"
     }
   ],
-  "listeners": [
-    {
-      "name": "lsp-tcp:9651",
-      "kind": "lsp",
-      "ipc": "tcp",
-      "port": 9651
-    },
-    {
-      "name": "api-tcp:9650",
-      "kind": "api",
-      "ipc": "tcp",
-      "port": 9650
-    }
-  ],
   "models": [
     {
       "name": "Llama-3.2-1B-Instruct-Q6_K",
@@ -32,41 +18,80 @@
       }
     }
   ],
-  "lsps": [],
+  "lsps": [
+    {
+      "name": "clangd",
+      "kind": "stdio",
+      "settings": {
+        "cmd": ["clangd"]
+      }
+    }
+  ],
   "usages": [
     {
-      "name": "all-completion",
-      "conditions": [
-        {
-          "filetypes": [".*"],
-          "paths": [".*"],
-          "events": ["textDocument/completion"]
-        }
+      "name": "lspsync",
+      "events": [
+        "initialize",
+        "initialized",
+        "textDocument/didiOpen",
+        "textDocument/didChange",
+        "textDocument/didClose",
+        "shutdown"
       ],
       "workflow": {
-        "name": "llm-completion",
         "steps": [
           {
-            "name": "llm-completion",
-            "scope": "global",
-            "model": "Llama-3.2-1B-Instruct-Q6_K",
-            "template": "<TODO>"
-          },
-          {
-            "name": "<unknown>",
-            "scope": "global",
-            "model": "<unknown>",
-            "template": "<TODO>",
-            "conditions": [
-              {
-                "filetypes": [".*"],
-                "paths": [".*"],
-                "events": ["<unknown>"]
-              }
-            ]
+            "name": "lsp",
+            "scope": "client",
+            "lsp": "clangd"
           }
         ]
       }
+    },
+    {
+      "name": "completion",
+      "events": ["textDocument/completion"],
+      "conditions": [
+        {
+          "filetypes": [".*"],
+          "paths": [".*"]
+        }
+      ],
+      "workflow": {
+        "steps": [
+          {
+            "name": "lsp",
+            "conditions": [
+              {
+                "filetypes": [".*"],
+                "paths": [".*"]
+              }
+            ],
+            "lsp": "clangd",
+            "scope": "client",
+          },
+          {
+            "name": "llm",
+            "model": "Llama-3.2-1B-Instruct-Q6_K"
+            "scope": "global",
+          }
+        ]
+      }
+    }
+  ],
+  "listeners": [
+    {
+      "name": "lsp-tcp:9651",
+      "kind": "lsp",
+      "ipc": "tcp",
+      "port": 9651,
+      "usages": ["lspsync", "completion"]
+    },
+    {
+      "name": "api-tcp:9650",
+      "kind": "api",
+      "ipc": "tcp",
+      "port": 9650,
     }
   ]
 }

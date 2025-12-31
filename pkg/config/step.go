@@ -1,24 +1,30 @@
 package config
 
-type Step interface {
-	step()
-}
-
-type StepGeneric struct {
-	Step       `json:"step,omitempty"`
+type Step struct {
 	Name       string
 	Conditions []*Condition
+	Kind       StepKind
 	Scope      string
 }
 
-type StepModel struct {
-	StepGeneric
-	Model    string
-	Template string
+type StepKind interface {
+	Kind() string
 }
 
-type StepLsp struct {
-	StepGeneric
-	Lsp      string
-	Template string
+type StepKindModel struct {
+	StepKind
+	Name string
+}
+
+func (s *StepKindModel) Kind() string {
+	return "model"
+}
+
+type StepKindLsp struct {
+	StepKind
+	Name string
+}
+
+func (s *StepKindLsp) Kind() string {
+	return "lsp"
 }

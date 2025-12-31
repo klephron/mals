@@ -1,32 +1,20 @@
 package config
 
-type Log interface {
-	Name() string
-	Level() string
+type Log struct {
+	Name  string
+	Level string
+	Kind  LogKind
 }
 
-type LogGeneric struct {
-	Log   `json:"log,omitempty"`
-	name  string
-	level string
+type LogKind interface {
+	Kind() string
 }
 
-func (s *LogGeneric) Name() string {
-	return s.name
-}
-
-func (s *LogGeneric) Level() string {
-	return s.level
-}
-
-func NewLogGeneric(name string, level string) LogGeneric {
-	return LogGeneric{
-		name:  name,
-		level: level,
-	}
-}
-
-type LogFile struct {
-	LogGeneric
+type LogKindFile struct {
+	LogKind
 	File string
+}
+
+func (s *LogKindFile) Kind() string {
+	return "file"
 }

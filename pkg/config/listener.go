@@ -1,36 +1,49 @@
 package config
 
-type Listener interface {
-	Name() string
+type Listener struct {
+	Name string
+	Kind ListenerKind
+	Ipc  ListenerIpc
+}
+
+type ListenerKind interface {
 	Kind() string
 }
 
-type ListenerGeneric struct {
-	Listener `json:"listener,omitempty"`
-	name     string
-	kind     string
+type ListenerKindApi struct {
+	ListenerKind
 }
 
-func (s *ListenerGeneric) Name() string {
-	return s.name
+func (s *ListenerKindApi) Kind() string {
+	return "api"
 }
 
-func (s *ListenerGeneric) Kind() string {
-	return s.kind
+type ListenerKindLsp struct {
+	ListenerKind
+	Usages []string
 }
 
-func NewListenerGeneric(name string, kind string) ListenerGeneric {
-	return ListenerGeneric{
-		name: name,
-		kind: kind,
-	}
+func (s *ListenerKindLsp) Kind() string {
+	return "lsp"
 }
 
-type ListenerTcp struct {
-	ListenerGeneric
+type ListenerIpc interface {
+	Ipc() string
+}
+
+type ListenerIpcStdio struct {
+	ListenerIpc
+}
+
+func (s *ListenerIpcStdio) Ipc() string {
+	return "stdio"
+}
+
+type ListenerIpcTcp struct {
+	ListenerIpc
 	Port int
 }
 
-type ListenerStdio struct {
-	ListenerGeneric
+func (s *ListenerIpcTcp) Ipc() string {
+	return "tcp"
 }
