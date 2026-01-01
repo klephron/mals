@@ -6,25 +6,34 @@ import (
 	"mals/internal/model"
 	"mals/internal/plane/controller"
 	"mals/internal/scope"
+	"mals/internal/usage"
 	"mals/pkg/config"
 
 	"github.com/google/uuid"
 )
 
-func (s *Plane) ClientOwn(client client.Client, listener listener.Listener) error {
-	return s.client.ClientOwn(client, listener)
+func (s *Plane) ClientStatus(name string) controller.ClientStatus {
+	return s.client.ClientStatus(name)
 }
 
-func (s *Plane) ClientServe(client client.Client) error {
-	return s.client.ClientServe(client)
+func (s *Plane) ClientOwn(name string, client client.Client, listener listener.Listener) error {
+	return s.client.ClientOwn(name, client, listener)
 }
 
-func (s *Plane) ClientShutdown(client client.Client) error {
-	return s.client.ClientShutdown(client)
+func (s *Plane) ClientServe(name string) error {
+	return s.client.ClientServe(name)
 }
 
-func (s *Plane) ClientShutdownSilent(client client.Client) error {
-	return s.client.ClientShutdownSilent(client)
+func (s *Plane) ClientShutdown(name string) error {
+	return s.client.ClientShutdown(name)
+}
+
+func (s *Plane) ClientShutdownSilent(name string) error {
+	return s.client.ClientShutdownSilent(name)
+}
+
+func (s *Plane) ClientGetListener(name string) (string, error) {
+	return s.client.ClientGetListener(name)
 }
 
 func (s *Plane) ListenerStatus(name string) controller.ListenerStatus {
@@ -55,12 +64,16 @@ func (s *Plane) ListenerStop(name string) error {
 	return s.listener.ListenerStop(name)
 }
 
-func (s *Plane) ListenerClientAdd(name string, client client.Client) error {
+func (s *Plane) ListenerClientAdd(name string, client string) error {
 	return s.listener.ListenerClientAdd(name, client)
 }
 
-func (s *Plane) ListenerClientRemove(name string, client client.Client) error {
+func (s *Plane) ListenerClientRemove(name string, client string) error {
 	return s.listener.ListenerClientRemove(name, client)
+}
+
+func (s *Plane) ListenerGetConfig(name string) (config.Listener, error) {
+	return s.listener.ListenerGetConfig(name)
 }
 
 func (s *Plane) LogStatus(name string) controller.LogStatus {
@@ -183,6 +196,10 @@ func (s *Plane) UsageGetAll() []*config.Usage {
 	return s.usage.UsageGetAll()
 }
 
-func (s *Plane) UsageGet(filetype *string, path *string, event *string) []*config.Usage {
-	return s.usage.UsageGet(filetype, path, event)
+func (s *Plane) UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage {
+	return s.usage.UsageGetFiltered(condition, event)
+}
+
+func (s *Plane) UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage {
+	return s.usage.UsageGetFilteredClient(condition, event, client)
 }

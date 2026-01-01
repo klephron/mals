@@ -5,6 +5,7 @@ import (
 	"mals/internal/info"
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
+	"mals/internal/usage"
 	"mals/pkg/config"
 )
 
@@ -164,7 +165,11 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 
 		s.plane.Infof("%T %v: workspace %v document %v: completion", s, s.Name(), workspace.name, document.uri)
 
-		usages := s.plane.UsageGet(nil, &document.uri, &EventTextDocumentCompletion)
+		usages := s.plane.UsageGetFilteredClient(
+			usage.ConditionFilter{Filetype: nil, Path: &document.uri},
+			usage.EventFilter{Event: &EventTextDocumentCompletion}, s.Name())
+
+		s.plane.Infof("%T %v: workspace %v document %v: usages: %v", s, s.Name(), workspace.name, document.uri, len(usages))
 
 		for _, usage := range usages {
 			go func(params protocol.CompletionParams, document *Document, workflow *config.Workflow) {

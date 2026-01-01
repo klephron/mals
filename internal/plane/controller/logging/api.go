@@ -83,18 +83,12 @@ func (s *LogController) LogRegister(name string, cfg config.Log) error {
 		return statusErrorEq(name, status, controller.LogAbsent)
 	}
 
-	switch config := cfg.(type) {
-	case *config.LogFile:
-		s.state.logs.Store(name, &LogValue{
-			rw:      sync.RWMutex{},
-			config:  config,
-			log:     nil,
-			enabled: false,
-		})
-
-	default:
-		return fmt.Errorf("unhandled log %T %v", config, config)
-	}
+	s.state.logs.Store(name, &LogValue{
+		rw:      sync.RWMutex{},
+		config:  cfg,
+		log:     nil,
+		enabled: false,
+	})
 
 	return nil
 }
@@ -128,16 +122,15 @@ func (s *LogController) LogCreate(name string) error {
 		return statusErrorEq(name, status, controller.LogRegistered)
 	}
 
-	switch config := value.config.(type) {
-	case *config.LogFile:
-		log, err := file.Open(config.File, config.Level())
+	switch kind := value.config.Kind.(type) {
+	case *config.LogKindFile:
+		log, err := file.Open(kind.File, value.config.Level)
 		if err != nil {
 			return err
 		}
 		value.log = log
-		value.enabled = false
 	default:
-		return fmt.Errorf("unhandled log %T %v", config, config)
+		return fmt.Errorf("unhandled log kind %T %v", kind, value.config)
 	}
 
 	return nil

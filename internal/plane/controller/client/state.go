@@ -10,6 +10,7 @@ import (
 
 type ClientValue struct {
 	rw         sync.RWMutex
+	client     client.Client
 	listener   string
 	cancelFunc context.CancelFunc
 }
@@ -18,5 +19,5 @@ type State struct {
 	statusRW     sync.RWMutex
 	statusCancel context.CancelFunc
 
-	clients *xsync.Map[client.Client, *ClientValue]
+	clients *xsync.Map[string, *ClientValue]
 }

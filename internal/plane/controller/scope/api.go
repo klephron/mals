@@ -55,7 +55,7 @@ func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (st
 		}
 
 		r := &ResourceModel{
-			fullname:     generateName(name, scope),
+			fullname:     mangleName(name, scope),
 			config:       config,
 			dependencies: xsync.NewMap[string, *ScopeToken](),
 		}
@@ -90,7 +90,7 @@ func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (st
 }
 
 func (s *ScopeController) ScopeModelRelease(fullname string, token controller.ScopeToken) error {
-	name, scope := decodeName(fullname)
+	name, scope := unmangleName(fullname)
 
 	current := s.state.root
 

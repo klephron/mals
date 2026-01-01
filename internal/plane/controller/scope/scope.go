@@ -23,7 +23,7 @@ func newToken() *ScopeToken {
 	}
 }
 
-func generateName(name string, scope *scope.Scope) string {
+func mangleName(name string, scope *scope.Scope) string {
 	fullname := ""
 
 	for _, sp := range scope.Path() {
@@ -36,7 +36,7 @@ func generateName(name string, scope *scope.Scope) string {
 	return fullname
 }
 
-func decodeName(name string) (string, *scope.Scope) {
+func unmangleName(name string) (string, *scope.Scope) {
 	parts := strings.Split(name, ":")
 	if len(parts) == 0 {
 		return "", nil

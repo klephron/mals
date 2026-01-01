@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"mals/internal/client"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
 	"sync"
@@ -22,7 +21,7 @@ func New(plane plane.Plane) *ClientController {
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			clients:      xsync.NewMap[client.Client, *ClientValue](),
+			clients:      xsync.NewMap[string, *ClientValue](),
 		},
 		plane: plane,
 	}

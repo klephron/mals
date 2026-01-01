@@ -70,12 +70,12 @@ func (s *ListenerLsp) Run(ctx context.Context) error {
 
 		client := newClient(s.plane, conn)
 
-		if err := s.plane.ClientOwn(client, s); err != nil {
+		if err := s.plane.ClientOwn(client.Name(), client, s); err != nil {
 			s.plane.Warnf("%s: %v", s.Name(), err)
 			continue
 		}
 
-		if err := s.plane.ClientServe(client); err != nil {
+		if err := s.plane.ClientServe(client.Name()); err != nil {
 			s.plane.Warnf("%s: %v", s.Name(), err)
 			continue
 		}

@@ -6,6 +6,7 @@ import (
 	"mals/internal/model"
 	"mals/internal/plane/controller"
 	"mals/internal/scope"
+	"mals/internal/usage"
 	"mals/pkg/config"
 
 	"github.com/google/uuid"
@@ -15,10 +16,12 @@ type Plane interface {
 	Run(onReady func())
 	Shutdown() error
 
-	ClientOwn(client client.Client, listener listener.Listener) error
-	ClientServe(client client.Client) error
-	ClientShutdown(client client.Client) error
-	ClientShutdownSilent(client client.Client) error
+	ClientStatus(name string) controller.ClientStatus
+	ClientOwn(name string, client client.Client, listener listener.Listener) error
+	ClientServe(name string) error
+	ClientShutdown(name string) error
+	ClientShutdownSilent(name string) error
+	ClientGetListener(name string) (string, error)
 
 	ListenerStatus(name string) controller.ListenerStatus
 	ListenerRegister(name string, config config.Listener) error
@@ -27,8 +30,9 @@ type Plane interface {
 	ListenerDelete(name string) error
 	ListenerStart(name string) error
 	ListenerStop(name string) error
-	ListenerClientAdd(name string, client client.Client) error
-	ListenerClientRemove(name string, client client.Client) error
+	ListenerClientAdd(name string, client string) error
+	ListenerClientRemove(name string, client string) error
+	ListenerGetConfig(name string) (config.Listener, error)
 
 	LogStatus(name string) controller.LogStatus
 	LogRegister(name string, config config.Log) error
@@ -65,5 +69,6 @@ type Plane interface {
 	UsageRegister(config config.Usage) error
 	UsageUnregister(name string) error
 	UsageGetAll() []*config.Usage
-	UsageGet(filetype *string, path *string, event *string) []*config.Usage
+	UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage
+	UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage
 }

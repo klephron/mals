@@ -29,26 +29,6 @@
   ],
   "usages": [
     {
-      "name": "lspsync",
-      "events": [
-        "initialize",
-        "initialized",
-        "textDocument/didiOpen",
-        "textDocument/didChange",
-        "textDocument/didClose",
-        "shutdown"
-      ],
-      "workflow": {
-        "steps": [
-          {
-            "name": "lsp",
-            "scope": "client",
-            "lsp": "clangd"
-          }
-        ]
-      }
-    },
-    {
       "name": "completion",
       "events": ["textDocument/completion"],
       "conditions": [
@@ -68,12 +48,32 @@
               }
             ],
             "lsp": "clangd",
-            "scope": "client",
+            "scope": "client"
           },
           {
             "name": "llm",
-            "model": "Llama-3.2-1B-Instruct-Q6_K"
-            "scope": "global",
+            "model": "Llama-3.2-1B-Instruct-Q6_K",
+            "scope": "global"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lspsync",
+      "events": [
+        "initialize",
+        "initialized",
+        "textDocument/didiOpen",
+        "textDocument/didChange",
+        "textDocument/didClose",
+        "shutdown"
+      ],
+      "workflow": {
+        "steps": [
+          {
+            "name": "lsp",
+            "scope": "client",
+            "lsp": "clangd"
           }
         ]
       }
@@ -91,7 +91,7 @@
       "name": "api-tcp:9650",
       "kind": "api",
       "ipc": "tcp",
-      "port": 9650,
+      "port": 9650
     }
   ]
 }

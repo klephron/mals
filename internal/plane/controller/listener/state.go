@@ -2,7 +2,6 @@ package listener
 
 import (
 	"context"
-	"mals/internal/client"
 	"mals/internal/listener"
 	"mals/pkg/config"
 	"sync"
@@ -21,5 +20,5 @@ type ListenerValue struct {
 	config     config.Listener
 	listener   listener.Listener
 	cancelFunc context.CancelFunc
-	clients    *xsync.Map[client.Client, struct{}]
+	clients    *xsync.Map[string, struct{}]
 }

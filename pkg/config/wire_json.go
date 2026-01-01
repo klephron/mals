@@ -7,48 +7,28 @@ import (
 
 func (o *Config) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Loggers   []json.RawMessage `json:"loggers"`
-		Models    []*Model          `json:"models"`
-		Lsps      []*Lsp            `json:"lsps"`
-		Usages    []*Usage          `json:"usages"`
-		Listeners []json.RawMessage `json:"listeners"`
+		Loggers   []*Log      `json:"loggers"`
+		Models    []*Model    `json:"models"`
+		Lsps      []*Lsp      `json:"lsps"`
+		Usages    []*Usage    `json:"usages"`
+		Listeners []*Listener `json:"listeners"`
 	}
 
-	t.Loggers = []json.RawMessage{}
+	t.Loggers = []*Log{}
 	t.Models = []*Model{}
 	t.Lsps = []*Lsp{}
 	t.Usages = []*Usage{}
-	t.Listeners = []json.RawMessage{}
+	t.Listeners = []*Listener{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
 
-	loggers := []*Log{}
-	for _, tlogger := range t.Loggers {
-		var logger Log
-		err := json.Unmarshal(tlogger, &logger)
-		if err != nil {
-			return err
-		}
-		loggers = append(loggers, &logger)
-	}
-	o.Loggers = loggers
-
+	o.Loggers = t.Loggers
 	o.Models = t.Models
 	o.Lsps = t.Lsps
 	o.Usages = t.Usages
-
-	listeners := []*Listener{}
-	for _, tlistener := range t.Listeners {
-		var listener Listener
-		err := json.Unmarshal(tlistener, &listener)
-		if err != nil {
-			return err
-		}
-		listeners = append(listeners, &listener)
-	}
-	o.Listeners = listeners
+	o.Listeners = t.Listeners
 
 	return nil
 }
@@ -167,7 +147,6 @@ func (o *Usage) UnmarshalJSON(data []byte) error {
 		Workflow   *Workflow    `json:"workflow"`
 	}
 
-	t.Conditions = []*Condition{}
 	t.Events = []string{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
@@ -240,25 +219,16 @@ func (o *Listener) UnmarshalJSON(data []byte) error {
 
 func (o *Workflow) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Steps []json.RawMessage `json:"steps"`
+		Steps []*Step `json:"steps"`
 	}
 
-	t.Steps = []json.RawMessage{}
+	t.Steps = []*Step{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
 
-	steps := []*Step{}
-	for _, tstep := range t.Steps {
-		var step Step
-		err := json.Unmarshal(tstep, &step)
-		if err != nil {
-			return err
-		}
-		steps = append(steps, &step)
-	}
-	o.Steps = steps
+	o.Steps = t.Steps
 
 	return nil
 }
@@ -271,8 +241,6 @@ func (o *Step) UnmarshalJSON(data []byte) error {
 		Lsp        *string      `json:"lsp"`
 		Scope      string       `json:"scope"`
 	}
-
-	t.Conditions = []*Condition{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
@@ -306,9 +274,6 @@ func (o *Condition) UnmarshalJSON(data []byte) error {
 		Filetypes []string `json:"filetypes"`
 		Paths     []string `json:"paths"`
 	}
-
-	t.Filetypes = []string{}
-	t.Paths = []string{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err

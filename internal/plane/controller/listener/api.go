@@ -3,7 +3,6 @@ package listener
 import (
 	"context"
 	"fmt"
-	"mals/internal/client"
 	"mals/internal/listener/api_tcp"
 	"mals/internal/listener/lsp_tcp"
 	"mals/internal/plane/controller"
@@ -14,11 +13,11 @@ import (
 )
 
 func statusErrorEq(name string, actual controller.ListenerStatus, expected controller.ListenerStatus) error {
-	return fmt.Errorf("Listener %v expected eq %v, got %v", name, expected, actual)
+	return fmt.Errorf("listener %v expected eq %v, got %v", name, expected, actual)
 }
 
 func statusErrorFlag(name string, actual controller.ListenerStatus, expected controller.ListenerStatus) error {
-	return fmt.Errorf("Listener %v expected flag %v, got %v", name, expected, actual)
+	return fmt.Errorf("listener %v expected flag %v, got %v", name, expected, actual)
 }
 
 func (s *ListenerController) status(value *ListenerValue) controller.ListenerStatus {
@@ -87,19 +86,13 @@ func (s *ListenerController) ListenerRegister(name string, cfg config.Listener) 
 		return statusErrorEq(name, status, controller.ListenerAbsent)
 	}
 
-	switch config := cfg.(type) {
-	case *config.ListenerTcp:
-		s.state.listeners.Store(name, &ListenerValue{
-			rw:         sync.RWMutex{},
-			config:     config,
-			listener:   nil,
-			cancelFunc: nil,
-			clients:    xsync.NewMap[client.Client, struct{}](),
-		})
-
-	default:
-		return fmt.Errorf("unhandled listener %T %v", config, config)
-	}
+	s.state.listeners.Store(name, &ListenerValue{
+		rw:         sync.RWMutex{},
+		config:     cfg,
+		listener:   nil,
+		cancelFunc: nil,
+		clients:    xsync.NewMap[string, struct{}](),
+	})
 
 	return nil
 }
@@ -133,33 +126,33 @@ func (s *ListenerController) ListenerCreate(name string) error {
 		return statusErrorEq(name, status, controller.ListenerRegistered)
 	}
 
-	switch config := value.config.(type) {
-	case *config.ListenerTcp:
-		switch config.Kind() {
+	switch value.config.Kind.(type) {
+	case *config.ListenerKindApi:
+		switch ipc := value.config.Ipc.(type) {
 
-		case api_tcp.Kind():
-			listener, err := api_tcp.NewListener(name, config.Port, s.plane)
+		case *config.ListenerIpcTcp:
+			listener, err := api_tcp.NewListener(name, ipc.Port, s.plane)
 			if err != nil {
 				return err
 			}
 			value.listener = listener
-
-		case lsp_tcp.Kind():
-			listener, err := lsp_tcp.NewListener(name, config.Port, s.plane)
-			if err != nil {
-				return err
-			}
-			value.listener = listener
-
-		default:
-			return fmt.Errorf("unhandled listener %T %v", config, config)
+			return nil
 		}
 
-	default:
-		return fmt.Errorf("unhandled listener %T %v", config, config)
+	case *config.ListenerKindLsp:
+		switch ipc := value.config.Ipc.(type) {
+
+		case *config.ListenerIpcTcp:
+			listener, err := lsp_tcp.NewListener(name, ipc.Port, s.plane)
+			if err != nil {
+				return err
+			}
+			value.listener = listener
+			return nil
+		}
 	}
 
-	return nil
+	return fmt.Errorf("unhandled listener %v kind=%v ipc=%v", value.config, value.config.Kind.Kind(), value.config.Ipc.Ipc())
 }
 
 func (s *ListenerController) ListenerDelete(name string) error {
@@ -218,7 +211,7 @@ func (s *ListenerController) ListenerStop(name string) error {
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	value.clients.Range(func(key client.Client, value struct{}) bool {
+	value.clients.Range(func(key string, value struct{}) bool {
 		s.plane.ClientShutdown(key)
 		return true
 	})
@@ -232,7 +225,7 @@ func (s *ListenerController) ListenerStop(name string) error {
 	return nil
 }
 
-func (s *ListenerController) ListenerClientAdd(name string, client client.Client) error {
+func (s *ListenerController) ListenerClientAdd(name string, client string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -250,7 +243,7 @@ func (s *ListenerController) ListenerClientAdd(name string, client client.Client
 
 	_, ok := value.clients.Load(client)
 	if ok {
-		return fmt.Errorf("listener %v client %v exists", name, client.Name())
+		return fmt.Errorf("listener %v client %v exists", name, client)
 	}
 
 	value.clients.Store(client, struct{}{})
@@ -258,7 +251,7 @@ func (s *ListenerController) ListenerClientAdd(name string, client client.Client
 	return nil
 }
 
-func (s *ListenerController) ListenerClientRemove(name string, client client.Client) error {
+func (s *ListenerController) ListenerClientRemove(name string, client string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -276,8 +269,23 @@ func (s *ListenerController) ListenerClientRemove(name string, client client.Cli
 
 	_, ok := value.clients.LoadAndDelete(client)
 	if !ok {
-		return fmt.Errorf("listener %v client %v does not exist", name, client.Name())
+		return fmt.Errorf("listener %v client %v does not exist", name, client)
 	}
 
 	return nil
+}
+
+func (s *ListenerController) ListenerGetConfig(name string) (config.Listener, error) {
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.ListenerRegistered == 0 {
+		return config.Listener{}, statusErrorFlag(name, status, controller.ListenerRegistered)
+	}
+
+	return value.config, nil
 }

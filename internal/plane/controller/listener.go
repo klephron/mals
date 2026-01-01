@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"mals/internal/client"
 	"mals/pkg/config"
 )
 
@@ -26,6 +25,8 @@ type ListenerController interface {
 	ListenerStart(name string) error
 	ListenerStop(name string) error
 
-	ListenerClientAdd(name string, client client.Client) error
-	ListenerClientRemove(name string, client client.Client) error
+	ListenerClientAdd(name string, client string) error
+	ListenerClientRemove(name string, client string) error
+
+	ListenerGetConfig(name string) (config.Listener, error)
 }

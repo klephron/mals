@@ -23,13 +23,16 @@ func configLoad(params *Params) (*config.Config, error) {
 
 func configInit(config *config.Config, plane plane.Plane) {
 	for _, log := range config.Loggers {
-		if err := plane.LogRegister(log.Name(), log); err != nil {
+		if log == nil {
+			continue
+		}
+		if err := plane.LogRegister(log.Name, *log); err != nil {
 			plane.Errorf("%v", err)
 		}
-		if err := plane.LogCreate(log.Name()); err != nil {
+		if err := plane.LogCreate(log.Name); err != nil {
 			plane.Errorf("%v", err)
 		}
-		if err := plane.LogStart(log.Name()); err != nil {
+		if err := plane.LogStart(log.Name); err != nil {
 			plane.Errorf("%v", err)
 		}
 	}
@@ -53,13 +56,16 @@ func configInit(config *config.Config, plane plane.Plane) {
 	}
 
 	for _, listener := range config.Listeners {
-		if err := plane.ListenerRegister(listener.Name(), listener); err != nil {
+		if listener == nil {
+			continue
+		}
+		if err := plane.ListenerRegister(listener.Name, *listener); err != nil {
 			plane.Errorf("%v", err)
 		}
-		if err := plane.ListenerCreate(listener.Name()); err != nil {
+		if err := plane.ListenerCreate(listener.Name); err != nil {
 			plane.Errorf("%v", err)
 		}
-		if err := plane.ListenerStart(listener.Name()); err != nil {
+		if err := plane.ListenerStart(listener.Name); err != nil {
 			plane.Errorf("%v", err)
 		}
 	}
