@@ -11,7 +11,7 @@ type Workflow struct {
 
 type Usage struct {
 	Name       string
-	Events     []string
+	Events     []Event
 	Conditions []*Condition
 	Workflow   *Workflow
 }

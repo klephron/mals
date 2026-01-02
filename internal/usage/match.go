@@ -46,11 +46,11 @@ func ConditionMatchAny(conditions []*config.Condition, filter ConditionFilter) b
 	return false
 }
 
-func EventMatch(event string, filter EventFilter) bool {
-	return matchRegex(event, filter.Event)
+func EventMatch(event config.Event, filter EventFilter) bool {
+	return matchRegex(string(event), (*string)(filter.Event))
 }
 
-func EventMatchAny(events []string, filter EventFilter) bool {
+func EventMatchAny(events []config.Event, filter EventFilter) bool {
 	if events == nil {
 		return true
 	}

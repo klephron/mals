@@ -1,12 +1,16 @@
-package client
+package middleware
 
 import (
 	"encoding/json"
 	"fmt"
 	"mals/internal/lsp/protocol"
+	"mals/internal/middleware/document"
 	"mals/internal/model"
 	"mals/internal/scope"
+	"mals/internal/usage"
+	"mals/internal/util"
 	"mals/pkg/config"
+	"sync"
 
 	"github.com/invopop/jsonschema"
 )
@@ -70,7 +74,7 @@ func completionSchema[T any]() any {
 	return schema
 }
 
-func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, document *Document, workflow *config.Workflow, step *config.Step) (*protocol.CompletionList, error) {
+func (s *Middleware) completionStepModel(params *protocol.CompletionParams, document *document.Document, step *config.Step) (*protocol.CompletionList, error) {
 
 	modelName := step.Kind.(*config.StepKindModel).Name
 
@@ -87,8 +91,8 @@ func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, docum
 	defer s.plane.ScopeModelRelease(modelFullname, token)
 
 	taskText := completionPrompt(
-		document.text(),
-		document.lastNChars(params.Position.Line, params.Position.Character, 200),
+		document.Text(),
+		document.LastNChars(params.Position.Line, params.Position.Character, 200),
 	)
 	task := model.NewTask(
 		taskText,
@@ -97,7 +101,7 @@ func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, docum
 		"Generated completion items",
 	)
 
-	text, err := s.plane.TaskExecClient(modelFullname, task, s)
+	text, err := s.plane.TaskExecClient(modelFullname, task, s.client)
 	if err != nil {
 		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
@@ -126,14 +130,14 @@ func (s *ClientLsp) completionStepModel(params *protocol.CompletionParams, docum
 	return result, nil
 }
 
-func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, document *Document, workflow *config.Workflow) (*protocol.CompletionList, error) {
+func (s *Middleware) completionWorkflow(params *protocol.CompletionParams, document *document.Document, workflow *config.Workflow) (*protocol.CompletionList, error) {
 	var result *protocol.CompletionList
 
 	for _, step := range workflow.Steps {
 		switch step.Kind.(type) {
 
 		case *config.StepKindModel:
-			if r, err := s.completionStepModel(params, document, workflow, step); err != nil {
+			if r, err := s.completionStepModel(params, document, step); err != nil {
 				return nil, err
 			} else {
 				result = r
@@ -147,4 +151,60 @@ func (s *ClientLsp) completionWorkflow(params *protocol.CompletionParams, docume
 	}
 
 	return result, nil
+}
+
+func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+	uri := params.TextDocument.URI
+
+	workspaces := s.workspaceFindAll(uri)
+
+	if len(workspaces) == 0 {
+		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), uri)
+	}
+
+	var wg sync.WaitGroup
+
+	listCh := make(chan *protocol.CompletionList)
+
+	for _, workspace := range workspaces {
+		document := s.documentGet(workspace, uri)
+		if document == nil {
+			continue
+		}
+
+		s.plane.Infof("%T %v: workspace %v document %v: completion", s, s.Name(), workspace.name, document.Uri())
+
+		usages := s.plane.UsageGetFilteredClient(
+			usage.ConditionFilter{Filetype: nil, Path: util.Ptr(document.Uri())},
+			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.Name())
+
+		for _, usage := range usages {
+			wg.Go(func() {
+				list, err := s.completionWorkflow(params, document, usage.Workflow)
+
+				if err != nil {
+					s.plane.Errorf("%T %v: workspace %v %v", s, s.Name(), workspace.name, err)
+					return
+				}
+
+				listCh <- list
+			})
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(listCh)
+	}()
+
+	var result protocol.CompletionList
+
+	for list := range listCh {
+		if list != nil {
+			result.Items = append(result.Items, list.Items...)
+			result.IsIncomplete = result.IsIncomplete || list.IsIncomplete
+		}
+	}
+
+	return &result, nil
 }

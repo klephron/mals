@@ -142,12 +142,12 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 func (o *Usage) UnmarshalJSON(data []byte) error {
 	var t struct {
 		Name       string       `json:"name"`
-		Events     []string     `json:"events"`
+		Events     []Event      `json:"events"`
 		Conditions []*Condition `json:"conditions"`
 		Workflow   *Workflow    `json:"workflow"`
 	}
 
-	t.Events = []string{}
+	t.Events = []Event{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err

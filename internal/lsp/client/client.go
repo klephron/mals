@@ -3,13 +3,10 @@ package client
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"mals/internal/client"
 	"mals/internal/jsonrpc"
+	"mals/internal/middleware"
 	"mals/internal/plane"
-	"strings"
-
-	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type ClientLsp struct {
@@ -19,19 +16,21 @@ type ClientLsp struct {
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
 
-	initialized bool
-	workspaces  *xsync.Map[string, *Workspace]
+	middleware *middleware.Middleware
 }
 
 func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *ClientLsp {
 	s := &ClientLsp{
-		plane:       plane,
-		scanner:     scanner,
-		writer:      writer,
-		initialized: false,
-		workspaces:  xsync.NewMap[string, *Workspace](),
+		plane:      plane,
+		scanner:    scanner,
+		writer:     writer,
+		middleware: nil,
 	}
+
+	s.middleware = middleware.New(s.plane, s)
+
 	s.scanner.Split(jsonrpc.ScannerSplit)
+
 	return s
 }
 
@@ -41,10 +40,6 @@ func (s *ClientLsp) Name() string {
 }
 
 func (s *ClientLsp) Serve(ctx context.Context) error {
-	if s.scanner == nil || s.writer == nil {
-		return fmt.Errorf("%s: must be binded before serve: scanner or writer is nil", s.Name())
-	}
-
 	ch := make(chan []byte)
 	defer close(ch)
 
@@ -108,33 +103,4 @@ func (s *ClientLsp) send(msg jsonrpc.Message) error {
 	s.plane.Debugf("%s: sent %s", s.Name(), string(bytes))
 
 	return nil
-}
-
-func (s *ClientLsp) workspaceAdd(uri string, name string) {
-	workspace := newWorkspace(uri, name)
-	s.workspaces.Store(uri, workspace)
-
-	s.plane.Infof("%s: workspace %s added", s.Name(), workspace.name)
-}
-
-func (s *ClientLsp) workspaceDelete(uri string) {
-	workspace, ok := s.workspaces.LoadAndDelete(uri)
-
-	if !ok {
-		s.plane.Warnf("%s: workspace by uri %s is not present", s.Name(), uri)
-	}
-	s.plane.Infof("%s: workspace %s deleted", s.Name(), workspace.name)
-}
-
-func (s *ClientLsp) workspaceFindAll(uri string) []*Workspace {
-	workspaces := make([]*Workspace, 0)
-
-	s.workspaces.Range(func(key string, value *Workspace) bool {
-		if strings.HasPrefix(uri, key) {
-			workspaces = append(workspaces, value)
-		}
-		return true
-	})
-
-	return workspaces
 }

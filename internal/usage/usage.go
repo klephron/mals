@@ -1,10 +1,12 @@
 package usage
 
+import "mals/pkg/config"
+
 type ConditionFilter struct {
 	Filetype *string
 	Path     *string
 }
 
 type EventFilter struct {
-	Event *string
+	Event *config.Event
 }
