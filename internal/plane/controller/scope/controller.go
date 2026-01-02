@@ -49,8 +49,6 @@ func (s *ScopeController) Run(onReady func()) error {
 	onReady()
 	<-ctx.Done()
 
-	// s.plane.Log().Infof("%T done", s)
-
 	s.state.statusRW.Lock()
 	s.state.statusCancel = nil
 	s.state.statusRW.Unlock()

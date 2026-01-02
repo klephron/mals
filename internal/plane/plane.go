@@ -47,6 +47,14 @@ type Plane interface {
 	Warnf(format string, a ...any) error
 	Errorf(format string, a ...any) error
 
+	LspStatus(name string) controller.LspStatus
+	LspRegister(name string, config *config.Lsp) error
+	LspUnregister(name string) error
+	LspCreate(name string) error
+	LspDelete(name string) error
+	LspStart(name string) error
+	LspStop(name string) error
+
 	ModelStatus(name string) controller.ModelStatus
 	ModelRegister(name string, config *config.Model) error
 	ModelUnregister(name string) error

@@ -6,6 +6,7 @@ import (
 	"mals/internal/plane/controller/client"
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/logging"
+	"mals/internal/plane/controller/lsp"
 	"mals/internal/plane/controller/model"
 	"mals/internal/plane/controller/scope"
 	"mals/internal/plane/controller/usage"
@@ -17,6 +18,7 @@ type Plane struct {
 	client   controller.ClientController
 	listener controller.ListenerController
 	log      controller.LogController
+	lsp      controller.LspController
 	model    controller.ModelController
 	scope    controller.ScopeController
 	usage    controller.UsageController
@@ -28,6 +30,7 @@ func New() plane.Plane {
 	plane.client = client.New(plane)
 	plane.listener = listener.New(plane)
 	plane.log = logging.New(plane)
+	plane.lsp = lsp.New(plane)
 	plane.model = model.New(plane)
 	plane.scope = scope.New(plane)
 	plane.usage = usage.New(plane)
@@ -43,6 +46,12 @@ func (s *Plane) Run(onReady func()) {
 		wgReady.Add(1)
 		wg.Go(func() {
 			s.log.Run(func() { wgReady.Done() })
+		})
+	}
+	{
+		wgReady.Add(1)
+		wg.Go(func() {
+			s.lsp.Run(func() { wgReady.Done() })
 		})
 	}
 	{
@@ -101,6 +110,10 @@ func (s *Plane) Shutdown() error {
 		return err
 	}
 	if err := s.model.Shutdown(); err != nil {
+		s.Errorf("%v", err)
+		return err
+	}
+	if err := s.lsp.Shutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}

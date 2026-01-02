@@ -120,6 +120,34 @@ func (s *Plane) Errorf(format string, a ...any) error {
 	return s.log.Errorf(format, a...)
 }
 
+func (s *Plane) LspStatus(name string) controller.LspStatus {
+	return s.lsp.LspStatus(name)
+}
+
+func (s *Plane) LspRegister(name string, config *config.Lsp) error {
+	return s.lsp.LspRegister(name, config)
+}
+
+func (s *Plane) LspUnregister(name string) error {
+	return s.lsp.LspUnregister(name)
+}
+
+func (s *Plane) LspCreate(name string) error {
+	return s.lsp.LspCreate(name)
+}
+
+func (s *Plane) LspDelete(name string) error {
+	return s.lsp.LspDelete(name)
+}
+
+func (s *Plane) LspStart(name string) error {
+	return s.lsp.LspStart(name)
+}
+
+func (s *Plane) LspStop(name string) error {
+	return s.lsp.LspStop(name)
+}
+
 func (s *Plane) ModelStatus(name string) controller.ModelStatus {
 	return s.model.ModelStatus(name)
 }

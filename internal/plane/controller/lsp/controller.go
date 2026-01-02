@@ -1,4 +1,4 @@
-package client
+package lsp
 
 import (
 	"context"
@@ -10,24 +10,24 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type ClientController struct {
-	controller.ClientController
+type LspController struct {
+	controller.LspController
 	state State
 	plane plane.Plane
 }
 
-func New(plane plane.Plane) *ClientController {
-	return &ClientController{
+func New(plane plane.Plane) *LspController {
+	return &LspController{
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			clients:      xsync.NewMap[string, *ClientValue](),
+			lsps:         xsync.NewMap[string, *LspValue](),
 		},
 		plane: plane,
 	}
 }
 
-func (s *ClientController) Run(onReady func()) error {
+func (s *LspController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
