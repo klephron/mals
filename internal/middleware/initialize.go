@@ -35,8 +35,20 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 				Name:    info.MiddlewareClientName,
 				Version: info.MiddlewareVersion,
 			},
-			Locale:                params.Locale,
-			Capabilities:          params.Capabilities,
+			Locale: params.Locale,
+			Capabilities: protocol.ClientCapabilities{
+				TextDocument: protocol.TextDocumentClientCapabilities{
+					Synchronization: &protocol.TextDocumentSyncClientCapabilities{
+						DynamicRegistration: false,
+						WillSave:            false,
+						WillSaveWaitUntil:   false,
+						DidSave:             false,
+					},
+					Completion: protocol.CompletionClientCapabilities{
+						DynamicRegistration: false,
+					},
+				},
+			},
 			InitializationOptions: params.InitializationOptions,
 			Trace:                 params.Trace,
 		},
