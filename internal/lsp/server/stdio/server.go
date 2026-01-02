@@ -10,6 +10,7 @@ import (
 	"mals/pkg/config"
 	"os/exec"
 	"sync"
+	"sync/atomic"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
@@ -26,12 +27,13 @@ type LspServerStdio struct {
 
 	cmd []string
 
-	rw sync.RWMutex
+	rw      sync.RWMutex
+	running bool
+	reader  *bufio.Reader
+	writer  *bufio.Writer
 
-	running  bool
-	reader   *bufio.Reader
-	writer   *bufio.Writer
 	requests *xsync.Map[int32, *RequestValue]
+	requestc atomic.Int32
 }
 
 func New(name string, settings *config.LspSettingsStdio, plane plane.Plane) *LspServerStdio {
@@ -44,6 +46,7 @@ func New(name string, settings *config.LspSettingsStdio, plane plane.Plane) *Lsp
 		rw:       sync.RWMutex{},
 		running:  false,
 		requests: xsync.NewMap[int32, *RequestValue](),
+		requestc: atomic.Int32{},
 	}
 }
 
@@ -134,6 +137,8 @@ func (s *LspServerStdio) Run(ctx context.Context) error {
 			return true
 		})
 		s.requests.Clear()
+
+		s.requestc.Store(0)
 
 		s.plane.Infof("%v: done", s.Name())
 
