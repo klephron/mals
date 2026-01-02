@@ -3,6 +3,7 @@ package client
 import (
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
+	"mals/internal/util"
 	"mals/pkg/config"
 )
 
@@ -14,7 +15,7 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := rawDecode[protocol.InitializeParams](s, req.Params)
+	params, err := util.JsonUnmarshal[protocol.InitializeParams](req.Params)
 	if err != nil {
 		s.plane.Warnf("%v", err)
 	}
@@ -38,7 +39,7 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 		return
 	}
 
-	resultRaw, err := rawEncode(s, result)
+	resultRaw, err := util.JsonMarshal(result)
 	if err != nil {
 		s.plane.Errorf("Initialize: %v", err)
 		return
@@ -58,7 +59,7 @@ func (s *ClientLsp) handleInitialized(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := rawDecode[protocol.InitializedParams](s, ntf.Params)
+	params, err := util.JsonUnmarshal[protocol.InitializedParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("Initialized %v", err)
 	}
@@ -77,7 +78,7 @@ func (s *ClientLsp) handleTextDocumentDidOpen(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := rawDecode[protocol.DidOpenTextDocumentParams](s, ntf.Params)
+	params, err := util.JsonUnmarshal[protocol.DidOpenTextDocumentParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("TextDocumentDidOpen %v", err)
 	}
@@ -96,7 +97,7 @@ func (s *ClientLsp) handleTextDocumentDidChange(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := rawDecode[protocol.DidChangeTextDocumentParams](s, ntf.Params)
+	params, err := util.JsonUnmarshal[protocol.DidChangeTextDocumentParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("TextDocumentDidChange %v", err)
 	}
@@ -115,7 +116,7 @@ func (s *ClientLsp) handleTextDocumentDidClose(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := rawDecode[protocol.DidCloseTextDocumentParams](s, ntf.Params)
+	params, err := util.JsonUnmarshal[protocol.DidCloseTextDocumentParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("TextDocumentDidClose %v", err)
 	}
@@ -134,7 +135,7 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := rawDecode[protocol.CompletionParams](s, req.Params)
+	params, err := util.JsonUnmarshal[protocol.CompletionParams](req.Params)
 	if err != nil {
 		s.plane.Warnf("TextDocumentCompletion %v", err)
 	}
@@ -146,7 +147,7 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 			return
 		}
 
-		listRaw, err := rawEncode(s, &list)
+		listRaw, err := util.JsonMarshal(&list)
 		if err != nil {
 			s.plane.Errorf("TextDocumentCompletion %v", err)
 			return

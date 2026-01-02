@@ -106,7 +106,7 @@ func (s *LspServerStdio) Run(ctx context.Context) error {
 					bytes := scanner.Bytes()
 					s.plane.Debugf("%v: scanned %v", s.Name(), string(bytes))
 
-					s.handleResponse(bytes)
+					s.handle(bytes)
 				}
 			}
 		}(s.reader)
@@ -146,6 +146,13 @@ func (s *LspServerStdio) Run(ctx context.Context) error {
 	}
 }
 
+func newRequestValue(request *jsonrpc.Request) *RequestValue {
+	return &RequestValue{
+		request: request,
+		result:  make(chan *jsonrpc.Response, 1),
+	}
+}
+
 func (s *LspServerStdio) send(msg jsonrpc.Message) error {
 	bytes, err := jsonrpc.EncodeMessage(msg)
 	if err != nil {
@@ -168,17 +175,20 @@ func (s *LspServerStdio) send(msg jsonrpc.Message) error {
 	return nil
 }
 
-func (s *LspServerStdio) sendRequest(request *RequestValue) error {
+func (s *LspServerStdio) sendRequest(request *jsonrpc.Request) (<-chan *jsonrpc.Response, error) {
 	s.rw.RLock()
 	defer s.rw.RUnlock()
 
 	if !s.running {
-		return s.errorNotRunning()
+		return nil, s.errorNotRunning()
 	}
 
-	s.requests.Store(request.request.Id, request)
+	request.Id = s.requestc.Add(1)
 
-	return s.send(request.request)
+	value := newRequestValue(request)
+	s.requests.Store(request.Id, value)
+
+	return value.result, s.send(request)
 }
 
 func (s *LspServerStdio) sendNotification(notification *jsonrpc.Notification) error {
@@ -192,7 +202,7 @@ func (s *LspServerStdio) sendNotification(notification *jsonrpc.Notification) er
 	return s.send(notification)
 }
 
-func (s *LspServerStdio) handleResponse(bytes []byte) {
+func (s *LspServerStdio) handle(bytes []byte) {
 	msg, err := jsonrpc.DecodeMessage(bytes)
 
 	if err != nil {
