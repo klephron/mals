@@ -17,19 +17,7 @@ func (s *Middleware) TextDocumentDidChange(params *protocol.DidChangeTextDocumen
 			continue
 		}
 
-		var text *string
-		for _, change := range params.ContentChanges {
-			if change.Range != nil {
-				s.plane.Warnf("%s: unsupported ContentChange Range is unsupported", s.Name())
-				continue
-			}
-
-			text = &change.Text
-		}
-
-		if text != nil {
-			s.documentUpdateFull(workspace, document, text, params.TextDocument.Version)
-		}
+		s.documentUpdate(workspace, document, params.TextDocument.Version, params.ContentChanges)
 	}
 
 	return nil

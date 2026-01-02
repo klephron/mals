@@ -1,6 +1,9 @@
 package middleware
 
-import "mals/internal/middleware/document"
+import (
+	"mals/internal/lsp/protocol"
+	"mals/internal/middleware/document"
+)
 
 func (s *Middleware) documentGet(workspace *Workspace, uri string) *document.Document {
 	document, ok := workspace.documents.Load(uri)
@@ -33,8 +36,8 @@ func (s *Middleware) documentDelete(workspace *Workspace, uri string) {
 	}
 }
 
-func (s *Middleware) documentUpdateFull(workspace *Workspace, document *document.Document, text *string, version int32) {
-	ok := document.SetText(text, version)
+func (s *Middleware) documentUpdate(workspace *Workspace, document *document.Document, version int32, changes []protocol.TextDocumentContentChangeEvent) {
+	ok := document.TextUpdate(version, changes)
 
 	if ok {
 		s.plane.Infof("%s: workspace %s document %s updated version %d",
