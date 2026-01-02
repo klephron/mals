@@ -32,18 +32,13 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 		return
 	}
 
-	capabilities, serverInfo, err := s.middleware.Initialize(&params, s.Client)
+	result, err := s.middleware.Initialize(&params, s.Client)
 	if err != nil {
 		s.plane.Errorf("%v", err)
 		return
 	}
 
-	result := protocol.InitializeResult{
-		Capabilities: *capabilities,
-		ServerInfo:   serverInfo,
-	}
-
-	resultRaw, err := rawEncode(s, &result)
+	resultRaw, err := rawEncode(s, result)
 	if err != nil {
 		s.plane.Errorf("Initialize: %v", err)
 		return

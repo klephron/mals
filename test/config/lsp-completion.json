@@ -7,17 +7,7 @@
       "file": "/dev/stderr"
     }
   ],
-  "models": [
-    {
-      "name": "Llama-3.2-1B-Instruct-Q6_K",
-      "kind": "openai",
-      "settings": {
-        "url": "http://localhost:9652",
-        "max_tokens": 250,
-        "temperature": 0.5
-      }
-    }
-  ],
+  "models": [],
   "lsps": [
     {
       "name": "clangd",
@@ -31,29 +21,12 @@
     {
       "name": "completion",
       "events": ["textDocument/completion"],
-      "conditions": [
-        {
-          "filetypes": [".*"],
-          "paths": [".*"]
-        }
-      ],
       "workflow": {
         "steps": [
           {
             "name": "lsp",
-            "conditions": [
-              {
-                "filetypes": [".*"],
-                "paths": [".*"]
-              }
-            ],
             "lsp": "clangd",
             "scope": "client"
-          },
-          {
-            "name": "llm",
-            "model": "Llama-3.2-1B-Instruct-Q6_K",
-            "scope": "global"
           }
         ]
       }

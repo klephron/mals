@@ -39,10 +39,7 @@ func (s *ClientLsp) Name() string {
 }
 
 func (s *ClientLsp) Serve(ctx context.Context) error {
-	ch := make(chan []byte)
-	defer close(ch)
-
-	s.plane.Infof("%s: listening", s.Name())
+	s.plane.Infof("%v: listening", s.Name())
 
 	scanCtx, scanCancel := context.WithCancel(ctx)
 
@@ -56,46 +53,41 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 				if !s.scanner.Scan() {
 					return
 				}
-				ch <- s.scanner.Bytes()
-				s.plane.Debugf("%s: scanned %s", s.Name(), string(s.scanner.Bytes()))
+
+				bytes := s.scanner.Bytes()
+				s.plane.Debugf("%v: scanned %v", s.Name(), string(bytes))
+
+				s.handle(bytes)
 			}
 		}
 	}()
 
-	defer func() {
-		s.plane.Infof("%s: closed", s.Name())
-	}()
+	<-scanCtx.Done()
 
-	for {
-		select {
-		case <-scanCtx.Done():
-			s.plane.Infof("%s: scanner done", s.Name())
+	s.plane.Infof("%v: done", s.Name())
 
-			if err := s.writer.Flush(); err != nil {
-				s.plane.Errorf("%s: flush: %v", err)
-				return err
-			}
-
-			return nil
-
-		case bytes := <-ch:
-			s.handle(bytes)
-		}
+	if err := s.writer.Flush(); err != nil {
+		s.plane.Errorf("%v: flush: %v", s.Name(), err)
+		return err
 	}
+
+	s.plane.Infof("%s: closed", s.Name())
+
+	return nil
 }
 
 func (s *ClientLsp) send(msg jsonrpc.Message) error {
 	bytes, err := jsonrpc.EncodeMessage(msg)
 	if err != nil {
-		s.plane.Errorf("%v", err)
+		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return err
 	}
 	if _, err := s.writer.Write(bytes); err != nil {
-		s.plane.Errorf("%v", err)
+		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return err
 	}
 	if err := s.writer.Flush(); err != nil {
-		s.plane.Errorf("%v", err)
+		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return err
 	}
 
