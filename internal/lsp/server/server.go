@@ -8,7 +8,7 @@ import (
 type LspServer interface {
 	Name() string
 	Kind() string
-	Run(ctx context.Context) error
+	Run(ctx context.Context, onReady func()) error
 
 	Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	Initialized(params *protocol.InitializedParams) error

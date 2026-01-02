@@ -3,6 +3,7 @@ package plane
 import (
 	"mals/internal/client"
 	"mals/internal/listener"
+	"mals/internal/lsp/protocol"
 	"mals/internal/model"
 	"mals/internal/plane/controller"
 	"mals/internal/scope"
@@ -54,6 +55,13 @@ type Plane interface {
 	LspDelete(name string) error
 	LspStart(name string) error
 	LspStop(name string) error
+	LspEventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
+	LspEventInitialized(name string, params *protocol.InitializedParams) error
+	LspEventTextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error
+	LspEventTextDocumentDidChange(name string, params *protocol.DidChangeTextDocumentParams) error
+	LspEventTextDocumentDidClose(name string, params *protocol.DidCloseTextDocumentParams) error
+	LspEventTextDocumentCompletion(name string, params *protocol.CompletionParams) (*protocol.CompletionList, error)
+	LspEventShutdown(name string) error
 
 	ModelStatus(name string) controller.ModelStatus
 	ModelRegister(name string, config *config.Model) error
@@ -62,12 +70,11 @@ type Plane interface {
 	ModelDelete(name string) error
 	ModelStart(name string) error
 	ModelStop(name string) error
-
-	TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error)
-	TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
-	TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error)
-	TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
-	TaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error)
+	ModelTaskExecClient(modelName string, task *model.Task, client client.Client) (string, error)
+	ModelTaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
+	ModelTaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error)
+	ModelTaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
+	ModelTaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error)
 
 	ScopeModelRegister(config config.Model) error
 	ScopeModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)

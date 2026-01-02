@@ -3,6 +3,7 @@ package lsp
 import (
 	"context"
 	"fmt"
+	"mals/internal/lsp/protocol"
 	"mals/internal/lsp/server/stdio"
 	"mals/internal/plane/controller"
 	"mals/pkg/config"
@@ -173,8 +174,12 @@ func (s *LspController) LspStart(name string) error {
 
 	lsp := value.lsp
 
+	var wgReady sync.WaitGroup
+
+	wgReady.Add(1)
+
 	go func() {
-		err := lsp.Run(ctx)
+		err := lsp.Run(ctx, func() { wgReady.Done() })
 		if err != nil {
 			s.plane.Errorf("%v", err)
 		}
@@ -182,6 +187,8 @@ func (s *LspController) LspStart(name string) error {
 
 		s.LspStop(lsp.Name())
 	}()
+
+	wgReady.Wait()
 
 	return nil
 }
@@ -207,4 +214,109 @@ func (s *LspController) LspStop(name string) error {
 	cancel()
 
 	return nil
+}
+
+func (s *LspController) EventInitialize(lspName string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return nil, statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.Initialize(params)
+}
+
+func (s *LspController) EventInitialized(lspName string, params *protocol.InitializedParams) error {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.Initialized(params)
+}
+
+func (s *LspController) EventTextDocumentDidOpen(lspName string, params *protocol.DidOpenTextDocumentParams) error {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.TextDocumentDidOpen(params)
+}
+
+func (s *LspController) EventTextDocumentDidChange(lspName string, params *protocol.DidChangeTextDocumentParams) error {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.TextDocumentDidChange(params)
+}
+
+func (s *LspController) EventTextDocumentDidClose(lspName string, params *protocol.DidCloseTextDocumentParams) error {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.TextDocumentDidClose(params)
+}
+
+func (s *LspController) EventTextDocumentCompletion(lspName string, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return nil, statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.TextDocumentCompletion(params)
+}
+
+func (s *LspController) EventShutdown(lspName string) error {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.Shutdown()
 }

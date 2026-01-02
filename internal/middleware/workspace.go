@@ -37,7 +37,18 @@ func (s *Middleware) workspaceDelete(uri string) {
 	s.plane.Infof("%s: workspace %s deleted", s.Name(), workspace.name)
 }
 
-func (s *Middleware) workspaceFindAll(uri string) []*Workspace {
+func (s *Middleware) workspaceFindAll() []*Workspace {
+	workspaces := make([]*Workspace, 0)
+
+	s.workspaces.Range(func(key string, value *Workspace) bool {
+		workspaces = append(workspaces, value)
+		return true
+	})
+
+	return workspaces
+}
+
+func (s *Middleware) workspaceFindAllByPrefix(uri string) []*Workspace {
 	workspaces := make([]*Workspace, 0)
 
 	s.workspaces.Range(func(key string, value *Workspace) bool {

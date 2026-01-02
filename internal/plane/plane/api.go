@@ -3,6 +3,7 @@ package plane
 import (
 	"mals/internal/client"
 	"mals/internal/listener"
+	"mals/internal/lsp/protocol"
 	"mals/internal/model"
 	"mals/internal/plane/controller"
 	"mals/internal/scope"
@@ -148,6 +149,34 @@ func (s *Plane) LspStop(name string) error {
 	return s.lsp.LspStop(name)
 }
 
+func (s *Plane) LspEventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+	return s.lsp.EventInitialize(name, params)
+}
+
+func (s *Plane) LspEventInitialized(name string, params *protocol.InitializedParams) error {
+	return s.lsp.EventInitialized(name, params)
+}
+
+func (s *Plane) LspEventTextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error {
+	return s.lsp.EventTextDocumentDidOpen(name, params)
+}
+
+func (s *Plane) LspEventTextDocumentDidChange(name string, params *protocol.DidChangeTextDocumentParams) error {
+	return s.lsp.EventTextDocumentDidChange(name, params)
+}
+
+func (s *Plane) LspEventTextDocumentDidClose(name string, params *protocol.DidCloseTextDocumentParams) error {
+	return s.lsp.EventTextDocumentDidClose(name, params)
+}
+
+func (s *Plane) LspEventTextDocumentCompletion(name string, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+	return s.lsp.EventTextDocumentCompletion(name, params)
+}
+
+func (s *Plane) LspEventShutdown(name string) error {
+	return s.lsp.EventShutdown(name)
+}
+
 func (s *Plane) ModelStatus(name string) controller.ModelStatus {
 	return s.model.ModelStatus(name)
 }
@@ -176,23 +205,23 @@ func (s *Plane) ModelStop(name string) error {
 	return s.model.ModelStop(name)
 }
 
-func (s *Plane) TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
+func (s *Plane) ModelTaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
 	return s.model.TaskExecClient(modelName, task, client)
 }
 
-func (s *Plane) TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
+func (s *Plane) ModelTaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
 	return s.model.TaskGetClient(modelName, id, client)
 }
 
-func (s *Plane) TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error) {
+func (s *Plane) ModelTaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error) {
 	return s.model.TaskGetAllClient(modelName, client)
 }
 
-func (s *Plane) TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
+func (s *Plane) ModelTaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
 	return s.model.TaskCancelClient(modelName, id, client)
 }
 
-func (s *Plane) TaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error) {
+func (s *Plane) ModelTaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error) {
 	return s.model.TaskCancelAllClient(modelName, client)
 }
 

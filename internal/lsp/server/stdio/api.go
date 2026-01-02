@@ -37,8 +37,7 @@ func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protoco
 
 	result, err := util.JsonUnmarshal[*protocol.InitializeResult](resp.Result)
 	if err != nil {
-		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
-		return nil, err
+		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}
 
 	return result, nil
@@ -153,8 +152,7 @@ func (s *LspServerStdio) TextDocumentCompletion(params *protocol.CompletionParam
 
 	result, err := util.JsonUnmarshal[*protocol.CompletionList](resp.Result)
 	if err != nil {
-		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
-		return nil, err
+		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}
 
 	return result, nil

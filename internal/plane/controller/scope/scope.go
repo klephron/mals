@@ -28,7 +28,7 @@ func mangleName(name string, scope *scope.Scope) string {
 
 	for _, sp := range scope.Path() {
 		fullname += sp.Name()
-		fullname += ":"
+		fullname += "#"
 	}
 
 	fullname += name
@@ -37,7 +37,7 @@ func mangleName(name string, scope *scope.Scope) string {
 }
 
 func unmangleName(name string) (string, *scope.Scope) {
-	parts := strings.Split(name, ":")
+	parts := strings.Split(name, "#")
 	if len(parts) == 0 {
 		return "", nil
 	}

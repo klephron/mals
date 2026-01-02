@@ -59,7 +59,7 @@ func (s *LspServerStdio) Kind() string {
 	return settings.Kind()
 }
 
-func (s *LspServerStdio) Run(ctx context.Context) error {
+func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {
 	{
 		s.rw.Lock()
 
@@ -115,6 +115,8 @@ func (s *LspServerStdio) Run(ctx context.Context) error {
 		s.rw.Unlock()
 
 		s.plane.Infof("%v: started", s.Name())
+
+		onReady()
 	}
 
 	<-ctx.Done()

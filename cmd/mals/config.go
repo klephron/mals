@@ -37,11 +37,11 @@ func configInit(config *config.Config, plane plane.Plane) {
 		}
 	}
 
-	for _, usage := range config.Usages {
-		if usage == nil {
+	for _, lsp := range config.Lsps {
+		if lsp == nil {
 			continue
 		}
-		if err := plane.UsageRegister(*usage); err != nil {
+		if err := plane.ScopeLspRegister(*lsp); err != nil {
 			plane.Errorf("%v", err)
 		}
 	}
@@ -51,6 +51,15 @@ func configInit(config *config.Config, plane plane.Plane) {
 			continue
 		}
 		if err := plane.ScopeModelRegister(*model); err != nil {
+			plane.Errorf("%v", err)
+		}
+	}
+
+	for _, usage := range config.Usages {
+		if usage == nil {
+			continue
+		}
+		if err := plane.UsageRegister(*usage); err != nil {
 			plane.Errorf("%v", err)
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"mals/internal/jsonrpc"
 	"mals/internal/middleware"
 	"mals/internal/plane"
+	"mals/internal/scope"
 )
 
 type ClientLsp struct {
@@ -63,6 +64,11 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 	}()
 
 	<-scanCtx.Done()
+
+	errs := s.plane.ScopeClose(scope.NewScopeClient(s.Name()))
+	for _, err := range errs {
+		s.plane.Warnf("%v: %v", s.Name(), err)
+	}
 
 	s.plane.Infof("%v: done", s.Name())
 

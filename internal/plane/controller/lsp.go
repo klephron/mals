@@ -1,6 +1,9 @@
 package controller
 
-import "mals/pkg/config"
+import (
+	"mals/internal/lsp/protocol"
+	"mals/pkg/config"
+)
 
 type LspStatus int32
 
@@ -22,4 +25,12 @@ type LspController interface {
 	LspDelete(name string) error
 	LspStart(name string) error
 	LspStop(name string) error
+
+	EventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
+	EventInitialized(name string, params *protocol.InitializedParams) error
+	EventTextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error
+	EventTextDocumentDidChange(name string, params *protocol.DidChangeTextDocumentParams) error
+	EventTextDocumentDidClose(name string, params *protocol.DidCloseTextDocumentParams) error
+	EventTextDocumentCompletion(name string, params *protocol.CompletionParams) (*protocol.CompletionList, error)
+	EventShutdown(name string) error
 }

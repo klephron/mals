@@ -73,7 +73,7 @@ func eventCompletionModelSchema[T any]() any {
 	return schema
 }
 
-func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, step *config.Step, workspace *Workspace) (*protocol.CompletionList, error) {
+func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, workspace *Workspace, step *config.Step) (*protocol.CompletionList, error) {
 	document := s.documentGet(workspace, params.TextDocument.URI)
 
 	if document == nil {
@@ -87,7 +87,9 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, ste
 
 	modelName := step.Kind.(*config.StepKindModel).Name
 
-	modelKey, token, err := s.plane.ScopeModelAcquire(modelName, scope.NewScopeGlobal())
+	scope := scope.NewScopeGlobal()
+	modelKey, token, err := s.plane.ScopeModelAcquire(modelName, scope)
+
 	if err != nil {
 		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
@@ -104,7 +106,7 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, ste
 		"Generated completion items",
 	)
 
-	text, err := s.plane.TaskExecClient(modelKey, task, s.client)
+	text, err := s.plane.ModelTaskExecClient(modelKey, task, s.client)
 	if err != nil {
 		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
@@ -132,14 +134,14 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, ste
 	return result, nil
 }
 
-func (s *Middleware) eventCompletionWorkflow(params *protocol.CompletionParams, workflow *config.Workflow, workspace *Workspace) (*protocol.CompletionList, error) {
+func (s *Middleware) eventCompletionWorkflow(params *protocol.CompletionParams, workspace *Workspace, workflow *config.Workflow) (*protocol.CompletionList, error) {
 	var result *protocol.CompletionList
 
 	for _, step := range workflow.Steps {
 		switch step.Kind.(type) {
 
 		case *config.StepKindModel:
-			if r, err := s.eventCompletionModel(params, step, workspace); err != nil {
+			if r, err := s.eventCompletionModel(params, workspace, step); err != nil {
 				return nil, err
 			} else {
 				result = r
@@ -159,16 +161,16 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 
 	listCh := make(chan *protocol.CompletionList)
 
-	usages := s.plane.UsageGetFilteredClient(
-		usage.ConditionFilter{Filetype: nil, Path: util.Ptr(params.TextDocument.URI)},
-		usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.Name())
+	for _, workspace := range workspaces {
+		usages := s.plane.UsageGetFilteredClient(
+			usage.ConditionFilter{Filetype: nil, Path: util.Ptr(params.TextDocument.URI)},
+			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.client.Name())
 
-	for _, usage := range usages {
-		s.plane.Infof("%T %v: usage %v: completion", s, s.Name(), usage.Name)
+		for _, usage := range usages {
+			s.plane.Infof("%T %v: usage %v: completion", s, s.Name(), usage.Name)
 
-		for _, workspace := range workspaces {
 			wg.Go(func() {
-				list, err := s.eventCompletionWorkflow(params, usage.Workflow, workspace)
+				list, err := s.eventCompletionWorkflow(params, workspace, usage.Workflow)
 
 				if err != nil {
 					s.plane.Warnf("%v", err)
@@ -198,7 +200,7 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 }
 
 func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	workspaces := s.workspaceFindAll(params.TextDocument.URI)
+	workspaces := s.workspaceFindAllByPrefix(params.TextDocument.URI)
 
 	if len(workspaces) == 0 {
 		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), params.TextDocument.URI)
