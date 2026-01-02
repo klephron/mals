@@ -14,10 +14,10 @@ type Middleware struct {
 	workspaces  *xsync.Map[string, *Workspace]
 }
 
-func New(plane plane.Plane, client client.Client) *Middleware {
+func New(plane plane.Plane) *Middleware {
 	return &Middleware{
 		plane:       plane,
-		client:      client,
+		client:      nil,
 		initialized: false,
 		workspaces:  xsync.NewMap[string, *Workspace](),
 	}

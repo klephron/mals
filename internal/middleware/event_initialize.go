@@ -1,11 +1,15 @@
 package middleware
 
 import (
+	"mals/internal/client"
 	"mals/internal/info"
 	"mals/internal/lsp/protocol"
 )
 
-func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.ServerCapabilities, *protocol.ServerInfo, error) {
+func (s *Middleware) Initialize(params *protocol.InitializeParams, client client.Client) (*protocol.ServerCapabilities, *protocol.ServerInfo, error) {
+
+	s.client = client
+
 	for _, workspace := range params.WorkspaceFolders {
 		s.workspaceAdd(workspace.URI, workspace.Name)
 	}
@@ -22,6 +26,8 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.Se
 		Name:    info.MiddlewareServerName,
 		Version: info.MiddlewareVersion,
 	}
+
+	s.plane.Infof("%v: initialized", s.Name())
 
 	return capabilities, serverInfo, nil
 }

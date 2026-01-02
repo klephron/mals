@@ -24,14 +24,6 @@ func (d *Document) Version() int32 {
 	return d.version
 }
 
-func (d *Document) SetVersion(version int32) bool {
-	if d.version >= version {
-		return false
-	}
-	d.version = version
-	return true
-}
-
 func (d *Document) LastNChars(line uint32, char uint32, n uint64) string {
 	position := d.position(line, char)
 	return d.positionLastNChars(position, n)
@@ -41,6 +33,13 @@ func (d *Document) Text() string {
 	return strings.Join(d.lines, "\n")
 }
 
-func (d *Document) SetText(text *string) {
+func (d *Document) SetText(text *string, version int32) bool {
+	if d.version >= version {
+		return false
+	}
+
+	d.version = version
 	d.lines = textToLines(text)
+
+	return true
 }

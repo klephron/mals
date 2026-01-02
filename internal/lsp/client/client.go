@@ -24,10 +24,9 @@ func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *Clien
 		plane:      plane,
 		scanner:    scanner,
 		writer:     writer,
-		middleware: nil,
+		middleware: middleware.New(plane),
 	}
-
-	s.middleware = middleware.New(s.plane, s)
+	s.Client = s
 
 	s.scanner.Split(jsonrpc.ScannerSplit)
 
