@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"mals/internal/lsp/protocol"
-	"mals/internal/middleware/document"
 	"mals/internal/model"
 	"mals/internal/scope"
 	"mals/internal/usage"
@@ -16,7 +15,7 @@ import (
 )
 
 const (
-	completionTemplate = `
+	eventCompletionModelTemplate = `
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
 You are an intelligent autocompletion engine. Your task is to suggest relevant text completions based on document context.
@@ -59,12 +58,12 @@ Current context:
 `
 )
 
-func completionPrompt(documentContext string, currentContext string) string {
-	prompt := fmt.Sprintf(completionTemplate, documentContext, currentContext)
+func eventCompletionModelPrompt(documentContext string, currentContext string) string {
+	prompt := fmt.Sprintf(eventCompletionModelTemplate, documentContext, currentContext)
 	return prompt
 }
 
-func completionSchema[T any]() any {
+func eventCompletionModelSchema[T any]() any {
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
@@ -74,34 +73,38 @@ func completionSchema[T any]() any {
 	return schema
 }
 
-func (s *Middleware) completionStepModel(params *protocol.CompletionParams, document *document.Document, step *config.Step) (*protocol.CompletionList, error) {
+func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, step *config.Step, workspace *Workspace) (*protocol.CompletionList, error) {
+	document := s.documentGet(workspace, params.TextDocument.URI)
 
-	modelName := step.Kind.(*config.StepKindModel).Name
+	if document == nil {
+		return nil, fmt.Errorf("document %v not found", params.TextDocument.URI)
+	}
 
 	// TODO: handle other scopes
 	if step.Scope != "global" {
 		s.plane.Warnf("step %T %v scope %v unsupported", step, step, step.Scope)
 	}
 
-	modelFullname, token, err := s.plane.ScopeModelAcquire(modelName, scope.NewScopeGlobal())
+	modelName := step.Kind.(*config.StepKindModel).Name
+
+	modelKey, token, err := s.plane.ScopeModelAcquire(modelName, scope.NewScopeGlobal())
 	if err != nil {
 		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
 	}
-	defer s.plane.ScopeModelRelease(modelFullname, token)
+	defer s.plane.ScopeModelRelease(modelKey, token)
 
-	taskText := completionPrompt(
-		document.Text(),
-		document.LastNChars(params.Position.Line, params.Position.Character, 200),
-	)
 	task := model.NewTask(
-		taskText,
-		completionSchema[[]string](),
+		eventCompletionModelPrompt(
+			document.Text(),
+			document.LastNChars(params.Position.Line, params.Position.Character, 200),
+		),
+		eventCompletionModelSchema[[]string](),
 		"completion_items",
 		"Generated completion items",
 	)
 
-	text, err := s.plane.TaskExecClient(modelFullname, task, s.client)
+	text, err := s.plane.TaskExecClient(modelKey, task, s.client)
 	if err != nil {
 		s.plane.Warnf("step %T %v: %v", step, step, err)
 		return nil, err
@@ -121,7 +124,6 @@ func (s *Middleware) completionStepModel(params *protocol.CompletionParams, docu
 		}
 	}
 
-	// TODO: process all the steps
 	result := &protocol.CompletionList{
 		IsIncomplete: false,
 		Items:        items,
@@ -130,14 +132,14 @@ func (s *Middleware) completionStepModel(params *protocol.CompletionParams, docu
 	return result, nil
 }
 
-func (s *Middleware) completionWorkflow(params *protocol.CompletionParams, document *document.Document, workflow *config.Workflow) (*protocol.CompletionList, error) {
+func (s *Middleware) eventCompletionWorkflow(params *protocol.CompletionParams, workflow *config.Workflow, workspace *Workspace) (*protocol.CompletionList, error) {
 	var result *protocol.CompletionList
 
 	for _, step := range workflow.Steps {
 		switch step.Kind.(type) {
 
 		case *config.StepKindModel:
-			if r, err := s.completionStepModel(params, document, step); err != nil {
+			if r, err := s.eventCompletionModel(params, step, workspace); err != nil {
 				return nil, err
 			} else {
 				result = r
@@ -145,7 +147,6 @@ func (s *Middleware) completionWorkflow(params *protocol.CompletionParams, docum
 
 		default:
 			err := fmt.Errorf("unhandled step %T %v", step, step)
-			s.plane.Warnf("%v", err)
 			return nil, err
 		}
 	}
@@ -153,37 +154,24 @@ func (s *Middleware) completionWorkflow(params *protocol.CompletionParams, docum
 	return result, nil
 }
 
-func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	uri := params.TextDocument.URI
-
-	workspaces := s.workspaceFindAll(uri)
-
-	if len(workspaces) == 0 {
-		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), uri)
-	}
-
+func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspaces []*Workspace) (*protocol.CompletionList, error) {
 	var wg sync.WaitGroup
 
 	listCh := make(chan *protocol.CompletionList)
 
-	for _, workspace := range workspaces {
-		document := s.documentGet(workspace, uri)
-		if document == nil {
-			continue
-		}
+	usages := s.plane.UsageGetFilteredClient(
+		usage.ConditionFilter{Filetype: nil, Path: util.Ptr(params.TextDocument.URI)},
+		usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.Name())
 
-		s.plane.Infof("%T %v: workspace %v document %v: completion", s, s.Name(), workspace.name, document.Uri())
+	for _, usage := range usages {
+		s.plane.Infof("%T %v: usage %v: completion", s, s.Name(), usage.Name)
 
-		usages := s.plane.UsageGetFilteredClient(
-			usage.ConditionFilter{Filetype: nil, Path: util.Ptr(document.Uri())},
-			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.Name())
-
-		for _, usage := range usages {
+		for _, workspace := range workspaces {
 			wg.Go(func() {
-				list, err := s.completionWorkflow(params, document, usage.Workflow)
+				list, err := s.eventCompletionWorkflow(params, usage.Workflow, workspace)
 
 				if err != nil {
-					s.plane.Errorf("%T %v: workspace %v %v", s, s.Name(), workspace.name, err)
+					s.plane.Warnf("%v", err)
 					return
 				}
 
@@ -207,4 +195,14 @@ func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (
 	}
 
 	return &result, nil
+}
+
+func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+	workspaces := s.workspaceFindAll(params.TextDocument.URI)
+
+	if len(workspaces) == 0 {
+		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), params.TextDocument.URI)
+	}
+
+	return s.eventCompletion(params, workspaces)
 }
