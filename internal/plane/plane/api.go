@@ -208,6 +208,18 @@ func (s *Plane) ScopeModelRelease(name string, token controller.ScopeToken) erro
 	return s.scope.ScopeModelRelease(name, token)
 }
 
+func (s *Plane) ScopeLspRegister(config config.Lsp) error {
+	return s.scope.ScopeLspRegister(config)
+}
+
+func (s *Plane) ScopeLspAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
+	return s.scope.ScopeLspAcquire(name, scope)
+}
+
+func (s *Plane) ScopeLspRelease(name string, token controller.ScopeToken) error {
+	return s.scope.ScopeLspRelease(name, token)
+}
+
 func (s *Plane) ScopeClose(scope *scope.Scope) []error {
 	return s.scope.ScopeClose(scope)
 }

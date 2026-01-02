@@ -66,6 +66,8 @@ func (o *Log) UnmarshalJSON(data []byte) error {
 }
 
 func (o *Model) UnmarshalJSON(data []byte) error {
+	var settingsOpenAI ModelSettingsOpenAI
+
 	t := &struct {
 		Name     string          `json:"name"`
 		Kind     string          `json:"kind"`
@@ -79,7 +81,7 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 	o.Name = t.Name
 
 	switch t.Kind {
-	case "openai":
+	case settingsOpenAI.Kind():
 		var ts struct {
 			Url         string  `json:"url"`
 			MaxTokens   int     `json:"max_tokens"`
@@ -104,6 +106,8 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 }
 
 func (o *Lsp) UnmarshalJSON(data []byte) error {
+	var settingsStdio LspSettingsStdio
+
 	t := &struct {
 		Name     string          `json:"name"`
 		Kind     string          `json:"kind"`
@@ -117,7 +121,7 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 	o.Name = t.Name
 
 	switch t.Kind {
-	case "stdio":
+	case settingsStdio.Kind():
 		var ts struct {
 			Cmd []string `json:"cmd"`
 		}

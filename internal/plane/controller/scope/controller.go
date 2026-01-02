@@ -23,6 +23,7 @@ func New(plane plane.Plane) *ScopeController {
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
 
+			lsps:   xsync.NewMap[string, *config.Lsp](),
 			models: xsync.NewMap[string, *config.Model](),
 
 			root: newSpaceRoot(),

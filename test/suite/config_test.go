@@ -222,7 +222,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Name:       "1",
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow:   nil,
 					},
@@ -241,7 +241,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Name:       "1",
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow:   nil,
 					},
@@ -260,7 +260,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Name:   "1",
-						Events: []string{},
+						Events: []Event{},
 						Conditions: []*Condition{
 							{
 								Filetypes: []string{},
@@ -284,7 +284,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Name:   "1",
-						Events: []string{},
+						Events: []Event{},
 						Conditions: []*Condition{
 							{
 								Filetypes: []string{"s1"},
@@ -308,7 +308,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Name:       "1",
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow: &Workflow{
 							Steps: []*Step{},
@@ -328,7 +328,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps:    []*Lsp{},
 				Usages: []*Usage{
 					{
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow: &Workflow{
 							Steps: []*Step{},
@@ -348,7 +348,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps:    []*Lsp{},
 				Usages: []*Usage{
 					{
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow: &Workflow{
 							Steps: []*Step{},
@@ -368,7 +368,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps:    []*Lsp{},
 				Usages: []*Usage{
 					{
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow: &Workflow{
 							Steps: []*Step{
@@ -394,7 +394,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps:    []*Lsp{},
 				Usages: []*Usage{
 					{
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow: &Workflow{
 							Steps: []*Step{
@@ -420,7 +420,7 @@ func Test_Unmarshall(t *testing.T) {
 				Lsps:    []*Lsp{},
 				Usages: []*Usage{
 					{
-						Events:     []string{},
+						Events:     []Event{},
 						Conditions: []*Condition{},
 						Workflow: &Workflow{
 							Steps: []*Step{

@@ -2,6 +2,7 @@ package test
 
 import (
 	"mals/internal/usage"
+	"mals/internal/util"
 	"mals/pkg/config"
 	"testing"
 )
@@ -26,7 +27,7 @@ func Test_StepsFilter(t *testing.T) {
 				{Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/test"}}}},
 			},
 			filter: usage.ConditionFilter{
-				Filetype: strPtr("go"),
+				Filetype: util.Ptr("go"),
 				Path:     nil,
 			},
 			expectedCount: 2,
@@ -38,8 +39,8 @@ func Test_StepsFilter(t *testing.T) {
 				{Conditions: []*config.Condition{{Filetypes: []string{"py"}, Paths: []string{"/src"}}}},
 			},
 			filter: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			expectedCount: 1,
 		},
@@ -49,8 +50,8 @@ func Test_StepsFilter(t *testing.T) {
 				{Conditions: []*config.Condition{{Filetypes: []string{"py"}, Paths: []string{"/src"}}}},
 			},
 			filter: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			expectedCount: 0,
 		},
@@ -87,7 +88,7 @@ func Test_UsagesFilter(t *testing.T) {
 			usages: []*config.Usage{
 				{
 					Name:       "test-usage",
-					Events:     []string{"save", "open"},
+					Events:     []config.Event{"save", "open"},
 					Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/src"}}},
 					Workflow: &config.Workflow{
 						Steps: []*config.Step{
@@ -97,11 +98,11 @@ func Test_UsagesFilter(t *testing.T) {
 				},
 			},
 			condition: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			event: usage.EventFilter{
-				Event: strPtr("save"),
+				Event: util.Ptr(config.Event("save")),
 			},
 			expectedCount: 1,
 			expectedSteps: []int{1},
@@ -111,17 +112,17 @@ func Test_UsagesFilter(t *testing.T) {
 			usages: []*config.Usage{
 				{
 					Name:       "test-usage",
-					Events:     []string{"save"},
+					Events:     []config.Event{"save"},
 					Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/src"}}},
 					Workflow:   &config.Workflow{Steps: []*config.Step{}},
 				},
 			},
 			condition: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			event: usage.EventFilter{
-				Event: strPtr("open"),
+				Event: util.Ptr(config.Event("open")),
 			},
 			expectedCount: 0,
 			expectedSteps: []int{},
@@ -131,17 +132,17 @@ func Test_UsagesFilter(t *testing.T) {
 			usages: []*config.Usage{
 				{
 					Name:       "test-usage",
-					Events:     []string{"save"},
+					Events:     []config.Event{"save"},
 					Conditions: []*config.Condition{{Filetypes: []string{"py"}, Paths: []string{"/src"}}},
 					Workflow:   &config.Workflow{Steps: []*config.Step{}},
 				},
 			},
 			condition: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			event: usage.EventFilter{
-				Event: strPtr("save"),
+				Event: util.Ptr(config.Event("save")),
 			},
 			expectedCount: 0,
 			expectedSteps: []int{},
@@ -151,7 +152,7 @@ func Test_UsagesFilter(t *testing.T) {
 			usages: []*config.Usage{
 				{
 					Name:       "test-usage",
-					Events:     []string{"save"},
+					Events:     []config.Event{"save"},
 					Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/src"}}},
 					Workflow: &config.Workflow{
 						Steps: []*config.Step{
@@ -162,11 +163,11 @@ func Test_UsagesFilter(t *testing.T) {
 				},
 			},
 			condition: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			event: usage.EventFilter{
-				Event: strPtr("save"),
+				Event: util.Ptr(config.Event("save")),
 			},
 			expectedCount: 1,
 			expectedSteps: []int{1},
@@ -176,23 +177,23 @@ func Test_UsagesFilter(t *testing.T) {
 			usages: []*config.Usage{
 				{
 					Name:       "usage1",
-					Events:     []string{"save"},
+					Events:     []config.Event{"save"},
 					Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/src"}}},
 					Workflow:   &config.Workflow{Steps: []*config.Step{{Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/src"}}}}}},
 				},
 				{
 					Name:       "usage2",
-					Events:     []string{"open"},
+					Events:     []config.Event{"open"},
 					Conditions: []*config.Condition{{Filetypes: []string{"go"}, Paths: []string{"/src"}}},
 					Workflow:   &config.Workflow{Steps: []*config.Step{}},
 				},
 			},
 			condition: usage.ConditionFilter{
-				Filetype: strPtr("go"),
-				Path:     strPtr("/src"),
+				Filetype: util.Ptr("go"),
+				Path:     util.Ptr("/src"),
 			},
 			event: usage.EventFilter{
-				Event: strPtr("save"),
+				Event: util.Ptr(config.Event("save")),
 			},
 			expectedCount: 1,
 			expectedSteps: []int{1},
@@ -215,8 +216,4 @@ func Test_UsagesFilter(t *testing.T) {
 			}
 		})
 	}
-}
-
-func strPtr(s string) *string {
-	return &s
 }

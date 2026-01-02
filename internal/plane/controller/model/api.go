@@ -135,16 +135,7 @@ func (s *ModelController) ModelCreate(name string) error {
 
 	switch settings := value.config.Settings.(type) {
 	case *config.ModelSettingsOpenAI:
-		spec := openai.ModelOpenAISpec{
-			Url:         settings.Url,
-			MaxTokens:   settings.MaxTokens,
-			Temperature: settings.Temperature,
-		}
-		model, err := openai.New(name, spec, s.plane)
-		if err != nil {
-			return err
-		}
-		value.model = model
+		value.model = openai.New(name, settings, s.plane)
 
 	default:
 		return fmt.Errorf("unhandled model %T %v", settings, settings)

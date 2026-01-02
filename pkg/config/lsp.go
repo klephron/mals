@@ -2,14 +2,18 @@ package config
 
 type Lsp struct {
 	Name     string
-	Settings LspSpec
+	Settings LspSettings
 }
 
-type LspSpec interface {
-	lspspec()
+type LspSettings interface {
+	Kind() string
 }
 
 type LspSettingsStdio struct {
-	LspSpec
+	LspSettings
 	Cmd []string
+}
+
+func (s *LspSettingsStdio) Kind() string {
+	return "stdio"
 }

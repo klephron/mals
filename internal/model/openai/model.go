@@ -4,20 +4,16 @@ import (
 	"context"
 	"mals/internal/model"
 	"mals/internal/plane"
+	"mals/pkg/config"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
 )
 
-type ModelOpenAISpec struct {
-	Url         string
-	MaxTokens   int
-	Temperature float32
-}
-
 type ModelOpenAI struct {
 	model.Model
+
 	name string
 
 	client      openai.Client
@@ -27,10 +23,10 @@ type ModelOpenAI struct {
 	plane plane.Plane
 }
 
-func New(name string, spec ModelOpenAISpec, plane plane.Plane) (*ModelOpenAI, error) {
-	client := openai.NewClient(option.WithBaseURL(spec.Url), option.WithAPIKey("sk-dummy"))
-	maxTokens := openai.Int(int64(spec.MaxTokens))
-	temperature := openai.Float(float64(spec.Temperature))
+func New(name string, settings *config.ModelSettingsOpenAI, plane plane.Plane) *ModelOpenAI {
+	client := openai.NewClient(option.WithBaseURL(settings.Url), option.WithAPIKey("sk-dummy"))
+	maxTokens := openai.Int(int64(settings.MaxTokens))
+	temperature := openai.Float(float64(settings.Temperature))
 
 	return &ModelOpenAI{
 		name:        name,
@@ -38,7 +34,7 @@ func New(name string, spec ModelOpenAISpec, plane plane.Plane) (*ModelOpenAI, er
 		maxTokens:   maxTokens,
 		temperature: temperature,
 		plane:       plane,
-	}, nil
+	}
 }
 
 func (s *ModelOpenAI) Name() string {
@@ -46,7 +42,8 @@ func (s *ModelOpenAI) Name() string {
 }
 
 func (s *ModelOpenAI) Kind() string {
-	return Kind()
+	var settings config.ModelSettingsOpenAI
+	return settings.Kind()
 }
 
 func (s *ModelOpenAI) Run(ctx context.Context) error {

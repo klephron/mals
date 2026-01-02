@@ -72,6 +72,9 @@ type Plane interface {
 	ScopeModelRegister(config config.Model) error
 	ScopeModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)
 	ScopeModelRelease(name string, token controller.ScopeToken) error
+	ScopeLspRegister(config config.Lsp) error
+	ScopeLspAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)
+	ScopeLspRelease(name string, token controller.ScopeToken) error
 	ScopeClose(scope *scope.Scope) []error
 
 	UsageRegister(config config.Usage) error
