@@ -3,12 +3,14 @@ package middleware
 import (
 	"encoding/json"
 	"fmt"
+	"mals/internal/info"
 	"mals/internal/lsp/protocol"
 	"mals/internal/model"
 	"mals/internal/scope"
 	"mals/internal/usage"
 	"mals/internal/util"
 	"mals/pkg/config"
+	"strings"
 	"sync"
 
 	"github.com/invopop/jsonschema"
@@ -118,12 +120,11 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, wor
 	items := make([]protocol.CompletionItem, len(resItems))
 	for i, s := range resItems {
 		items[i] = protocol.CompletionItem{
-			Label:         s,
-			Detail:        fmt.Sprintf("%v", modelName),
+			Label:         strings.TrimSpace(s),
+			Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, modelName),
 			Documentation: &protocol.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", modelName)},
 		}
 	}
-
 	result := &protocol.CompletionList{
 		IsIncomplete: false,
 		Items:        items,
@@ -147,13 +148,27 @@ func (s *Middleware) eventCompletionLsp(params *protocol.CompletionParams, _ *Wo
 	}
 	defer s.plane.ScopeLspRelease(lspKey, token)
 
-	result, err := s.plane.LspEventTextDocumentCompletion(lspKey, params)
+	list, err := s.plane.LspEventTextDocumentCompletion(lspKey, params)
 	if err != nil {
 		s.plane.Errorf("TextDocumentCompletion %T %v: %v", step, step, err)
 		return nil, err
 	}
 
-	s.plane.Infof("TextDocumentCompletion %T %v: %+v", step, step, result)
+	s.plane.Debugf("TextDocumentCompletion %T %v: %+v", step, step, list)
+
+	// only return label, detail and documentation
+	items := make([]protocol.CompletionItem, len(list.Items))
+	for i, s := range list.Items {
+		items[i] = protocol.CompletionItem{
+			Label:         strings.TrimSpace(s.Label),
+			Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, lspName),
+			Documentation: &protocol.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
+		}
+	}
+	result := &protocol.CompletionList{
+		IsIncomplete: list.IsIncomplete,
+		Items:        items,
+	}
 
 	return result, nil
 }
@@ -235,6 +250,8 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 			result.IsIncomplete = result.IsIncomplete || list.IsIncomplete
 		}
 	}
+
+	s.plane.Infof("TextDocumentCompletion %+v", result)
 
 	return &result, nil
 }

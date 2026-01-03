@@ -29,7 +29,7 @@ func (s *Middleware) eventShutdownLsp(_ *Workspace, step *config.Step) error {
 		return nil
 	}
 
-	s.plane.Infof("Shutdown %T %v", step, step)
+	s.plane.Debugf("Shutdown %T %v", step, step)
 
 	return nil
 }

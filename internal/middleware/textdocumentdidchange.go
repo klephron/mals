@@ -102,7 +102,7 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 		return nil
 	}
 
-	s.plane.Infof("TextDocumentDidChange %T %v", step, step)
+	s.plane.Debugf("TextDocumentDidChange %T %v", step, step)
 
 	return nil
 }

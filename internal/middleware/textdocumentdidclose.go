@@ -36,7 +36,7 @@ func (s *Middleware) eventTextDocumentDidCloseLsp(params *protocol.DidCloseTextD
 		return nil
 	}
 
-	s.plane.Infof("TextDocumentDidClose %T %v", step, step)
+	s.plane.Debugf("TextDocumentDidClose %T %v", step, step)
 
 	return nil
 }

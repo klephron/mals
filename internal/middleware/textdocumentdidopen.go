@@ -39,7 +39,7 @@ func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDoc
 		return nil
 	}
 
-	s.plane.Infof("TextDocumentDidOpen %T %v", step, step)
+	s.plane.Debugf("TextDocumentDidOpen %T %v", step, step)
 
 	return nil
 }

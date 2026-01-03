@@ -67,7 +67,7 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 		return nil
 	}
 
-	s.plane.Infof("Initialize %T %v: %+v", step, step, result)
+	s.plane.Debugf("Initialize %T %v: %+v", step, step, result)
 
 	return nil
 }

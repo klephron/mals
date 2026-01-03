@@ -32,7 +32,7 @@ func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Works
 		return nil
 	}
 
-	s.plane.Infof("Initialized %T %v", step, step)
+	s.plane.Debugf("Initialized %T %v", step, step)
 
 	return nil
 }
