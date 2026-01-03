@@ -5,7 +5,7 @@
 Build utility script to fetch latest changes:
 
 ```sh
-go build -o build/lsp-gen cmd/lsp/gen/*.go
+go build -o build/lsp-gen cmd/lsp-gen/*.go
 ```
 
 Generate lsp protocol structures and helpers:
