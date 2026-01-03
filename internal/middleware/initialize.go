@@ -125,7 +125,7 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams, client client
 		Capabilities: protocol.ServerCapabilities{
 			TextDocumentSync: protocol.TextDocumentSyncOptions{
 				OpenClose: true,
-				Change:    protocol.Incremental,
+				Change:    s.textDocumentSyncKind,
 			},
 			CompletionProvider: &protocol.CompletionOptions{},
 		},
