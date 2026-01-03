@@ -14,14 +14,13 @@ import (
 
 func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, workspace *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("Initialize %T %v scope %v unsupported", step, step, step.Scope)
+		s.plane.Warnf("Initialize %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
+	scope := scope.NewScopeClient(s.client.Name())
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	scope := scope.NewScopeClient(s.client.Name())
 	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
-
 	if err != nil {
 		s.plane.Errorf("Initialize %T %v: %v", step, step, err)
 		return err

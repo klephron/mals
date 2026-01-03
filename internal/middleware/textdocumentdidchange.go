@@ -11,14 +11,13 @@ import (
 
 func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTextDocumentParams, workspace *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("TextDocumentDidChange %T %v scope %v unsupported", step, step, step.Scope)
+		s.plane.Warnf("TextDocumentDidChange %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
+	scope := scope.NewScopeClient(s.client.Name())
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	scope := scope.NewScopeClient(s.client.Name())
 	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
-
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
 		return err
