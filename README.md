@@ -28,7 +28,6 @@ go build -o build/mals cmd/mals/*.go
 
 ## TODO
 
-- Assign `"model": { object }`, same as in `"models"` to start model for each workspace (may be necessary if it accumulates context changes)
 - Optimization of requests and caching:
   - Drop autocompletion requests that are old (may be checked by document version id) to skip answering to them if model can't pace
   - Skip if user triggers autocompletion too often and drop older requests
