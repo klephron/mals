@@ -66,7 +66,7 @@ func (s *Middleware) eventTextDocumentDidOpen(params *protocol.DidOpenTextDocume
 	for _, workspace := range workspaces {
 		usages := s.plane.UsageGetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-			usage.EventFilter{Event: util.Ptr(config.EventInitialized)}, s.client.Name())
+			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidOpen)}, s.client.Name())
 
 		for _, usage := range usages {
 			if err := s.eventTextDocumentDidOpenWorkflow(params, workspace, usage.Workflow); err != nil {

@@ -36,7 +36,7 @@
       "events": [
         "initialize",
         "initialized",
-        "textDocument/didiOpen",
+        "textDocument/didOpen",
         "textDocument/didChange",
         "textDocument/didClose",
         "shutdown"
