@@ -4,7 +4,7 @@ type Step struct {
 	Name       string
 	Conditions []*Condition
 	Kind       StepKind
-	Scope      string
+	Scope      ScopeKind
 }
 
 type StepKind interface {

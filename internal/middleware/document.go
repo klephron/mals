@@ -15,8 +15,8 @@ func (s *Middleware) documentGet(workspace *Workspace, uri string) *document.Doc
 	return document
 }
 
-func (s *Middleware) documentAdd(workspace *Workspace, uri string, text *string) {
-	document := document.New(uri, text)
+func (s *Middleware) documentAdd(workspace *Workspace, uri string, text *string, version int32) {
+	document := document.New(uri, text, version)
 
 	workspace.documents.Store(uri, document)
 

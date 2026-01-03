@@ -243,7 +243,7 @@ func (o *Step) UnmarshalJSON(data []byte) error {
 		Conditions []*Condition `json:"conditions"`
 		Model      *string      `json:"model"`
 		Lsp        *string      `json:"lsp"`
-		Scope      string       `json:"scope"`
+		Scope      ScopeKind    `json:"scope"`
 	}
 
 	if err := json.Unmarshal(data, &t); err != nil {

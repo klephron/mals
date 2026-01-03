@@ -11,10 +11,10 @@ type Document struct {
 	lines   []string
 }
 
-func New(uri string, text *string) *Document {
+func New(uri string, text *string, version int32) *Document {
 	return &Document{
 		uri:     uri,
-		version: 0,
+		version: version,
 		lines:   textToLines(text),
 	}
 }
