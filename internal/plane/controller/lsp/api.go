@@ -216,6 +216,36 @@ func (s *LspController) LspStop(name string) error {
 	return nil
 }
 
+func (s *LspController) LspCapabilities(lspName string) (*protocol.ServerCapabilities, error) {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return nil, statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.Capabilities()
+}
+
+func (s *LspController) LspInfo(lspName string) (*protocol.ServerInfo, error) {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.LspStarted == 0 {
+		return nil, statusErrorFlag(lspName, status, controller.LspStarted)
+	}
+
+	return value.lsp.Info()
+}
+
 func (s *LspController) EventInitialize(lspName string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	value, _ := s.state.lsps.Load(lspName)
 

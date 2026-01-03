@@ -10,6 +10,9 @@ type LspServer interface {
 	Kind() string
 	Run(ctx context.Context, onReady func()) error
 
+	Capabilities() (*protocol.ServerCapabilities, error)
+	Info() (*protocol.ServerInfo, error)
+
 	Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	Initialized(params *protocol.InitializedParams) error
 	TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error

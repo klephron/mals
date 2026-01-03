@@ -8,6 +8,28 @@ import (
 	"mals/pkg/config"
 )
 
+func (s *LspServerStdio) Capabilities() (*protocol.ServerCapabilities, error) {
+	s.rw.RLock()
+	defer s.rw.RUnlock()
+
+	if !s.running {
+		return nil, s.errorNotRunning()
+	}
+
+	return s.capabilities, nil
+}
+
+func (s *LspServerStdio) Info() (*protocol.ServerInfo, error) {
+	s.rw.RLock()
+	defer s.rw.RUnlock()
+
+	if !s.running {
+		return nil, s.errorNotRunning()
+	}
+
+	return s.info, nil
+}
+
 func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
@@ -38,6 +60,14 @@ func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protoco
 	result, err := util.JsonUnmarshal[*protocol.InitializeResult](resp.Result)
 	if err != nil {
 		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
+	}
+
+	s.rw.Lock()
+	defer s.rw.Unlock()
+
+	if s.running {
+		s.capabilities = &result.Capabilities
+		s.info = result.ServerInfo
 	}
 
 	return result, nil

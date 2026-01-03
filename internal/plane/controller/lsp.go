@@ -26,6 +26,9 @@ type LspController interface {
 	LspStart(name string) error
 	LspStop(name string) error
 
+	LspCapabilities(name string) (*protocol.ServerCapabilities, error)
+	LspInfo(name string) (*protocol.ServerInfo, error)
+
 	EventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	EventInitialized(name string, params *protocol.InitializedParams) error
 	EventTextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error

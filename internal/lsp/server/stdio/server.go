@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/jsonrpc"
+	"mals/internal/lsp/protocol"
 	"mals/internal/lsp/server"
 	"mals/internal/plane"
 	"mals/pkg/config"
@@ -27,10 +28,12 @@ type LspServerStdio struct {
 
 	cmd []string
 
-	rw      sync.RWMutex
-	running bool
-	reader  *bufio.Reader
-	writer  *bufio.Writer
+	rw           sync.RWMutex
+	running      bool
+	reader       *bufio.Reader
+	writer       *bufio.Writer
+	capabilities *protocol.ServerCapabilities
+	info         *protocol.ServerInfo
 
 	requests *xsync.Map[int32, *RequestValue]
 	requestc atomic.Int32
@@ -40,13 +43,17 @@ func New(name string, settings *config.LspSettingsStdio, plane plane.Plane) *Lsp
 	cmd := settings.Cmd
 
 	return &LspServerStdio{
-		name:     name,
-		plane:    plane,
-		cmd:      cmd,
-		rw:       sync.RWMutex{},
-		running:  false,
-		requests: xsync.NewMap[int32, *RequestValue](),
-		requestc: atomic.Int32{},
+		name:         name,
+		plane:        plane,
+		cmd:          cmd,
+		rw:           sync.RWMutex{},
+		running:      false,
+		reader:       nil,
+		writer:       nil,
+		capabilities: nil,
+		info:         nil,
+		requests:     xsync.NewMap[int32, *RequestValue](),
+		requestc:     atomic.Int32{},
 	}
 }
 

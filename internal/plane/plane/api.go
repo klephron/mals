@@ -149,6 +149,14 @@ func (s *Plane) LspStop(name string) error {
 	return s.lsp.LspStop(name)
 }
 
+func (s *Plane) LspCapabilities(name string) (*protocol.ServerCapabilities, error) {
+	return s.lsp.LspCapabilities(name)
+}
+
+func (s *Plane) LspInfo(name string) (*protocol.ServerInfo, error) {
+	return s.lsp.LspInfo(name)
+}
+
 func (s *Plane) LspEventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	return s.lsp.EventInitialize(name, params)
 }
