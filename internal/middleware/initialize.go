@@ -3,12 +3,12 @@ package middleware
 import (
 	"fmt"
 	"mals/internal/client"
-	"mals/internal/info"
 	"mals/internal/lsp/protocol"
 	"mals/internal/scope"
 	"mals/internal/usage"
 	"mals/internal/util"
 	"mals/pkg/config"
+	"mals/pkg/info"
 	"os"
 )
 

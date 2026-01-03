@@ -3,13 +3,13 @@ package middleware
 import (
 	"encoding/json"
 	"fmt"
-	"mals/internal/info"
 	"mals/internal/lsp/protocol"
 	"mals/internal/model"
 	"mals/internal/scope"
 	"mals/internal/usage"
 	"mals/internal/util"
 	"mals/pkg/config"
+	"mals/pkg/info"
 	"strings"
 	"sync"
 
