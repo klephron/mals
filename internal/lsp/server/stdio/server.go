@@ -194,7 +194,7 @@ func (s *LspServerStdio) sendRequest(request *jsonrpc.Request) (<-chan *jsonrpc.
 }
 
 func (s *LspServerStdio) sendNotification(notification *jsonrpc.Notification) error {
-	s.rw.Lock()
+	s.rw.RLock()
 	defer s.rw.RUnlock()
 
 	if !s.running {
