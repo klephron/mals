@@ -69,7 +69,13 @@ type LspGetInput struct {
 func LspGet(plane plane.Plane) func(ctx context.Context, input *LspGetInput) (*struct{ Body LSP }, error) {
 	return func(ctx context.Context, input *LspGetInput) (*struct{ Body LSP }, error) {
 		lsp, err := plane.LspGet(input.Name)
+
+		if err != nil {
+			return nil, huma.Error404NotFound("LSP not found", err)
+		}
+
 		result := toDto(lsp)
-		return &struct{ Body LSP }{Body: result}, huma.Error404NotFound("LSP not found", err)
+
+		return &struct{ Body LSP }{Body: result}, nil
 	}
 }
