@@ -22,7 +22,7 @@ func configLoad(params *Params) (*config.Config, error) {
 }
 
 func configInit(config *config.Config, plane plane.Plane) {
-	for _, log := range config.Loggers {
+	for _, log := range config.Logs {
 		if log == nil {
 			continue
 		}

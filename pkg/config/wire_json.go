@@ -7,14 +7,14 @@ import (
 
 func (o *Config) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Loggers   []*Log      `json:"loggers"`
+		Logs      []*Log      `json:"logs"`
 		Models    []*Model    `json:"models"`
 		Lsps      []*Lsp      `json:"lsps"`
 		Usages    []*Usage    `json:"usages"`
 		Listeners []*Listener `json:"listeners"`
 	}
 
-	t.Loggers = []*Log{}
+	t.Logs = []*Log{}
 	t.Models = []*Model{}
 	t.Lsps = []*Lsp{}
 	t.Usages = []*Usage{}
@@ -24,7 +24,7 @@ func (o *Config) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	o.Loggers = t.Loggers
+	o.Logs = t.Logs
 	o.Models = t.Models
 	o.Lsps = t.Lsps
 	o.Usages = t.Usages

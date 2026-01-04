@@ -17,7 +17,7 @@ type Usage struct {
 }
 
 type Config struct {
-	Loggers   []*Log
+	Logs      []*Log
 	Models    []*Model
 	Lsps      []*Lsp
 	Usages    []*Usage
