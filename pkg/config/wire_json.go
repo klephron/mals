@@ -169,8 +169,9 @@ func (o *Listener) UnmarshalJSON(data []byte) error {
 	var kindApi ListenerKindApi
 	var kindLsp ListenerKindLsp
 
-	var ipcTcp ListenerIpcTcp
 	var ipcStdio ListenerIpcStdio
+	var ipcTcp ListenerIpcTcp
+	var ipcHttp ListenerIpcHttp
 
 	var t struct {
 		Name   string   `json:"name"`
@@ -213,6 +214,15 @@ func (o *Listener) UnmarshalJSON(data []byte) error {
 		}
 
 		o.Ipc = tcp
+
+	case ipcHttp.Ipc():
+		http := &ListenerIpcHttp{}
+
+		if t.Port != nil {
+			http.Port = *t.Port
+		}
+
+		o.Ipc = http
 
 	default:
 		return fmt.Errorf(`in listener: "ipc" is unknown, got "%v"`, t.Ipc)

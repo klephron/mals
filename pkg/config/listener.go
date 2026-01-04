@@ -47,3 +47,12 @@ type ListenerIpcTcp struct {
 func (s *ListenerIpcTcp) Ipc() string {
 	return "tcp"
 }
+
+type ListenerIpcHttp struct {
+	ListenerIpc
+	Port int
+}
+
+func (s *ListenerIpcHttp) Ipc() string {
+	return "http"
+}

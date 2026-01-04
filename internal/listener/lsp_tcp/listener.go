@@ -9,15 +9,15 @@ import (
 	"net"
 )
 
-type ListenerLsp struct {
+type ListenerLspTcp struct {
 	listener.Listener
 	name  string
 	addr  string
 	plane plane.Plane
 }
 
-func NewListener(name string, port int, plane plane.Plane) (*ListenerLsp, error) {
-	l := &ListenerLsp{
+func NewListener(name string, port int, plane plane.Plane) (*ListenerLspTcp, error) {
+	l := &ListenerLspTcp{
 		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
@@ -25,19 +25,11 @@ func NewListener(name string, port int, plane plane.Plane) (*ListenerLsp, error)
 	return l, nil
 }
 
-func (s *ListenerLsp) Name() string {
+func (s *ListenerLspTcp) Name() string {
 	return s.name
 }
 
-func (s *ListenerLsp) Kind() string {
-	return Kind()
-}
-
-func (s *ListenerLsp) Ipc() string {
-	return Ipc()
-}
-
-func (s *ListenerLsp) Run(ctx context.Context) error {
+func (s *ListenerLspTcp) Run(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {

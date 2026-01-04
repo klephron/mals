@@ -1,4 +1,4 @@
-package api_tcp
+package api_http
 
 import (
 	"context"
@@ -12,15 +12,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type ListenerApiTcp struct {
+type ListenerApiHttp struct {
 	listener.Listener
 	name  string
 	addr  string
 	plane plane.Plane
 }
 
-func NewListener(name string, port int, plane plane.Plane) (*ListenerApiTcp, error) {
-	l := &ListenerApiTcp{
+func NewListener(name string, port int, plane plane.Plane) (*ListenerApiHttp, error) {
+	l := &ListenerApiHttp{
 		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
@@ -28,19 +28,11 @@ func NewListener(name string, port int, plane plane.Plane) (*ListenerApiTcp, err
 	return l, nil
 }
 
-func (s *ListenerApiTcp) Name() string {
+func (s *ListenerApiHttp) Name() string {
 	return s.name
 }
 
-func (s *ListenerApiTcp) Kind() string {
-	return Kind()
-}
-
-func (s *ListenerApiTcp) Ipc() string {
-	return Ipc()
-}
-
-func (s *ListenerApiTcp) Run(ctx context.Context) error {
+func (s *ListenerApiHttp) Run(ctx context.Context) error {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 

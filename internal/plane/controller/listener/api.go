@@ -3,7 +3,7 @@ package listener
 import (
 	"context"
 	"fmt"
-	"mals/internal/listener/api_tcp"
+	"mals/internal/listener/api_http"
 	"mals/internal/listener/lsp_tcp"
 	"mals/internal/plane/controller"
 	"mals/pkg/config"
@@ -130,8 +130,8 @@ func (s *ListenerController) ListenerCreate(name string) error {
 	case *config.ListenerKindApi:
 		switch ipc := value.config.Ipc.(type) {
 
-		case *config.ListenerIpcTcp:
-			listener, err := api_tcp.NewListener(name, ipc.Port, s.plane)
+		case *config.ListenerIpcHttp:
+			listener, err := api_http.NewListener(name, ipc.Port, s.plane)
 			if err != nil {
 				return err
 			}

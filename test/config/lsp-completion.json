@@ -61,9 +61,9 @@
       "usages": ["lspsync", "completion"]
     },
     {
-      "name": "api-tcp:9650",
+      "name": "api-http:9650",
       "kind": "api",
-      "ipc": "tcp",
+      "ipc": "http",
       "port": 9650
     }
   ]
