@@ -10,7 +10,6 @@ type LspSettings interface {
 }
 
 type LspSettingsStdio struct {
-	LspSettings
 	Cmd []string
 }
 

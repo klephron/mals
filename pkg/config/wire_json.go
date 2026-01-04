@@ -5,14 +5,16 @@ import (
 	"fmt"
 )
 
+type WireConfig struct {
+	Logs      []*Log      `json:"logs"`
+	Models    []*Model    `json:"models"`
+	Lsps      []*Lsp      `json:"lsps"`
+	Usages    []*Usage    `json:"usages"`
+	Listeners []*Listener `json:"listeners"`
+}
+
 func (o *Config) UnmarshalJSON(data []byte) error {
-	var t struct {
-		Logs      []*Log      `json:"logs"`
-		Models    []*Model    `json:"models"`
-		Lsps      []*Lsp      `json:"lsps"`
-		Usages    []*Usage    `json:"usages"`
-		Listeners []*Listener `json:"listeners"`
-	}
+	t := WireConfig{}
 
 	t.Logs = []*Log{}
 	t.Models = []*Model{}
@@ -33,15 +35,33 @@ func (o *Config) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (o *Config) Wire() WireConfig {
+	t := WireConfig{
+		Logs:      o.Logs,
+		Models:    o.Models,
+		Lsps:      o.Lsps,
+		Usages:    o.Usages,
+		Listeners: o.Listeners,
+	}
+	return t
+}
+
+func (o *Config) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireLog struct {
+	Name  string  `json:"name"`
+	Kind  string  `json:"kind"`
+	Level string  `json:"level"`
+	File  *string `json:"file"`
+}
+
 func (o *Log) UnmarshalJSON(data []byte) error {
 	var kindFile LogKindFile
 
-	var t struct {
-		Name  string  `json:"name"`
-		Kind  string  `json:"kind"`
-		Level string  `json:"level"`
-		File  *string `json:"file"`
-	}
+	t := WireLog{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
@@ -65,16 +85,44 @@ func (o *Log) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (o *Log) Wire() WireLog {
+	t := WireLog{
+		Name:  o.Name,
+		Level: o.Level,
+	}
+
+	switch k := o.Kind.(type) {
+	case *LogKindFile:
+		t.Kind = k.Kind()
+		t.File = &k.File
+	}
+
+	return t
+}
+
+func (o *Log) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireModel struct {
+	Name     string            `json:"name"`
+	Kind     string            `json:"kind"`
+	Settings WireModelSettings `json:"settings"`
+}
+
+type WireModelSettings struct {
+	Url         string  `json:"url"`
+	MaxTokens   int     `json:"max_tokens"`
+	Temperature float32 `json:"temperature"`
+}
+
 func (o *Model) UnmarshalJSON(data []byte) error {
 	var settingsOpenAI ModelSettingsOpenAI
 
-	t := &struct {
-		Name     string          `json:"name"`
-		Kind     string          `json:"kind"`
-		Settings json.RawMessage `json:"settings"`
-	}{}
+	t := WireModel{}
 
-	if err := json.Unmarshal(data, t); err != nil {
+	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
 
@@ -82,20 +130,10 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 
 	switch t.Kind {
 	case settingsOpenAI.Kind():
-		var ts struct {
-			Url         string  `json:"url"`
-			MaxTokens   int     `json:"max_tokens"`
-			Temperature float32 `json:"temperature"`
-		}
-
-		if err := json.Unmarshal(t.Settings, &ts); err != nil {
-			return err
-		}
-
 		o.Settings = &ModelSettingsOpenAI{
-			Url:         ts.Url,
-			MaxTokens:   ts.MaxTokens,
-			Temperature: ts.Temperature,
+			Url:         t.Settings.Url,
+			MaxTokens:   t.Settings.MaxTokens,
+			Temperature: t.Settings.Temperature,
 		}
 
 	default:
@@ -105,16 +143,45 @@ func (o *Model) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (o *Model) Wire() WireModel {
+	t := WireModel{
+		Name: o.Name,
+	}
+
+	switch s := o.Settings.(type) {
+	case *ModelSettingsOpenAI:
+		t.Kind = s.Kind()
+		t.Settings = WireModelSettings{
+			Url:         s.Url,
+			MaxTokens:   s.MaxTokens,
+			Temperature: s.Temperature,
+		}
+	}
+
+	return t
+}
+
+func (o *Model) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireLsp struct {
+	Name     string          `json:"name"`
+	Kind     string          `json:"kind"`
+	Settings WireLspSettings `json:"settings"`
+}
+
+type WireLspSettings struct {
+	Cmd []string `json:"cmd"`
+}
+
 func (o *Lsp) UnmarshalJSON(data []byte) error {
 	var settingsStdio LspSettingsStdio
 
-	t := &struct {
-		Name     string          `json:"name"`
-		Kind     string          `json:"kind"`
-		Settings json.RawMessage `json:"settings"`
-	}{}
+	t := WireLsp{}
 
-	if err := json.Unmarshal(data, t); err != nil {
+	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
 
@@ -122,18 +189,8 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 
 	switch t.Kind {
 	case settingsStdio.Kind():
-		var ts struct {
-			Cmd []string `json:"cmd"`
-		}
-
-		ts.Cmd = []string{}
-
-		if err := json.Unmarshal(t.Settings, &ts); err != nil {
-			return err
-		}
-
 		o.Settings = &LspSettingsStdio{
-			Cmd: ts.Cmd,
+			Cmd: t.Settings.Cmd,
 		}
 
 	default:
@@ -143,13 +200,36 @@ func (o *Lsp) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (o *Usage) UnmarshalJSON(data []byte) error {
-	var t struct {
-		Name       string       `json:"name"`
-		Events     []Event      `json:"events"`
-		Conditions []*Condition `json:"conditions"`
-		Workflow   *Workflow    `json:"workflow"`
+func (o *Lsp) Wire() WireLsp {
+	t := WireLsp{
+		Name: o.Name,
 	}
+
+	switch s := o.Settings.(type) {
+	case *LspSettingsStdio:
+		t.Kind = s.Kind()
+		t.Settings = WireLspSettings{
+			Cmd: s.Cmd,
+		}
+	}
+
+	return t
+}
+
+func (o *Lsp) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireUsage struct {
+	Name       string       `json:"name"`
+	Events     []Event      `json:"events"`
+	Conditions []*Condition `json:"conditions"`
+	Workflow   *Workflow    `json:"workflow"`
+}
+
+func (o *Usage) UnmarshalJSON(data []byte) error {
+	t := WireUsage{}
 
 	t.Events = []Event{}
 
@@ -165,6 +245,30 @@ func (o *Usage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (o *Usage) Wire() WireUsage {
+	t := WireUsage{
+		Name:       o.Name,
+		Events:     o.Events,
+		Conditions: o.Conditions,
+		Workflow:   o.Workflow,
+	}
+
+	return t
+}
+
+func (o *Usage) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireListener struct {
+	Name   string   `json:"name"`
+	Kind   string   `json:"kind"`
+	Ipc    string   `json:"ipc"`
+	Port   *int     `json:"port"`
+	Usages []string `json:"usages"`
+}
+
 func (o *Listener) UnmarshalJSON(data []byte) error {
 	var kindApi ListenerKindApi
 	var kindLsp ListenerKindLsp
@@ -173,13 +277,7 @@ func (o *Listener) UnmarshalJSON(data []byte) error {
 	var ipcTcp ListenerIpcTcp
 	var ipcHttp ListenerIpcHttp
 
-	var t struct {
-		Name   string   `json:"name"`
-		Kind   string   `json:"kind"`
-		Ipc    string   `json:"ipc"`
-		Port   *int     `json:"port"`
-		Usages []string `json:"usages"`
-	}
+	t := WireListener{}
 
 	t.Usages = []string{}
 
@@ -231,10 +329,44 @@ func (o *Listener) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (o *Workflow) UnmarshalJSON(data []byte) error {
-	var t struct {
-		Steps []*Step `json:"steps"`
+func (o *Listener) Wire() WireListener {
+	t := WireListener{
+		Name: o.Name,
 	}
+
+	switch k := o.Kind.(type) {
+	case *ListenerKindApi:
+		t.Kind = k.Kind()
+	case *ListenerKindLsp:
+		t.Kind = k.Kind()
+		t.Usages = k.Usages
+	}
+
+	switch i := o.Ipc.(type) {
+	case *ListenerIpcStdio:
+		t.Ipc = i.Ipc()
+	case *ListenerIpcTcp:
+		t.Ipc = i.Ipc()
+		t.Port = &i.Port
+	case *ListenerIpcHttp:
+		t.Ipc = i.Ipc()
+		t.Port = &i.Port
+	}
+
+	return t
+}
+
+func (o *Listener) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireWorkflow struct {
+	Steps []*Step `json:"steps"`
+}
+
+func (o *Workflow) UnmarshalJSON(data []byte) error {
+	t := WireWorkflow{}
 
 	t.Steps = []*Step{}
 
@@ -247,14 +379,28 @@ func (o *Workflow) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (o *Step) UnmarshalJSON(data []byte) error {
-	var t struct {
-		Name       string       `json:"name"`
-		Conditions []*Condition `json:"conditions"`
-		Model      *string      `json:"model"`
-		Lsp        *string      `json:"lsp"`
-		Scope      ScopeKind    `json:"scope"`
+func (o *Workflow) Wire() WireWorkflow {
+	t := WireWorkflow{
+		Steps: o.Steps,
 	}
+	return t
+}
+
+func (o *Workflow) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireStep struct {
+	Name       string       `json:"name"`
+	Conditions []*Condition `json:"conditions"`
+	Model      *string      `json:"model"`
+	Lsp        *string      `json:"lsp"`
+	Scope      ScopeKind    `json:"scope"`
+}
+
+func (o *Step) UnmarshalJSON(data []byte) error {
+	t := WireStep{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
@@ -283,11 +429,35 @@ func (o *Step) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (o *Condition) UnmarshalJSON(data []byte) error {
-	var t struct {
-		Filetypes []string `json:"filetypes"`
-		Paths     []string `json:"paths"`
+func (o *Step) Wire() WireStep {
+	t := WireStep{
+		Name:       o.Name,
+		Conditions: o.Conditions,
+		Scope:      o.Scope,
 	}
+
+	switch k := o.Kind.(type) {
+	case *StepKindModel:
+		t.Model = &k.Name
+	case *StepKindLsp:
+		t.Lsp = &k.Name
+	}
+
+	return t
+}
+
+func (o *Step) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
+}
+
+type WireCondition struct {
+	Filetypes []string `json:"filetypes"`
+	Paths     []string `json:"paths"`
+}
+
+func (o *Condition) UnmarshalJSON(data []byte) error {
+	t := WireCondition{}
 
 	if err := json.Unmarshal(data, &t); err != nil {
 		return err
@@ -297,4 +467,17 @@ func (o *Condition) UnmarshalJSON(data []byte) error {
 	o.Paths = t.Paths
 
 	return nil
+}
+
+func (o *Condition) Wire() WireCondition {
+	t := WireCondition{
+		Filetypes: o.Filetypes,
+		Paths:     o.Paths,
+	}
+	return t
+}
+
+func (o *Condition) MarshalJSON() ([]byte, error) {
+	t := o.Wire()
+	return json.Marshal(t)
 }

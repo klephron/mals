@@ -17,14 +17,14 @@ func (s *UsageController) Shutdown() error {
 	return nil
 }
 
-func (s *UsageController) UsageRegister(cfg config.Usage) error {
+func (s *UsageController) UsageRegister(cfg *config.Usage) error {
 	name := cfg.Name
 
 	if _, ok := s.state.usages.Load(name); ok {
 		return fmt.Errorf("usage %v exists", name)
 	}
 
-	s.state.usages.Store(name, &cfg)
+	s.state.usages.Store(name, cfg)
 
 	return nil
 }

@@ -16,7 +16,7 @@ type LogController interface {
 	Shutdown() error
 
 	LogStatus(name string) LogStatus
-	LogRegister(name string, config config.Log) error
+	LogRegister(name string, config *config.Log) error
 	LogUnregister(name string) error
 	LogCreate(name string) error
 	LogDelete(name string) error

@@ -37,14 +37,14 @@ func (s *ScopeController) Shutdown() error {
 	return nil
 }
 
-func (s *ScopeController) ScopeModelRegister(config config.Model) error {
+func (s *ScopeController) ScopeModelRegister(config *config.Model) error {
 	name := config.Name
 
 	if _, ok := s.state.models.Load(name); ok {
 		return fmt.Errorf("model %v exists", name)
 	}
 
-	s.state.models.Store(name, &config)
+	s.state.models.Store(name, config)
 
 	return nil
 }
@@ -125,14 +125,14 @@ func (s *ScopeController) ScopeModelRelease(fullname string, token controller.Sc
 	return nil
 }
 
-func (s *ScopeController) ScopeLspRegister(config config.Lsp) error {
+func (s *ScopeController) ScopeLspRegister(config *config.Lsp) error {
 	name := config.Name
 
 	if _, ok := s.state.lsps.Load(name); ok {
 		return fmt.Errorf("ScopeLspRegister lsp %v exists", name)
 	}
 
-	s.state.lsps.Store(name, &config)
+	s.state.lsps.Store(name, config)
 
 	return nil
 }

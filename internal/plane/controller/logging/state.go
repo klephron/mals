@@ -11,7 +11,7 @@ import (
 
 type LogValue struct {
 	rw      sync.RWMutex
-	config  config.Log
+	config  *config.Log
 	log     log.Log
 	enabled bool
 }

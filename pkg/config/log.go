@@ -11,7 +11,6 @@ type LogKind interface {
 }
 
 type LogKindFile struct {
-	LogKind
 	File string
 }
 

@@ -79,7 +79,7 @@ func (s *ListenerController) ListenerStatus(name string) controller.ListenerStat
 	return s.statusRW(value)
 }
 
-func (s *ListenerController) ListenerRegister(name string, cfg config.Listener) error {
+func (s *ListenerController) ListenerRegister(name string, cfg *config.Listener) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if status := s.statusRW(value); status != controller.ListenerAbsent {
@@ -275,7 +275,7 @@ func (s *ListenerController) ListenerClientRemove(name string, client string) er
 	return nil
 }
 
-func (s *ListenerController) ListenerGetConfig(name string) (config.Listener, error) {
+func (s *ListenerController) ListenerGetConfig(name string) (*config.Listener, error) {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -284,8 +284,47 @@ func (s *ListenerController) ListenerGetConfig(name string) (config.Listener, er
 	}
 
 	if status := s.status(value); status&controller.ListenerRegistered == 0 {
-		return config.Listener{}, statusErrorFlag(name, status, controller.ListenerRegistered)
+		return nil, statusErrorFlag(name, status, controller.ListenerRegistered)
 	}
 
 	return value.config, nil
+}
+
+func (s *ListenerController) ListenerGet(name string) (*controller.ListenerData, error) {
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	status := s.status(value)
+
+	if status&controller.ListenerRegistered == 0 {
+		return nil, statusErrorFlag(name, status, controller.ListenerRegistered)
+	}
+
+	config := value.config
+
+	return &controller.ListenerData{
+		Name:   name,
+		Status: status,
+		Config: config,
+	}, nil
+}
+
+func (s *ListenerController) ListenerGetAll() []*controller.ListenerData {
+	datas := make([]*controller.ListenerData, 0)
+
+	s.state.listeners.Range(func(key string, value *ListenerValue) bool {
+		data, err := s.ListenerGet(key)
+
+		if err == nil {
+			datas = append(datas, data)
+		}
+
+		return true
+	})
+
+	return datas
 }

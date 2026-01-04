@@ -25,7 +25,7 @@ type Plane interface {
 	ClientGetListener(name string) (string, error)
 
 	ListenerStatus(name string) controller.ListenerStatus
-	ListenerRegister(name string, config config.Listener) error
+	ListenerRegister(name string, config *config.Listener) error
 	ListenerUnregister(name string) error
 	ListenerCreate(name string) error
 	ListenerDelete(name string) error
@@ -33,10 +33,12 @@ type Plane interface {
 	ListenerStop(name string) error
 	ListenerClientAdd(name string, client string) error
 	ListenerClientRemove(name string, client string) error
-	ListenerGetConfig(name string) (config.Listener, error)
+	ListenerGetConfig(name string) (*config.Listener, error)
+	ListenerGet(name string) (*controller.ListenerData, error)
+	ListenerGetAll() []*controller.ListenerData
 
 	LogStatus(name string) controller.LogStatus
-	LogRegister(name string, config config.Log) error
+	LogRegister(name string, config *config.Log) error
 	LogUnregister(name string) error
 	LogCreate(name string) error
 	LogDelete(name string) error
@@ -55,10 +57,10 @@ type Plane interface {
 	LspDelete(name string) error
 	LspStart(name string) error
 	LspStop(name string) error
-	LspCapabilities(name string) (*protocol.ServerCapabilities, error)
+	LspGetCapabilities(name string) (*protocol.ServerCapabilities, error)
+	LspGetInfo(name string) (*protocol.ServerInfo, error)
 	LspGet(name string) (*controller.LspData, error)
 	LspGetAll() []*controller.LspData
-	LspInfo(name string) (*protocol.ServerInfo, error)
 	LspEventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	LspEventInitialized(name string, params *protocol.InitializedParams) error
 	LspEventTextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error
@@ -80,15 +82,15 @@ type Plane interface {
 	ModelTaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
 	ModelTaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error)
 
-	ScopeModelRegister(config config.Model) error
+	ScopeModelRegister(config *config.Model) error
 	ScopeModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)
 	ScopeModelRelease(name string, token controller.ScopeToken) error
-	ScopeLspRegister(config config.Lsp) error
+	ScopeLspRegister(config *config.Lsp) error
 	ScopeLspAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)
 	ScopeLspRelease(name string, token controller.ScopeToken) error
 	ScopeClose(scope *scope.Scope) []error
 
-	UsageRegister(config config.Usage) error
+	UsageRegister(config *config.Usage) error
 	UsageUnregister(name string) error
 	UsageGetAll() []*config.Usage
 	UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage

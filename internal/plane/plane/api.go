@@ -41,7 +41,7 @@ func (s *Plane) ListenerStatus(name string) controller.ListenerStatus {
 	return s.listener.ListenerStatus(name)
 }
 
-func (s *Plane) ListenerRegister(name string, config config.Listener) error {
+func (s *Plane) ListenerRegister(name string, config *config.Listener) error {
 	return s.listener.ListenerRegister(name, config)
 }
 
@@ -73,15 +73,23 @@ func (s *Plane) ListenerClientRemove(name string, client string) error {
 	return s.listener.ListenerClientRemove(name, client)
 }
 
-func (s *Plane) ListenerGetConfig(name string) (config.Listener, error) {
+func (s *Plane) ListenerGetConfig(name string) (*config.Listener, error) {
 	return s.listener.ListenerGetConfig(name)
+}
+
+func (s *Plane) ListenerGet(name string) (*controller.ListenerData, error) {
+	return s.listener.ListenerGet(name)
+}
+
+func (s *Plane) ListenerGetAll() []*controller.ListenerData {
+	return s.listener.ListenerGetAll()
 }
 
 func (s *Plane) LogStatus(name string) controller.LogStatus {
 	return s.log.LogStatus(name)
 }
 
-func (s *Plane) LogRegister(name string, config config.Log) error {
+func (s *Plane) LogRegister(name string, config *config.Log) error {
 	return s.log.LogRegister(name, config)
 }
 
@@ -149,12 +157,12 @@ func (s *Plane) LspStop(name string) error {
 	return s.lsp.LspStop(name)
 }
 
-func (s *Plane) LspCapabilities(name string) (*protocol.ServerCapabilities, error) {
-	return s.lsp.LspCapabilities(name)
+func (s *Plane) LspGetCapabilities(name string) (*protocol.ServerCapabilities, error) {
+	return s.lsp.LspGetCapabilities(name)
 }
 
-func (s *Plane) LspInfo(name string) (*protocol.ServerInfo, error) {
-	return s.lsp.LspInfo(name)
+func (s *Plane) LspGetInfo(name string) (*protocol.ServerInfo, error) {
+	return s.lsp.LspGetInfo(name)
 }
 
 func (s *Plane) LspGet(name string) (*controller.LspData, error) {
@@ -241,7 +249,7 @@ func (s *Plane) ModelTaskCancelAllClient(modelName string, client client.Client)
 	return s.model.TaskCancelAllClient(modelName, client)
 }
 
-func (s *Plane) ScopeModelRegister(config config.Model) error {
+func (s *Plane) ScopeModelRegister(config *config.Model) error {
 	return s.scope.ScopeModelRegister(config)
 }
 
@@ -253,7 +261,7 @@ func (s *Plane) ScopeModelRelease(name string, token controller.ScopeToken) erro
 	return s.scope.ScopeModelRelease(name, token)
 }
 
-func (s *Plane) ScopeLspRegister(config config.Lsp) error {
+func (s *Plane) ScopeLspRegister(config *config.Lsp) error {
 	return s.scope.ScopeLspRegister(config)
 }
 
@@ -269,7 +277,7 @@ func (s *Plane) ScopeClose(scope *scope.Scope) []error {
 	return s.scope.ScopeClose(scope)
 }
 
-func (s *Plane) UsageRegister(config config.Usage) error {
+func (s *Plane) UsageRegister(config *config.Usage) error {
 	return s.usage.UsageRegister(config)
 }
 

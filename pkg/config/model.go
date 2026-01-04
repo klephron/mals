@@ -10,7 +10,6 @@ type ModelSettings interface {
 }
 
 type ModelSettingsOpenAI struct {
-	ModelSettings
 	Url         string
 	MaxTokens   int
 	Temperature float32

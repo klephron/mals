@@ -11,7 +11,6 @@ type ListenerKind interface {
 }
 
 type ListenerKindApi struct {
-	ListenerKind
 }
 
 func (s *ListenerKindApi) Kind() string {
@@ -19,7 +18,6 @@ func (s *ListenerKindApi) Kind() string {
 }
 
 type ListenerKindLsp struct {
-	ListenerKind
 	Usages []string
 }
 
@@ -32,7 +30,6 @@ type ListenerIpc interface {
 }
 
 type ListenerIpcStdio struct {
-	ListenerIpc
 }
 
 func (s *ListenerIpcStdio) Ipc() string {
@@ -40,7 +37,6 @@ func (s *ListenerIpcStdio) Ipc() string {
 }
 
 type ListenerIpcTcp struct {
-	ListenerIpc
 	Port int
 }
 
@@ -49,7 +45,6 @@ func (s *ListenerIpcTcp) Ipc() string {
 }
 
 type ListenerIpcHttp struct {
-	ListenerIpc
 	Port int
 }
 

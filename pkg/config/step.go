@@ -12,7 +12,6 @@ type StepKind interface {
 }
 
 type StepKindModel struct {
-	StepKind
 	Name string
 }
 
@@ -21,7 +20,6 @@ func (s *StepKindModel) Kind() string {
 }
 
 type StepKindLsp struct {
-	StepKind
 	Name string
 }
 

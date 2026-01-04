@@ -17,7 +17,7 @@ type State struct {
 
 type ListenerValue struct {
 	rw         sync.RWMutex
-	config     config.Listener
+	config     *config.Listener
 	listener   listener.Listener
 	cancelFunc context.CancelFunc
 	clients    *xsync.Map[string, struct{}]

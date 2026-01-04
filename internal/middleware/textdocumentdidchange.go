@@ -24,7 +24,7 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 	}
 	defer s.plane.ScopeLspRelease(lspKey, token)
 
-	capabilities, err := s.plane.LspCapabilities(lspKey)
+	capabilities, err := s.plane.LspGetCapabilities(lspKey)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
 		return err

@@ -34,9 +34,8 @@ type LspController interface {
 	LspStart(name string) error
 	LspStop(name string) error
 
-	LspCapabilities(name string) (*protocol.ServerCapabilities, error)
-	LspInfo(name string) (*protocol.ServerInfo, error)
-
+	LspGetCapabilities(name string) (*protocol.ServerCapabilities, error)
+	LspGetInfo(name string) (*protocol.ServerInfo, error)
 	LspGet(name string) (*LspData, error)
 	LspGetAll() []*LspData
 

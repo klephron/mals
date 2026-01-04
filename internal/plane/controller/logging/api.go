@@ -76,7 +76,7 @@ func (s *LogController) LogStatus(name string) controller.LogStatus {
 	return s.statusRW(value)
 }
 
-func (s *LogController) LogRegister(name string, cfg config.Log) error {
+func (s *LogController) LogRegister(name string, cfg *config.Log) error {
 	value, _ := s.state.logs.Load(name)
 
 	if status := s.statusRW(value); status != controller.LogAbsent {
