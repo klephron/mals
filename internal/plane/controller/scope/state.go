@@ -17,7 +17,7 @@ type ResourceLsp struct {
 }
 
 type ResourceModel struct {
-	rw           sync.Mutex
+	rw           sync.RWMutex
 	fullname     string
 	config       *config.Model
 	dependencies *xsync.Map[string, *ScopeToken]

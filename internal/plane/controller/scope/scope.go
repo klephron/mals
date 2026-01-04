@@ -4,22 +4,29 @@ import (
 	"mals/internal/plane/controller"
 	"mals/internal/scope"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type ScopeToken struct {
 	controller.ScopeToken
-	id string
+	id   string
+	from time.Time
 }
 
 func (s *ScopeToken) Token() string {
 	return s.id
 }
 
+func (s *ScopeToken) From() time.Time {
+	return s.from
+}
+
 func newToken() *ScopeToken {
 	return &ScopeToken{
-		id: uuid.New().String(),
+		id:   uuid.New().String(),
+		from: time.Now(),
 	}
 }
 

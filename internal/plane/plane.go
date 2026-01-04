@@ -93,6 +93,7 @@ type Plane interface {
 	ScopeLspAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)
 	ScopeLspRelease(name string, token controller.ScopeToken) error
 	ScopeClose(scope *scope.Scope) []error
+	ScopeTreeRoot() *controller.Space
 
 	UsageRegister(config *config.Usage) error
 	UsageUnregister(name string) error

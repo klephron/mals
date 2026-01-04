@@ -293,6 +293,10 @@ func (s *Plane) ScopeClose(scope *scope.Scope) []error {
 	return s.scope.ScopeClose(scope)
 }
 
+func (s *Plane) ScopeTreeRoot() *controller.Space {
+	return s.scope.ScopeTreeRoot()
+}
+
 func (s *Plane) UsageRegister(config *config.Usage) error {
 	return s.usage.UsageRegister(config)
 }

@@ -307,3 +307,59 @@ func (s *ScopeController) ScopeClose(scope *scope.Scope) []error {
 
 	return errors
 }
+
+func (s *ScopeController) ScopeTreeRoot() *controller.Space {
+	return s.scopeTree(s.state.root)
+}
+
+func (s *ScopeController) scopeTree(src *Space) *controller.Space {
+	if src == nil {
+		return nil
+	}
+
+	dst := &controller.Space{
+		Space:    src.space,
+		Children: make(map[scope.Space]*controller.Space),
+		Lsps:     make(map[string]controller.ResourceLsp),
+		Models:   make(map[string]controller.ResourceModel),
+	}
+
+	src.children.Range(func(key scope.Space, val *Space) bool {
+		dst.Children[key] = s.scopeTree(val)
+		return true
+	})
+
+	src.lsps.Range(func(key string, val *ResourceLsp) bool {
+		val.rw.RLock()
+		deps := make(map[string]controller.ScopeToken)
+		val.dependencies.Range(func(key string, value *ScopeToken) bool {
+			deps[key] = value
+			return true
+		})
+		dst.Lsps[key] = controller.ResourceLsp{
+			Fullname:     val.fullname,
+			Config:       val.config,
+			Dependencies: deps,
+		}
+		val.rw.RUnlock()
+		return true
+	})
+
+	src.models.Range(func(key string, val *ResourceModel) bool {
+		val.rw.RLock()
+		deps := make(map[string]controller.ScopeToken)
+		val.dependencies.Range(func(key string, value *ScopeToken) bool {
+			deps[key] = value
+			return true
+		})
+		dst.Models[key] = controller.ResourceModel{
+			Fullname:     val.fullname,
+			Config:       val.config,
+			Dependencies: deps,
+		}
+		val.rw.RUnlock()
+		return true
+	})
+
+	return dst
+}
