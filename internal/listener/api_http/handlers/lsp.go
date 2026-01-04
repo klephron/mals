@@ -13,16 +13,34 @@ import (
 
 type LSP struct {
 	Name         string                       `json:"name"`
-	Status       string                       `json:"status"`
+	Status       controller.LspStatus         `json:"status"`
+	StatusFlags  []string                     `json:"status_flags"`
 	Config       *config.Lsp                  `json:"config"`
 	Capabilities *protocol.ServerCapabilities `json:"capabilities"`
 	Info         *protocol.ServerInfo         `json:"info"`
 }
 
+var (
+	lspStatusFlags = map[controller.LspStatus]string{
+		controller.LspAbsent:     "ABSENT",
+		controller.LspRegistered: "REGISTERED",
+		controller.LspCreated:    "CREATED",
+		controller.LspStarted:    "STARTED",
+	}
+)
+
 func toDto(lsp *controller.LspData) LSP {
+	statusFlags := make([]string, 0, 4)
+	for bit, name := range lspStatusFlags {
+		if lsp.Status&bit != 0 {
+			statusFlags = append(statusFlags, name)
+		}
+	}
+
 	return LSP{
 		Name:         lsp.Name,
-		Status:       string(lsp.Status),
+		Status:       lsp.Status,
+		StatusFlags:  statusFlags,
 		Config:       lsp.Config,
 		Capabilities: lsp.Capabilities,
 		Info:         lsp.Info,
