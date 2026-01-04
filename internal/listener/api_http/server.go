@@ -34,6 +34,9 @@ func (s *ListenerApiHttp) newServer() *http.Server {
 	huma.Register(api, handlers.ModelGetAllOperation(), handlers.ModelGetAll(s.plane))
 	huma.Register(api, handlers.ModelGetOperation(), handlers.ModelGet(s.plane))
 
+	huma.Register(api, handlers.UsageGetAllOperation(), handlers.UsageGetAll(s.plane))
+	huma.Register(api, handlers.UsageGetOperation(), handlers.UsageGet(s.plane))
+
 	srv := &http.Server{
 		Addr:    s.addr,
 		Handler: router,

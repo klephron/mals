@@ -301,8 +301,8 @@ func (s *Plane) UsageUnregister(name string) error {
 	return s.usage.UsageUnregister(name)
 }
 
-func (s *Plane) UsageGetAll() []*config.Usage {
-	return s.usage.UsageGetAll()
+func (s *Plane) UsageGet(name string) (*config.Usage, error) {
+	return s.usage.UsageGet(name)
 }
 
 func (s *Plane) UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage {
@@ -311,4 +311,8 @@ func (s *Plane) UsageGetFiltered(condition usage.ConditionFilter, event usage.Ev
 
 func (s *Plane) UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage {
 	return s.usage.UsageGetFilteredClient(condition, event, client)
+}
+
+func (s *Plane) UsageGetAll() []*config.Usage {
+	return s.usage.UsageGetAll()
 }

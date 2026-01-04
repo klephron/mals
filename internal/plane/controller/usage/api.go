@@ -40,15 +40,13 @@ func (s *UsageController) UsageUnregister(name string) error {
 	return nil
 }
 
-func (s *UsageController) UsageGetAll() []*config.Usage {
-	usages := make([]*config.Usage, 0)
+func (s *UsageController) UsageGet(name string) (*config.Usage, error) {
+	value, ok := s.state.usages.Load(name)
+	if !ok {
+		return nil, fmt.Errorf("usage %v does not exist", name)
+	}
 
-	s.state.usages.Range(func(key string, value *config.Usage) bool {
-		usages = append(usages, value)
-		return true
-	})
-
-	return usages
+	return value, nil
 }
 
 func (s *UsageController) UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage {
@@ -90,4 +88,15 @@ func (s *UsageController) UsageGetFilteredClient(condition usage.ConditionFilter
 	})
 
 	return usage.UsagesFilter(usages, condition, event)
+}
+
+func (s *UsageController) UsageGetAll() []*config.Usage {
+	usages := make([]*config.Usage, 0)
+
+	s.state.usages.Range(func(key string, value *config.Usage) bool {
+		usages = append(usages, value)
+		return true
+	})
+
+	return usages
 }

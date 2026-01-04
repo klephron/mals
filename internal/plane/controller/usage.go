@@ -11,8 +11,8 @@ type UsageController interface {
 
 	UsageRegister(config *config.Usage) error
 	UsageUnregister(name string) error
-	UsageGetAll() []*config.Usage
+	UsageGet(name string) (*config.Usage, error)
 	UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage
-
 	UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage
+	UsageGetAll() []*config.Usage
 }
