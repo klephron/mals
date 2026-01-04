@@ -7,9 +7,6 @@ import (
 	"mals/internal/plane"
 	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ListenerApiHttp struct {
@@ -33,18 +30,10 @@ func (s *ListenerApiHttp) Name() string {
 }
 
 func (s *ListenerApiHttp) Run(ctx context.Context) error {
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.New()
-
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-
-	srv := &http.Server{
-		Addr:    s.addr,
-		Handler: r,
-	}
-
 	errCh := make(chan error)
 	defer close(errCh)
+
+	srv := s.newServer()
 
 	go func() {
 		err := srv.ListenAndServe()

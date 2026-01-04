@@ -157,6 +157,14 @@ func (s *Plane) LspInfo(name string) (*protocol.ServerInfo, error) {
 	return s.lsp.LspInfo(name)
 }
 
+func (s *Plane) LspGet(name string) (*controller.LspData, error) {
+	return s.lsp.LspGet(name)
+}
+
+func (s *Plane) LspGetAll() []*controller.LspData {
+	return s.lsp.LspGetAll()
+}
+
 func (s *Plane) LspEventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	return s.lsp.EventInitialize(name, params)
 }

@@ -14,6 +14,14 @@ const (
 	LspStarted    LspStatus = (1 << 2)
 )
 
+type LspData struct {
+	Name         string
+	Status       LspStatus
+	Config       *config.Lsp
+	Capabilities *protocol.ServerCapabilities
+	Info         *protocol.ServerInfo
+}
+
 type LspController interface {
 	Run(onReady func()) error
 	Shutdown() error
@@ -28,6 +36,9 @@ type LspController interface {
 
 	LspCapabilities(name string) (*protocol.ServerCapabilities, error)
 	LspInfo(name string) (*protocol.ServerInfo, error)
+
+	LspGet(name string) (*LspData, error)
+	LspGetAll() []*LspData
 
 	EventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	EventInitialized(name string, params *protocol.InitializedParams) error

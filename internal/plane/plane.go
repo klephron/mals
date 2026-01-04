@@ -56,6 +56,8 @@ type Plane interface {
 	LspStart(name string) error
 	LspStop(name string) error
 	LspCapabilities(name string) (*protocol.ServerCapabilities, error)
+	LspGet(name string) (*controller.LspData, error)
+	LspGetAll() []*controller.LspData
 	LspInfo(name string) (*protocol.ServerInfo, error)
 	LspEventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	LspEventInitialized(name string, params *protocol.InitializedParams) error

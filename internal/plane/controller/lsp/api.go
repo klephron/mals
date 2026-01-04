@@ -246,6 +246,50 @@ func (s *LspController) LspInfo(lspName string) (*protocol.ServerInfo, error) {
 	return value.lsp.Info()
 }
 
+func (s *LspController) LspGet(lspName string) (*controller.LspData, error) {
+	value, _ := s.state.lsps.Load(lspName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	status := s.status(value)
+
+	if status&controller.LspRegistered == 0 {
+		return nil, statusErrorFlag(lspName, status, controller.LspRegistered)
+	}
+
+	config := value.config
+
+	capabilities, _ := s.LspCapabilities(lspName)
+	info, _ := s.LspInfo(lspName)
+
+	return &controller.LspData{
+		Name:         lspName,
+		Status:       status,
+		Config:       config,
+		Capabilities: capabilities,
+		Info:         info,
+	}, nil
+}
+
+func (s *LspController) LspGetAll() []*controller.LspData {
+	datas := make([]*controller.LspData, 0)
+
+	s.state.lsps.Range(func(key string, value *LspValue) bool {
+		data, err := s.LspGet(key)
+
+		if err == nil {
+			datas = append(datas, data)
+		}
+
+		return true
+	})
+
+	return datas
+}
+
 func (s *LspController) EventInitialize(lspName string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
