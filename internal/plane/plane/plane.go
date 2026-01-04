@@ -5,7 +5,7 @@ import (
 	"mals/internal/plane/controller"
 	"mals/internal/plane/controller/client"
 	"mals/internal/plane/controller/listener"
-	"mals/internal/plane/controller/logging"
+	"mals/internal/plane/controller/log"
 	"mals/internal/plane/controller/lsp"
 	"mals/internal/plane/controller/model"
 	"mals/internal/plane/controller/scope"
@@ -29,7 +29,7 @@ func New() plane.Plane {
 
 	plane.client = client.New(plane)
 	plane.listener = listener.New(plane)
-	plane.log = logging.New(plane)
+	plane.log = log.New(plane)
 	plane.lsp = lsp.New(plane)
 	plane.model = model.New(plane)
 	plane.scope = scope.New(plane)

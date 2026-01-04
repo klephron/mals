@@ -113,6 +113,14 @@ func (s *Plane) LogStop(name string) error {
 	return s.log.LogStop(name)
 }
 
+func (s *Plane) LogGet(name string) (*controller.LogData, error) {
+	return s.log.LogGet(name)
+}
+
+func (s *Plane) LogGetAll() []*controller.LogData {
+	return s.log.LogGetAll()
+}
+
 func (s *Plane) Debugf(format string, a ...any) error {
 	return s.log.Debugf(format, a...)
 }

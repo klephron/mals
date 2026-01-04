@@ -1,4 +1,4 @@
-package logging
+package log
 
 import (
 	"fmt"
@@ -186,6 +186,45 @@ func (s *LogController) LogStop(name string) error {
 	value.enabled = false
 
 	return nil
+}
+
+func (s *LogController) LogGet(name string) (*controller.LogData, error) {
+	value, _ := s.state.logs.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	status := s.status(value)
+
+	if status&controller.LogRegistered == 0 {
+		return nil, statusErrorFlag(name, status, controller.LogRegistered)
+	}
+
+	config := value.config
+
+	return &controller.LogData{
+		Name:   name,
+		Status: status,
+		Config: config,
+	}, nil
+}
+
+func (s *LogController) LogGetAll() []*controller.LogData {
+	datas := make([]*controller.LogData, 0)
+
+	s.state.logs.Range(func(key string, value *LogValue) bool {
+		data, err := s.LogGet(key)
+
+		if err == nil {
+			datas = append(datas, data)
+		}
+
+		return true
+	})
+
+	return datas
 }
 
 func (s *LogController) log(level log.Level, format string, a ...any) error {

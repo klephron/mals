@@ -11,6 +11,12 @@ const (
 	LogStarted    LogStatus = (1 << 2)
 )
 
+type LogData struct {
+	Name   string
+	Status LogStatus
+	Config *config.Log
+}
+
 type LogController interface {
 	Run(onReady func()) error
 	Shutdown() error
@@ -22,6 +28,9 @@ type LogController interface {
 	LogDelete(name string) error
 	LogStart(name string) error
 	LogStop(name string) error
+
+	LogGet(name string) (*LogData, error)
+	LogGetAll() []*LogData
 
 	Debugf(format string, a ...any) error
 	Infof(format string, a ...any) error

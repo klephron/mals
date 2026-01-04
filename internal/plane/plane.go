@@ -44,6 +44,8 @@ type Plane interface {
 	LogDelete(name string) error
 	LogStart(name string) error
 	LogStop(name string) error
+	LogGet(name string) (*controller.LogData, error)
+	LogGetAll() []*controller.LogData
 
 	Debugf(format string, a ...any) error
 	Infof(format string, a ...any) error
