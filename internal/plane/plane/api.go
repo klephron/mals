@@ -237,6 +237,14 @@ func (s *Plane) ModelStop(name string) error {
 	return s.model.ModelStop(name)
 }
 
+func (s *Plane) ModelGet(name string) (*controller.ModelData, error) {
+	return s.model.ModelGet(name)
+}
+
+func (s *Plane) ModelGetAll() []*controller.ModelData {
+	return s.model.ModelGetAll()
+}
+
 func (s *Plane) ModelTaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
 	return s.model.TaskExecClient(modelName, task, client)
 }

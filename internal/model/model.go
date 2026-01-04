@@ -7,12 +7,12 @@ import (
 )
 
 type Task struct {
-	Id                uuid.UUID
-	Text              string
-	Schema            any
-	SchemaName        string
-	SchemaDescription string
-	SchemaStrict      bool
+	Id                uuid.UUID `json:"id"`
+	Text              string    `json:"text"`
+	Schema            any       `json:"schema"`
+	SchemaName        string    `json:"schema_name"`
+	SchemaDescription string    `json:"schema_description"`
+	SchemaStrict      bool      `json:"schema_strict"`
 }
 
 func NewTask(text string, schema any, schemaName string, schemaDescription string) *Task {

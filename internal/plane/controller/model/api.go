@@ -242,6 +242,48 @@ func (s *ModelController) ModelStop(name string) error {
 	return nil
 }
 
+func (s *ModelController) ModelGet(name string) (*controller.ModelData, error) {
+	value, _ := s.state.models.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	status := s.status(value)
+
+	if status&controller.ModelRegistered == 0 {
+		return nil, statusErrorFlag(name, status, controller.ModelRegistered)
+	}
+
+	config := value.config
+
+	tasks, _ := s.TaskGetAll(name)
+
+	return &controller.ModelData{
+		Name:   name,
+		Status: status,
+		Config: config,
+		Tasks:  tasks,
+	}, nil
+}
+
+func (s *ModelController) ModelGetAll() []*controller.ModelData {
+	datas := make([]*controller.ModelData, 0)
+
+	s.state.models.Range(func(key string, value *ModelValue) bool {
+		data, err := s.ModelGet(key)
+
+		if err == nil {
+			datas = append(datas, data)
+		}
+
+		return true
+	})
+
+	return datas
+}
+
 func (s *ModelController) TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
 	value, _ := s.state.models.Load(modelName)
 
@@ -257,6 +299,21 @@ func (s *ModelController) TaskExecClient(modelName string, task *model.Task, cli
 	return value.queue.taskExecClient(task, client)
 }
 
+func (s *ModelController) TaskGet(modelName string, id uuid.UUID) (*model.Task, error) {
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
+	}
+
+	return value.queue.taskGet(id)
+}
+
 func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
 	value, _ := s.state.models.Load(modelName)
 
@@ -270,6 +327,21 @@ func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client c
 	}
 
 	return value.queue.taskGetClient(id, client)
+}
+
+func (s *ModelController) TaskGetAll(modelName string) ([]*model.Task, error) {
+	value, _ := s.state.models.Load(modelName)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.ModelCreated == 0 {
+		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
+	}
+
+	return value.queue.taskGetAll(), nil
 }
 
 func (s *ModelController) TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error) {

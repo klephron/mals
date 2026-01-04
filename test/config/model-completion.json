@@ -1,5 +1,5 @@
 {
-  "loggers": [
+  "logs": [
     {
       "name": "stderr",
       "level": "info",
@@ -45,7 +45,7 @@
     {
       "name": "api-tcp:9650",
       "kind": "api",
-      "ipc": "tcp",
+      "ipc": "http",
       "port": 9650
     }
   ]

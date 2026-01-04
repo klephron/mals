@@ -34,7 +34,7 @@ var (
 	}
 )
 
-func LspToDto(lsp *controller.LspData) LspDto {
+func lspToDto(lsp *controller.LspData) LspDto {
 	statusFlags := make([]string, 0, 4)
 	for bit, name := range lspStatusFlags {
 		if lsp.Status&bit != 0 {
@@ -54,7 +54,7 @@ func LspToDto(lsp *controller.LspData) LspDto {
 
 func LspGetAllOperation() huma.Operation {
 	return huma.Operation{
-		OperationID: "lsps-get-all",
+		OperationID: "lsp-get-all",
 		Method:      http.MethodGet,
 		Path:        "/lsps",
 		Summary:     "Get all LSPs",
@@ -68,7 +68,7 @@ func LspGetAll(plane plane.Plane) func(ctx context.Context, input *struct{}) (*s
 
 		result := make([]LspDto, len(lsps))
 		for i, lsp := range lsps {
-			result[i] = LspToDto(lsp)
+			result[i] = lspToDto(lsp)
 		}
 
 		return &struct{ Body []LspDto }{Body: result}, nil
@@ -93,7 +93,7 @@ func LspGet(plane plane.Plane) func(ctx context.Context, input *LspGetInput) (*s
 			return nil, huma.Error404NotFound("LSP not found", err)
 		}
 
-		result := LspToDto(lsp)
+		result := lspToDto(lsp)
 
 		return &struct{ Body LspDto }{Body: result}, nil
 	}

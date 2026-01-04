@@ -78,6 +78,8 @@ type Plane interface {
 	ModelDelete(name string) error
 	ModelStart(name string) error
 	ModelStop(name string) error
+	ModelGet(name string) (*controller.ModelData, error)
+	ModelGetAll() []*controller.ModelData
 	ModelTaskExecClient(modelName string, task *model.Task, client client.Client) (string, error)
 	ModelTaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
 	ModelTaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error)
