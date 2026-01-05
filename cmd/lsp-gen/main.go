@@ -68,6 +68,7 @@ func genGopls(params Params) {
 	files := []string{
 		"gopls/internal/protocol/tsprotocol.go",
 		"gopls/internal/protocol/tsdocument_changes.go",
+		"gopls/internal/protocol/form.go",
 	}
 
 	for _, file := range files {
