@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -58,7 +59,7 @@ func modify(params Params, bytes []byte) []byte {
 }
 
 func getTargetPath(params Params, file string) string {
-	targetName := params.Prefix + filepath.Base(file)
+	targetName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)) + "." + params.Suffix + filepath.Ext(file)
 	targetPath := path.Join(path.Join(params.Target, targetName))
 	return targetPath
 }

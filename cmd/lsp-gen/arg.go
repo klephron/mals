@@ -7,7 +7,7 @@ import (
 type Params struct {
 	Target  string `arg:"-o" default:"internal/lsp/protocol"`
 	Package string `arg:"-p" default:"protocol"`
-	Prefix  string `arg:"-s" default:"gen."`
+	Suffix  string `arg:"-s" default:"gen"`
 }
 
 func argParse() Params {
