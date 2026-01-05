@@ -34,7 +34,6 @@ func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *Clien
 	return s
 }
 
-// abstract
 func (s *ClientLsp) Name() string {
 	return s.Client.Name()
 }

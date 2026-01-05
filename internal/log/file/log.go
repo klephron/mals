@@ -8,7 +8,6 @@ import (
 )
 
 type LogFile struct {
-	log.Log
 	file   *os.File
 	logger *slog.Logger
 }

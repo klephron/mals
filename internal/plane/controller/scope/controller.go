@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/plane"
-	"mals/internal/plane/controller"
 	"mals/pkg/config"
 	"sync"
 
@@ -12,7 +11,6 @@ import (
 )
 
 type ScopeController struct {
-	controller.ScopeController
 	state State
 	plane plane.Plane
 }

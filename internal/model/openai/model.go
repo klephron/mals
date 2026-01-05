@@ -12,8 +12,6 @@ import (
 )
 
 type ModelOpenAI struct {
-	model.Model
-
 	name string
 
 	client      openai.Client

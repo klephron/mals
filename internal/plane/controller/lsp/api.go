@@ -216,7 +216,7 @@ func (s *LspController) LspStop(name string) error {
 	return nil
 }
 
-func (s *LspController) LspCapabilities(lspName string) (*protocol.ServerCapabilities, error) {
+func (s *LspController) LspGetCapabilities(lspName string) (*protocol.ServerCapabilities, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -231,7 +231,7 @@ func (s *LspController) LspCapabilities(lspName string) (*protocol.ServerCapabil
 	return value.lsp.Capabilities()
 }
 
-func (s *LspController) LspInfo(lspName string) (*protocol.ServerInfo, error) {
+func (s *LspController) LspGetInfo(lspName string) (*protocol.ServerInfo, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -262,8 +262,8 @@ func (s *LspController) LspGet(lspName string) (*controller.LspData, error) {
 
 	config := value.config
 
-	capabilities, _ := s.LspCapabilities(lspName)
-	info, _ := s.LspInfo(lspName)
+	capabilities, _ := s.LspGetCapabilities(lspName)
+	info, _ := s.LspGetInfo(lspName)
 
 	return &controller.LspData{
 		Name:         lspName,

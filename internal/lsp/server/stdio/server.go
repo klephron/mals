@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
-	"mals/internal/lsp/server"
 	"mals/internal/plane"
 	"mals/pkg/config"
 	"os/exec"
@@ -22,7 +21,6 @@ type RequestValue struct {
 }
 
 type LspServerStdio struct {
-	server.LspServer
 	name  string
 	plane plane.Plane
 

@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/plane"
-	"mals/internal/plane/controller"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type LogController struct {
-	controller.LogController
 	state State
 	plane plane.Plane
 }

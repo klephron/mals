@@ -14,7 +14,6 @@ import (
 )
 
 type Plane struct {
-	plane.Plane
 	client   controller.ClientController
 	listener controller.ListenerController
 	log      controller.LogController

@@ -3,7 +3,4 @@ int first() {
 }
 
 int main() {
-  "this is main"
-  ldfasfafasfas
-
 }

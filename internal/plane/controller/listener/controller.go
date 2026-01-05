@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/plane"
-	"mals/internal/plane/controller"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
 type ListenerController struct {
-	controller.ListenerController
 	state State
 	plane plane.Plane
 }

@@ -30,7 +30,6 @@ var (
 )
 
 type ModelMetered struct {
-	model.Model
 	parent model.Model
 	plane  plane.Plane
 }
@@ -40,7 +39,6 @@ func New(plane plane.Plane, model model.Model) *ModelMetered {
 		parent: model,
 		plane:  plane,
 	}
-	s.Model = s
 	return s
 }
 
