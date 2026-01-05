@@ -26,6 +26,13 @@ go build -o build/mals cmd/mals/*.go
 ./build/mals -h
 ```
 
+Generate openapi schema (v3.1, v3.0):
+
+```sh
+curl $LISTENER_API_HOST:$LISTENER_API_PORT/openapi.{json,yml}
+curl $LISTENER_API_HOST:$LISTENER_API_PORT/openapi-3.0.{json,yml}
+```
+
 ## TODO
 
 - Optimization of requests and caching:
