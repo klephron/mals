@@ -5,8 +5,7 @@ import (
 	"mals/internal/model"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/internal/util"
-	"mals/pkg/config"
+	"mals/pkg/wire"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -16,7 +15,7 @@ type ModelDto struct {
 	Name        string                 `json:"name"`
 	Status      controller.ModelStatus `json:"status"`
 	StatusFlags []string               `json:"status_flags"`
-	Config      *config.WireModel      `json:"config"`
+	Config      *wire.Model            `json:"config"`
 	Tasks       []*model.Task          `json:"tasks"`
 }
 
@@ -41,13 +40,16 @@ func modelToDto(model *controller.ModelData) ModelDto {
 		}
 	}
 
-	return ModelDto{
+	t := ModelDto{
 		Name:        model.Name,
 		Status:      model.Status,
 		StatusFlags: statusFlags,
-		Config:      util.Ptr(model.Config.Wire()),
+		Config:      &wire.Model{},
 		Tasks:       model.Tasks,
 	}
+	t.Config.Wire(model.Config)
+
+	return t
 }
 
 func ModelGetAllOperation() huma.Operation {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	. "mals/pkg/config"
+	"mals/pkg/wire"
 	"testing"
 )
 
@@ -223,7 +224,7 @@ func Test_Unmarshall(t *testing.T) {
 					{
 						Name:       "1",
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow:   nil,
 					},
 				},
@@ -263,8 +264,8 @@ func Test_Unmarshall(t *testing.T) {
 						Events: []Event{},
 						Conditions: []*Condition{
 							{
-								Filetypes: []string{},
-								Paths:     []string{},
+								Filetypes: nil,
+								Paths:     nil,
 							},
 						},
 						Workflow: nil,
@@ -309,7 +310,7 @@ func Test_Unmarshall(t *testing.T) {
 					{
 						Name:       "1",
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow: &Workflow{
 							Steps: []*Step{},
 						},
@@ -329,7 +330,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow: &Workflow{
 							Steps: []*Step{},
 						},
@@ -349,7 +350,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow: &Workflow{
 							Steps: []*Step{},
 						},
@@ -369,12 +370,12 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow: &Workflow{
 							Steps: []*Step{
 								{
 									Name:       "",
-									Conditions: []*Condition{},
+									Conditions: nil,
 									Kind:       &StepKindLsp{Name: "1"},
 								},
 							},
@@ -395,7 +396,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow: &Workflow{
 							Steps: []*Step{
 								{
@@ -421,7 +422,7 @@ func Test_Unmarshall(t *testing.T) {
 				Usages: []*Usage{
 					{
 						Events:     []Event{},
-						Conditions: []*Condition{},
+						Conditions: nil,
 						Workflow: &Workflow{
 							Steps: []*Step{
 								{
@@ -452,8 +453,17 @@ func Test_Unmarshall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var config Config
-			err := json.Unmarshal(tt.input, &config)
+			var wire wire.Config
+			err := json.Unmarshal(tt.input, &wire)
+
+			var config *Config
+			if err == nil {
+				config, err = wire.Unwire()
+			}
+
+			if config != nil {
+				DefaultConfig(config)
+			}
 
 			if tt.expectedError {
 				if err == nil {

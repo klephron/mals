@@ -4,8 +4,7 @@ import (
 	"context"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/internal/util"
-	"mals/pkg/config"
+	"mals/pkg/wire"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -15,7 +14,7 @@ type LogDto struct {
 	Name        string               `json:"name"`
 	Status      controller.LogStatus `json:"status"`
 	StatusFlags []string             `json:"status_flags"`
-	Config      *config.WireLog      `json:"config"`
+	Config      *wire.Log            `json:"config"`
 }
 
 type LogGetInput struct {
@@ -39,12 +38,15 @@ func logToDto(log *controller.LogData) LogDto {
 		}
 	}
 
-	return LogDto{
+	t := LogDto{
 		Name:        log.Name,
 		Status:      log.Status,
 		StatusFlags: statusFlags,
-		Config:      util.Ptr(log.Config.Wire()),
+		Config:      &wire.Log{},
 	}
+	t.Config.Wire(log.Config)
+
+	return t
 }
 
 func LogGetAllOperation() huma.Operation {

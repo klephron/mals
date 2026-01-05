@@ -4,19 +4,22 @@ import (
 	"context"
 	"mals/internal/plane"
 	"mals/pkg/config"
+	"mals/pkg/wire"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
-type UsageDto config.WireUsage
+type UsageDto wire.Usage
 
 type UsageGetInput struct {
 	Name string `path:"name" doc:"usage name"`
 }
 
 func usageToDto(usage *config.Usage) UsageDto {
-	return UsageDto(usage.Wire())
+	t := wire.Usage{}
+	t.Wire(usage)
+	return UsageDto(t)
 }
 
 func UsageGetAllOperation() huma.Operation {

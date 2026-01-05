@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"mals/internal/plane"
 	"mals/pkg/config"
+	"mals/pkg/wire"
 	"os"
 )
 
@@ -13,12 +14,19 @@ func configLoad(params *Params) (*config.Config, error) {
 		return nil, err
 	}
 
-	var c config.Config
-	if err := json.Unmarshal(bytes, &c); err != nil {
+	var wire wire.Config
+	if err := json.Unmarshal(bytes, &wire); err != nil {
 		return nil, err
 	}
 
-	return &c, nil
+	cfg, err := wire.Unwire()
+	if err != nil {
+		return nil, err
+	}
+
+	config.DefaultConfig(cfg)
+
+	return cfg, nil
 }
 
 func configInit(config *config.Config, plane plane.Plane) {

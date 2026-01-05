@@ -5,8 +5,7 @@ import (
 	"mals/internal/lsp/protocol"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/internal/util"
-	"mals/pkg/config"
+	"mals/pkg/wire"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -16,7 +15,7 @@ type LspDto struct {
 	Name         string                       `json:"name"`
 	Status       controller.LspStatus         `json:"status"`
 	StatusFlags  []string                     `json:"status_flags"`
-	Config       *config.WireLsp              `json:"config"`
+	Config       *wire.Lsp                    `json:"config"`
 	Capabilities *protocol.ServerCapabilities `json:"capabilities"`
 	Info         *protocol.ServerInfo         `json:"info"`
 }
@@ -42,14 +41,17 @@ func lspToDto(lsp *controller.LspData) LspDto {
 		}
 	}
 
-	return LspDto{
+	t := LspDto{
 		Name:         lsp.Name,
 		Status:       lsp.Status,
 		StatusFlags:  statusFlags,
-		Config:       util.Ptr(lsp.Config.Wire()),
+		Config:       &wire.Lsp{},
 		Capabilities: lsp.Capabilities,
 		Info:         lsp.Info,
 	}
+	t.Config.Wire(lsp.Config)
+
+	return t
 }
 
 func LspGetAllOperation() huma.Operation {

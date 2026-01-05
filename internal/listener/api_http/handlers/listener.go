@@ -4,8 +4,7 @@ import (
 	"context"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/internal/util"
-	"mals/pkg/config"
+	"mals/pkg/wire"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -15,7 +14,7 @@ type ListenerDto struct {
 	Name        string                    `json:"name"`
 	Status      controller.ListenerStatus `json:"status"`
 	StatusFlags []string                  `json:"status_flags"`
-	Config      *config.WireListener      `json:"config"`
+	Config      *wire.Listener            `json:"config"`
 }
 
 type ListenerGetInput struct {
@@ -39,12 +38,15 @@ func listenerToDto(listener *controller.ListenerData) ListenerDto {
 		}
 	}
 
-	return ListenerDto{
+	t := ListenerDto{
 		Name:        listener.Name,
 		Status:      listener.Status,
 		StatusFlags: statusFlags,
-		Config:      util.Ptr(listener.Config.Wire()),
+		Config:      &wire.Listener{},
 	}
+	t.Config.Wire(listener.Config)
+
+	return t
 }
 
 func ListenerGetAllOperation() huma.Operation {
