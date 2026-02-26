@@ -17,14 +17,14 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
 		return err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
-	capabilities, err := s.plane.LspGetCapabilities(lspKey)
+	capabilities, err := s.plane.Lsp().GetCapabilities(lspKey)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
 		return err
@@ -96,7 +96,7 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 		return err
 	}
 
-	err = s.plane.LspEventTextDocumentDidChange(lspKey, lspParams)
+	err = s.plane.Lsp().EventTextDocumentDidChange(lspKey, lspParams)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
 		return nil
@@ -126,7 +126,7 @@ func (s *Middleware) eventTextDocumentDidChangeWorkflow(params *protocol.DidChan
 
 func (s *Middleware) eventTextDocumentDidChange(params *protocol.DidChangeTextDocumentParams, workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
 			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidOpen)}, s.listenerName, s.clientName)
 

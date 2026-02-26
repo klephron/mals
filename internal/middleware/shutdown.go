@@ -16,14 +16,14 @@ func (s *Middleware) eventShutdownLsp(_ *Workspace, step *config.Step) error {
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("Shutdown %T %v: %v", step, step, err)
 		return err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
-	err = s.plane.LspEventShutdown(lspKey)
+	err = s.plane.Lsp().EventShutdown(lspKey)
 	if err != nil {
 		s.plane.Errorf("Shutdown %T %v: %v", step, step, err)
 		return nil
@@ -53,7 +53,7 @@ func (s *Middleware) eventShutdownWorkflow(workspace *Workspace, workflow *confi
 
 func (s *Middleware) eventShutdown(workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
 			usage.EventFilter{Event: util.Ptr(config.EventShutdown)}, s.listenerName, s.clientName)
 

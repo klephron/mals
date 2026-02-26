@@ -29,23 +29,23 @@ type ListenerData struct {
 }
 
 type ListenerController interface {
-	Run(onReady func()) error
-	Shutdown() error
+	ControllerRun(onReady func()) error
+	ControllerShutdown() error
 
-	ListenerStatus(name string) ListenerStatus
-	ListenerRegister(name string, config *config.Listener) error
-	ListenerUnregister(name string) error
-	ListenerCreate(name string) error
-	ListenerDelete(name string) error
-	ListenerStart(name string) error
-	ListenerStop(name string) error
+	Status(name string) ListenerStatus
+	Register(name string, config *config.Listener) error
+	Unregister(name string) error
+	Create(name string) error
+	Delete(name string) error
+	Start(name string) error
+	Stop(name string) error
 
-	ListenerLspClientOwn(name string, client listener.ListenerLspClient) error
-	ListenerLspClientStatus(name string, clientName string) ClientStatus
-	ListenerLspClientServe(name string, clientName string) error
-	ListenerLspClientShutdown(name string, clientName string) error
+	LspClientOwn(name string, client listener.ListenerLspClient) error
+	LspClientStatus(name string, clientName string) ClientStatus
+	LspClientServe(name string, clientName string) error
+	LspClientShutdown(name string, clientName string) error
 
-	ListenerGetConfig(name string) (*config.Listener, error)
-	ListenerGet(name string) (*ListenerData, error)
-	ListenerGetAll() []*ListenerData
+	GetConfig(name string) (*config.Listener, error)
+	Get(name string) (*ListenerData, error)
+	GetAll() []*ListenerData
 }

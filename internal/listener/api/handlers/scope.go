@@ -89,7 +89,7 @@ func ScopeTreeRootOperation() huma.Operation {
 
 func ScopeTreeRoot(plane plane.Plane) func(ctx context.Context, input *struct{}) (*struct{ Body SpaceDto }, error) {
 	return func(ctx context.Context, input *struct{}) (*struct{ Body SpaceDto }, error) {
-		root := plane.ScopeTreeRoot()
+		root := plane.Scope().TreeRoot()
 
 		result := spaceToDto(root)
 

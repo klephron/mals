@@ -59,28 +59,12 @@ func (s *ModelController) statusRW(value *Model) controller.ModelStatus {
 	return status
 }
 
-func (s *ModelController) Shutdown() error {
-	s.state.models.Range(func(key string, value *Model) bool {
-		s.ModelStop(key)
-		s.ModelDelete(key)
-		return true
-	})
-
-	s.state.statusRW.RLock()
-	cancel := s.state.statusCancel
-	s.state.statusRW.RUnlock()
-
-	cancel()
-
-	return nil
-}
-
-func (s *ModelController) ModelStatus(name string) controller.ModelStatus {
+func (s *ModelController) Status(name string) controller.ModelStatus {
 	value, _ := s.state.models.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *ModelController) ModelRegister(name string, cfg *config.Model) error {
+func (s *ModelController) Register(name string, cfg *config.Model) error {
 	value, _ := s.state.models.Load(name)
 
 	if status := s.statusRW(value); status != controller.ModelAbsent {
@@ -103,7 +87,7 @@ func (s *ModelController) ModelRegister(name string, cfg *config.Model) error {
 	return nil
 }
 
-func (s *ModelController) ModelUnregister(name string) error {
+func (s *ModelController) Unregister(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -120,7 +104,7 @@ func (s *ModelController) ModelUnregister(name string) error {
 	return nil
 }
 
-func (s *ModelController) ModelCreate(name string) error {
+func (s *ModelController) Create(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -148,7 +132,7 @@ func (s *ModelController) ModelCreate(name string) error {
 	return nil
 }
 
-func (s *ModelController) ModelDelete(name string) error {
+func (s *ModelController) Delete(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -166,7 +150,7 @@ func (s *ModelController) ModelDelete(name string) error {
 	return nil
 }
 
-func (s *ModelController) ModelStart(name string) error {
+func (s *ModelController) Start(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -210,7 +194,7 @@ func (s *ModelController) ModelStart(name string) error {
 
 		wg.Wait()
 
-		s.ModelStop(model.Name())
+		s.Stop(model.Name())
 	}()
 
 	wgReady.Wait()
@@ -218,7 +202,7 @@ func (s *ModelController) ModelStart(name string) error {
 	return nil
 }
 
-func (s *ModelController) ModelStop(name string) error {
+func (s *ModelController) Stop(name string) error {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -241,7 +225,7 @@ func (s *ModelController) ModelStop(name string) error {
 	return nil
 }
 
-func (s *ModelController) ModelGet(name string) (*controller.ModelData, error) {
+func (s *ModelController) Get(name string) (*controller.ModelData, error) {
 	value, _ := s.state.models.Load(name)
 
 	if value != nil {
@@ -267,11 +251,11 @@ func (s *ModelController) ModelGet(name string) (*controller.ModelData, error) {
 	}, nil
 }
 
-func (s *ModelController) ModelGetAll() []*controller.ModelData {
+func (s *ModelController) GetAll() []*controller.ModelData {
 	datas := make([]*controller.ModelData, 0)
 
 	s.state.models.Range(func(key string, value *Model) bool {
-		data, err := s.ModelGet(key)
+		data, err := s.Get(key)
 
 		if err == nil {
 			datas = append(datas, data)

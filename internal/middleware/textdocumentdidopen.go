@@ -17,12 +17,12 @@ func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDoc
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidOpen %T %v: %v", step, step, err)
 		return err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	lspParams := &protocol.DidOpenTextDocumentParams{
 		TextDocument: protocol.TextDocumentItem{
@@ -33,7 +33,7 @@ func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDoc
 		},
 	}
 
-	err = s.plane.LspEventTextDocumentDidOpen(lspKey, lspParams)
+	err = s.plane.Lsp().EventTextDocumentDidOpen(lspKey, lspParams)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidOpen %T %v: %v", step, step, err)
 		return nil
@@ -63,7 +63,7 @@ func (s *Middleware) eventTextDocumentDidOpenWorkflow(params *protocol.DidOpenTe
 
 func (s *Middleware) eventTextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams, workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
 			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidOpen)}, s.listenerName, s.clientName)
 

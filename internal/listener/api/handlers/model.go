@@ -64,7 +64,7 @@ func ModelGetAllOperation() huma.Operation {
 
 func ModelGetAll(plane plane.Plane) func(ctx context.Context, input *struct{}) (*struct{ Body []ModelDto }, error) {
 	return func(ctx context.Context, input *struct{}) (*struct{ Body []ModelDto }, error) {
-		models := plane.ModelGetAll()
+		models := plane.Model().GetAll()
 
 		result := make([]ModelDto, len(models))
 		for i, model := range models {
@@ -87,7 +87,7 @@ func ModelGetOperation() huma.Operation {
 
 func ModelGet(plane plane.Plane) func(ctx context.Context, input *ModelGetInput) (*struct{ Body ModelDto }, error) {
 	return func(ctx context.Context, input *ModelGetInput) (*struct{ Body ModelDto }, error) {
-		model, err := plane.ModelGet(input.Name)
+		model, err := plane.Model().Get(input.Name)
 
 		if err != nil {
 			return nil, huma.Error404NotFound("model not found", err)

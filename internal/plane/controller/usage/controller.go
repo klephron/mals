@@ -26,7 +26,7 @@ func New(plane plane.Plane) *UsageController {
 	}
 }
 
-func (s *UsageController) Run(onReady func()) error {
+func (s *UsageController) ControllerRun(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
@@ -47,6 +47,16 @@ func (s *UsageController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 	s.state.statusCancel = nil
 	s.state.statusRW.Unlock()
+
+	return nil
+}
+
+func (s *UsageController) ControllerShutdown() error {
+	s.state.statusRW.RLock()
+	cancel := s.state.statusCancel
+	s.state.statusRW.RUnlock()
+
+	cancel()
 
 	return nil
 }

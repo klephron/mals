@@ -17,16 +17,16 @@ func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Works
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("Initialized %T %v: %v", step, step, err)
 		return err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	lspParams := &protocol.InitializedParams{}
 
-	err = s.plane.LspEventInitialized(lspKey, lspParams)
+	err = s.plane.Lsp().EventInitialized(lspKey, lspParams)
 	if err != nil {
 		s.plane.Errorf("Initialized %T %v: %v", step, step, err)
 		return nil
@@ -56,7 +56,7 @@ func (s *Middleware) eventInitializedWorkflow(params *protocol.InitializedParams
 
 func (s *Middleware) eventInitialized(params *protocol.InitializedParams, workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
 			usage.EventFilter{Event: util.Ptr(config.EventInitialized)}, s.listenerName, s.clientName)
 

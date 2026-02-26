@@ -23,21 +23,21 @@ type LspData struct {
 }
 
 type LspController interface {
-	Run(onReady func()) error
-	Shutdown() error
+	ControllerRun(onReady func()) error
+	ControllerShutdown() error
 
-	LspStatus(name string) LspStatus
-	LspRegister(name string, config *config.Lsp) error
-	LspUnregister(name string) error
-	LspCreate(name string) error
-	LspDelete(name string) error
-	LspStart(name string) error
-	LspStop(name string) error
+	Status(name string) LspStatus
+	Register(name string, config *config.Lsp) error
+	Unregister(name string) error
+	Create(name string) error
+	Delete(name string) error
+	Start(name string) error
+	Stop(name string) error
 
-	LspGetCapabilities(name string) (*protocol.ServerCapabilities, error)
-	LspGetInfo(name string) (*protocol.ServerInfo, error)
-	LspGet(name string) (*LspData, error)
-	LspGetAll() []*LspData
+	GetCapabilities(name string) (*protocol.ServerCapabilities, error)
+	GetInfo(name string) (*protocol.ServerInfo, error)
+	Get(name string) (*LspData, error)
+	GetAll() []*LspData
 
 	EventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
 	EventInitialized(name string, params *protocol.InitializedParams) error

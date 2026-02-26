@@ -19,12 +19,12 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("Initialize %T %v: %v", step, step, err)
 		return err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	lspParams := &protocol.InitializeParams{
 		XInitializeParams: protocol.XInitializeParams{
@@ -60,7 +60,7 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 		},
 	}
 
-	result, err := s.plane.LspEventInitialize(lspKey, lspParams)
+	result, err := s.plane.Lsp().EventInitialize(lspKey, lspParams)
 	if err != nil {
 		s.plane.Errorf("Initialize %T %v: %v", step, step, err)
 		return nil
@@ -90,7 +90,7 @@ func (s *Middleware) eventInitializeWorkflow(params *protocol.InitializeParams, 
 
 func (s *Middleware) eventInitialize(params *protocol.InitializeParams, workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
 			usage.EventFilter{Event: util.Ptr(config.EventInitialize)}, s.listenerName, s.clientName)
 

@@ -34,7 +34,7 @@ func UsageGetAllOperation() huma.Operation {
 
 func UsageGetAll(plane plane.Plane) func(ctx context.Context, input *struct{}) (*struct{ Body []UsageDto }, error) {
 	return func(ctx context.Context, input *struct{}) (*struct{ Body []UsageDto }, error) {
-		usages := plane.UsageGetAll()
+		usages := plane.Usage().GetAll()
 
 		result := make([]UsageDto, len(usages))
 		for i, usage := range usages {
@@ -57,7 +57,7 @@ func UsageGetOperation() huma.Operation {
 
 func UsageGet(plane plane.Plane) func(ctx context.Context, input *UsageGetInput) (*struct{ Body UsageDto }, error) {
 	return func(ctx context.Context, input *UsageGetInput) (*struct{ Body UsageDto }, error) {
-		usage, err := plane.UsageGet(input.Name)
+		usage, err := plane.Usage().Get(input.Name)
 
 		if err != nil {
 			return nil, huma.Error404NotFound("usage not found", err)

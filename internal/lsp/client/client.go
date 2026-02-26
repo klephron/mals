@@ -64,7 +64,7 @@ func (s *LspClient) Serve(ctx context.Context) error {
 
 	<-scanCtx.Done()
 
-	errs := s.plane.ScopeClose(scope.NewScopeClient(s.listenerName, s.clientName))
+	errs := s.plane.Scope().Close(scope.NewScopeClient(s.listenerName, s.clientName))
 	for _, err := range errs {
 		s.plane.Warnf("%v: %v", s.Name(), err)
 	}

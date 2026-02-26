@@ -55,28 +55,12 @@ func (s *LogController) statusRW(value *Log) controller.LogStatus {
 	return status
 }
 
-func (s *LogController) Shutdown() error {
-	s.state.logs.Range(func(key string, value *Log) bool {
-		s.LogStop(key)
-		s.LogDelete(key)
-		return true
-	})
-
-	s.state.statusRW.RLock()
-	cancel := s.state.statusCancel
-	s.state.statusRW.RUnlock()
-
-	cancel()
-
-	return nil
-}
-
-func (s *LogController) LogStatus(name string) controller.LogStatus {
+func (s *LogController) Status(name string) controller.LogStatus {
 	value, _ := s.state.logs.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *LogController) LogRegister(name string, cfg *config.Log) error {
+func (s *LogController) Register(name string, cfg *config.Log) error {
 	value, _ := s.state.logs.Load(name)
 
 	if status := s.statusRW(value); status != controller.LogAbsent {
@@ -93,7 +77,7 @@ func (s *LogController) LogRegister(name string, cfg *config.Log) error {
 	return nil
 }
 
-func (s *LogController) LogUnregister(name string) error {
+func (s *LogController) Unregister(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -110,7 +94,7 @@ func (s *LogController) LogUnregister(name string) error {
 	return nil
 }
 
-func (s *LogController) LogCreate(name string) error {
+func (s *LogController) Create(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -136,7 +120,7 @@ func (s *LogController) LogCreate(name string) error {
 	return nil
 }
 
-func (s *LogController) LogDelete(name string) error {
+func (s *LogController) Delete(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -154,7 +138,7 @@ func (s *LogController) LogDelete(name string) error {
 	return nil
 }
 
-func (s *LogController) LogStart(name string) error {
+func (s *LogController) Start(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -171,7 +155,7 @@ func (s *LogController) LogStart(name string) error {
 	return nil
 }
 
-func (s *LogController) LogStop(name string) error {
+func (s *LogController) Stop(name string) error {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -188,7 +172,7 @@ func (s *LogController) LogStop(name string) error {
 	return nil
 }
 
-func (s *LogController) LogGet(name string) (*controller.LogData, error) {
+func (s *LogController) Get(name string) (*controller.LogData, error) {
 	value, _ := s.state.logs.Load(name)
 
 	if value != nil {
@@ -211,11 +195,11 @@ func (s *LogController) LogGet(name string) (*controller.LogData, error) {
 	}, nil
 }
 
-func (s *LogController) LogGetAll() []*controller.LogData {
+func (s *LogController) GetAll() []*controller.LogData {
 	datas := make([]*controller.LogData, 0)
 
 	s.state.logs.Range(func(key string, value *Log) bool {
-		data, err := s.LogGet(key)
+		data, err := s.Get(key)
 
 		if err == nil {
 			datas = append(datas, data)

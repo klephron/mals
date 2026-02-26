@@ -25,7 +25,7 @@ func New(plane plane.Plane) *ListenerController {
 	}
 }
 
-func (s *ListenerController) Run(onReady func()) error {
+func (s *ListenerController) ControllerRun(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
@@ -46,6 +46,22 @@ func (s *ListenerController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 	s.state.statusCancel = nil
 	s.state.statusRW.Unlock()
+
+	return nil
+}
+
+func (s *ListenerController) ControllerShutdown() error {
+	s.state.listeners.Range(func(key string, value *Listener) bool {
+		s.Stop(key)
+		s.Delete(key)
+		return true
+	})
+
+	s.state.statusRW.RLock()
+	cancel := s.state.statusCancel
+	s.state.statusRW.RUnlock()
+
+	cancel()
 
 	return nil
 }

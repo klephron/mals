@@ -17,12 +17,12 @@ func (s *Middleware) eventTextDocumentDidCloseLsp(params *protocol.DidCloseTextD
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidClose %T %v: %v", step, step, err)
 		return err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	lspParams := &protocol.DidCloseTextDocumentParams{
 		TextDocument: protocol.TextDocumentIdentifier{
@@ -30,7 +30,7 @@ func (s *Middleware) eventTextDocumentDidCloseLsp(params *protocol.DidCloseTextD
 		},
 	}
 
-	err = s.plane.LspEventTextDocumentDidClose(lspKey, lspParams)
+	err = s.plane.Lsp().EventTextDocumentDidClose(lspKey, lspParams)
 	if err != nil {
 		s.plane.Errorf("TextDocumentDidClose %T %v: %v", step, step, err)
 		return nil
@@ -60,7 +60,7 @@ func (s *Middleware) eventTextDocumentDidCloseWorkflow(params *protocol.DidClose
 
 func (s *Middleware) eventTextDocumentDidClose(params *protocol.DidCloseTextDocumentParams, workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
 			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidClose)}, s.listenerName, s.clientName)
 

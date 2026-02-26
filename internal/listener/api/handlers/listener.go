@@ -61,7 +61,7 @@ func ListenerGetAllOperation() huma.Operation {
 
 func ListenerGetAll(plane plane.Plane) func(ctx context.Context, input *struct{}) (*struct{ Body []ListenerDto }, error) {
 	return func(ctx context.Context, input *struct{}) (*struct{ Body []ListenerDto }, error) {
-		listeners := plane.ListenerGetAll()
+		listeners := plane.Listener().GetAll()
 
 		result := make([]ListenerDto, len(listeners))
 		for i, listener := range listeners {
@@ -84,7 +84,7 @@ func ListenerGetOperation() huma.Operation {
 
 func ListenerGet(plane plane.Plane) func(ctx context.Context, input *ListenerGetInput) (*struct{ Body ListenerDto }, error) {
 	return func(ctx context.Context, input *ListenerGetInput) (*struct{ Body ListenerDto }, error) {
-		listener, err := plane.ListenerGet(input.Name)
+		listener, err := plane.Listener().Get(input.Name)
 
 		if err != nil {
 			return nil, huma.Error404NotFound("Listener not found", err)

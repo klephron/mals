@@ -61,7 +61,7 @@ func LogGetAllOperation() huma.Operation {
 
 func LogGetAll(plane plane.Plane) func(ctx context.Context, input *struct{}) (*struct{ Body []LogDto }, error) {
 	return func(ctx context.Context, input *struct{}) (*struct{ Body []LogDto }, error) {
-		logs := plane.LogGetAll()
+		logs := plane.Log().GetAll()
 
 		result := make([]LogDto, len(logs))
 		for i, Log := range logs {
@@ -84,7 +84,7 @@ func LogGetOperation() huma.Operation {
 
 func LogGet(plane plane.Plane) func(ctx context.Context, input *LogGetInput) (*struct{ Body LogDto }, error) {
 	return func(ctx context.Context, input *LogGetInput) (*struct{ Body LogDto }, error) {
-		log, err := plane.LogGet(input.Name)
+		log, err := plane.Log().Get(input.Name)
 
 		if err != nil {
 			return nil, huma.Error404NotFound("Log not found", err)

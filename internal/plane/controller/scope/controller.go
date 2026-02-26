@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/plane"
+	"mals/internal/scope"
 	"mals/pkg/config"
 	"sync"
 
@@ -30,7 +31,7 @@ func New(plane plane.Plane) *ScopeController {
 	}
 }
 
-func (s *ScopeController) Run(onReady func()) error {
+func (s *ScopeController) ControllerRun(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
@@ -51,6 +52,18 @@ func (s *ScopeController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 	s.state.statusCancel = nil
 	s.state.statusRW.Unlock()
+
+	return nil
+}
+
+func (s *ScopeController) ControllerShutdown() error {
+	s.Close(scope.NewScopeGlobal())
+
+	s.state.statusRW.RLock()
+	cancel := s.state.statusCancel
+	s.state.statusRW.RUnlock()
+
+	cancel()
 
 	return nil
 }

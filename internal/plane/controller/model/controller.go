@@ -25,7 +25,7 @@ func New(plane plane.Plane) *ModelController {
 	}
 }
 
-func (s *ModelController) Run(onReady func()) error {
+func (s *ModelController) ControllerRun(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
@@ -46,6 +46,22 @@ func (s *ModelController) Run(onReady func()) error {
 	s.state.statusRW.Lock()
 	s.state.statusCancel = nil
 	s.state.statusRW.Unlock()
+
+	return nil
+}
+
+func (s *ModelController) ControllerShutdown() error {
+	s.state.models.Range(func(key string, value *Model) bool {
+		s.Stop(key)
+		s.Delete(key)
+		return true
+	})
+
+	s.state.statusRW.RLock()
+	cancel := s.state.statusCancel
+	s.state.statusRW.RUnlock()
+
+	cancel()
 
 	return nil
 }

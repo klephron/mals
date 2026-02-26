@@ -56,28 +56,12 @@ func (s *LspController) statusRW(value *Lsp) controller.LspStatus {
 	return status
 }
 
-func (s *LspController) Shutdown() error {
-	s.state.lsps.Range(func(key string, value *Lsp) bool {
-		s.LspStop(key)
-		s.LspDelete(key)
-		return true
-	})
-
-	s.state.statusRW.RLock()
-	cancel := s.state.statusCancel
-	s.state.statusRW.RUnlock()
-
-	cancel()
-
-	return nil
-}
-
-func (s *LspController) LspStatus(name string) controller.LspStatus {
+func (s *LspController) Status(name string) controller.LspStatus {
 	value, _ := s.state.lsps.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *LspController) LspRegister(name string, cfg *config.Lsp) error {
+func (s *LspController) Register(name string, cfg *config.Lsp) error {
 	value, _ := s.state.lsps.Load(name)
 
 	if status := s.statusRW(value); status != controller.LspAbsent {
@@ -99,7 +83,7 @@ func (s *LspController) LspRegister(name string, cfg *config.Lsp) error {
 	return nil
 }
 
-func (s *LspController) LspUnregister(name string) error {
+func (s *LspController) Unregister(name string) error {
 	value, _ := s.state.lsps.Load(name)
 
 	if value != nil {
@@ -116,7 +100,7 @@ func (s *LspController) LspUnregister(name string) error {
 	return nil
 }
 
-func (s *LspController) LspCreate(name string) error {
+func (s *LspController) Create(name string) error {
 	value, _ := s.state.lsps.Load(name)
 
 	if value != nil {
@@ -139,7 +123,7 @@ func (s *LspController) LspCreate(name string) error {
 	return nil
 }
 
-func (s *LspController) LspDelete(name string) error {
+func (s *LspController) Delete(name string) error {
 	value, _ := s.state.lsps.Load(name)
 
 	if value != nil {
@@ -156,7 +140,7 @@ func (s *LspController) LspDelete(name string) error {
 	return nil
 }
 
-func (s *LspController) LspStart(name string) error {
+func (s *LspController) Start(name string) error {
 	value, _ := s.state.lsps.Load(name)
 
 	if value != nil {
@@ -185,7 +169,7 @@ func (s *LspController) LspStart(name string) error {
 		}
 		cancel()
 
-		s.LspStop(lsp.Name())
+		s.Stop(lsp.Name())
 	}()
 
 	wgReady.Wait()
@@ -193,7 +177,7 @@ func (s *LspController) LspStart(name string) error {
 	return nil
 }
 
-func (s *LspController) LspStop(name string) error {
+func (s *LspController) Stop(name string) error {
 	value, _ := s.state.lsps.Load(name)
 
 	if value != nil {
@@ -216,7 +200,7 @@ func (s *LspController) LspStop(name string) error {
 	return nil
 }
 
-func (s *LspController) LspGetCapabilities(lspName string) (*protocol.ServerCapabilities, error) {
+func (s *LspController) GetCapabilities(lspName string) (*protocol.ServerCapabilities, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -231,7 +215,7 @@ func (s *LspController) LspGetCapabilities(lspName string) (*protocol.ServerCapa
 	return value.lsp.Capabilities()
 }
 
-func (s *LspController) LspGetInfo(lspName string) (*protocol.ServerInfo, error) {
+func (s *LspController) GetInfo(lspName string) (*protocol.ServerInfo, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -246,7 +230,7 @@ func (s *LspController) LspGetInfo(lspName string) (*protocol.ServerInfo, error)
 	return value.lsp.Info()
 }
 
-func (s *LspController) LspGet(lspName string) (*controller.LspData, error) {
+func (s *LspController) Get(lspName string) (*controller.LspData, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -262,8 +246,8 @@ func (s *LspController) LspGet(lspName string) (*controller.LspData, error) {
 
 	config := value.config
 
-	capabilities, _ := s.LspGetCapabilities(lspName)
-	info, _ := s.LspGetInfo(lspName)
+	capabilities, _ := s.GetCapabilities(lspName)
+	info, _ := s.GetInfo(lspName)
 
 	return &controller.LspData{
 		Name:         lspName,
@@ -274,11 +258,11 @@ func (s *LspController) LspGet(lspName string) (*controller.LspData, error) {
 	}, nil
 }
 
-func (s *LspController) LspGetAll() []*controller.LspData {
+func (s *LspController) GetAll() []*controller.LspData {
 	datas := make([]*controller.LspData, 0)
 
 	s.state.lsps.Range(func(key string, value *Lsp) bool {
-		data, err := s.LspGet(key)
+		data, err := s.Get(key)
 
 		if err == nil {
 			datas = append(datas, data)

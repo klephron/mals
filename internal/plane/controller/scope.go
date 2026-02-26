@@ -31,18 +31,18 @@ type Space struct {
 }
 
 type ScopeController interface {
-	Run(onReady func()) error
-	Shutdown() error
+	ControllerRun(onReady func()) error
+	ControllerShutdown() error
 
-	ScopeModelRegister(config *config.Model) error
-	ScopeModelAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
-	ScopeModelRelease(name string, token ScopeToken) error
+	ModelRegister(config *config.Model) error
+	ModelAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
+	ModelRelease(name string, token ScopeToken) error
 
-	ScopeLspRegister(config *config.Lsp) error
-	ScopeLspAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
-	ScopeLspRelease(name string, token ScopeToken) error
+	LspRegister(config *config.Lsp) error
+	LspAcquire(name string, scope *scope.Scope) (string, ScopeToken, error)
+	LspRelease(name string, token ScopeToken) error
 
-	ScopeClose(scope *scope.Scope) []error
+	Close(scope *scope.Scope) []error
 
-	ScopeTreeRoot() *Space
+	TreeRoot() *Space
 }

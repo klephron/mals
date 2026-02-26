@@ -24,25 +24,25 @@ type ModelData struct {
 }
 
 type ModelController interface {
-	Run(onReady func()) error
-	Shutdown() error
+	ControllerRun(onReady func()) error
+	ControllerShutdown() error
 
-	ModelStatus(name string) ModelStatus
-	ModelRegister(name string, config *config.Model) error
-	ModelUnregister(name string) error
-	ModelCreate(name string) error
-	ModelDelete(name string) error
-	ModelStart(name string) error
-	ModelStop(name string) error
+	Status(name string) ModelStatus
+	Register(name string, config *config.Model) error
+	Unregister(name string) error
+	Create(name string) error
+	Delete(name string) error
+	Start(name string) error
+	Stop(name string) error
 
-	ModelGet(name string) (*ModelData, error)
-	ModelGetAll() []*ModelData
+	Get(name string) (*ModelData, error)
+	GetAll() []*ModelData
 
-	TaskExecClient(modelName string, task *model.Task, clientName string) (string, error)
-	TaskGet(modelName string, id uuid.UUID) (*model.Task, error)
-	TaskGetClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error)
-	TaskGetAll(modelName string) ([]*model.Task, error)
-	TaskGetAllClient(modelName string, clientName string) ([]*model.Task, error)
-	TaskCancelClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error)
-	TaskCancelAllClient(modelName string, clientName string) ([]*model.Task, error)
+	TaskExecClient(name string, task *model.Task, clientName string) (string, error)
+	TaskGet(name string, id uuid.UUID) (*model.Task, error)
+	TaskGetClient(name string, id uuid.UUID, clientName string) (*model.Task, error)
+	TaskGetAll(name string) ([]*model.Task, error)
+	TaskGetAllClient(name string, clientName string) ([]*model.Task, error)
+	TaskCancelClient(name string, id uuid.UUID, clientName string) (*model.Task, error)
+	TaskCancelAllClient(name string, clientName string) ([]*model.Task, error)
 }

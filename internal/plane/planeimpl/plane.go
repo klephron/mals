@@ -41,38 +41,38 @@ func (s *Plane) Run(onReady func()) {
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.log.Run(func() { wgReady.Done() })
+			s.log.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.lsp.Run(func() { wgReady.Done() })
+			s.lsp.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.model.Run(func() { wgReady.Done() })
+			s.model.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.scope.Run(func() { wgReady.Done() })
+			s.scope.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.usage.Run(func() { wgReady.Done() })
+			s.usage.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.listener.Run(func() { wgReady.Done() })
+			s.listener.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 
@@ -82,28 +82,28 @@ func (s *Plane) Run(onReady func()) {
 }
 
 func (s *Plane) Shutdown() error {
-	if err := s.listener.Shutdown(); err != nil {
+	if err := s.listener.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}
 
-	if err := s.usage.Shutdown(); err != nil {
+	if err := s.usage.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}
-	if err := s.scope.Shutdown(); err != nil {
+	if err := s.scope.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}
-	if err := s.model.Shutdown(); err != nil {
+	if err := s.model.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}
-	if err := s.lsp.Shutdown(); err != nil {
+	if err := s.lsp.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}
-	if err := s.log.Shutdown(); err != nil {
+	if err := s.log.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}

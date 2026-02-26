@@ -18,19 +18,19 @@ type LogData struct {
 }
 
 type LogController interface {
-	Run(onReady func()) error
-	Shutdown() error
+	ControllerRun(onReady func()) error
+	ControllerShutdown() error
 
-	LogStatus(name string) LogStatus
-	LogRegister(name string, config *config.Log) error
-	LogUnregister(name string) error
-	LogCreate(name string) error
-	LogDelete(name string) error
-	LogStart(name string) error
-	LogStop(name string) error
+	Status(name string) LogStatus
+	Register(name string, config *config.Log) error
+	Unregister(name string) error
+	Create(name string) error
+	Delete(name string) error
+	Start(name string) error
+	Stop(name string) error
 
-	LogGet(name string) (*LogData, error)
-	LogGetAll() []*LogData
+	Get(name string) (*LogData, error)
+	GetAll() []*LogData
 
 	Debugf(format string, a ...any) error
 	Infof(format string, a ...any) error

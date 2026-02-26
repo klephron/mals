@@ -25,19 +25,7 @@ func scopeDescent(current *Space, scope *scope.Scope, create bool) *Space {
 	return current
 }
 
-func (s *ScopeController) Shutdown() error {
-	s.ScopeClose(scope.NewScopeGlobal())
-
-	s.state.statusRW.RLock()
-	cancel := s.state.statusCancel
-	s.state.statusRW.RUnlock()
-
-	cancel()
-
-	return nil
-}
-
-func (s *ScopeController) ScopeModelRegister(config *config.Model) error {
+func (s *ScopeController) ModelRegister(config *config.Model) error {
 	name := config.Name
 
 	if _, ok := s.state.models.Load(name); ok {
@@ -49,7 +37,7 @@ func (s *ScopeController) ScopeModelRegister(config *config.Model) error {
 	return nil
 }
 
-func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
+func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
 	current := scopeDescent(s.state.root, scope, true)
 
 	resource, exist := current.models.Load(name)
@@ -77,13 +65,13 @@ func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (st
 	defer resource.rw.Unlock()
 
 	if !exist {
-		if err := s.plane.ModelRegister(resource.fullname, resource.config); err != nil {
+		if err := s.plane.Model().Register(resource.fullname, resource.config); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.ModelCreate(resource.fullname); err != nil {
+		if err := s.plane.Model().Create(resource.fullname); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.ModelStart(resource.fullname); err != nil {
+		if err := s.plane.Model().Start(resource.fullname); err != nil {
 			return "", nil, err
 		}
 
@@ -98,7 +86,7 @@ func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (st
 	return resource.fullname, token, nil
 }
 
-func (s *ScopeController) ScopeModelRelease(fullname string, token controller.ScopeToken) error {
+func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeToken) error {
 	name, scope := unmangleName(fullname)
 
 	current := scopeDescent(s.state.root, scope, false)
@@ -125,7 +113,7 @@ func (s *ScopeController) ScopeModelRelease(fullname string, token controller.Sc
 	return nil
 }
 
-func (s *ScopeController) ScopeLspRegister(config *config.Lsp) error {
+func (s *ScopeController) LspRegister(config *config.Lsp) error {
 	name := config.Name
 
 	if _, ok := s.state.lsps.Load(name); ok {
@@ -137,7 +125,7 @@ func (s *ScopeController) ScopeLspRegister(config *config.Lsp) error {
 	return nil
 }
 
-func (s *ScopeController) ScopeLspAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
+func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error) {
 	current := scopeDescent(s.state.root, scope, true)
 
 	resource, exist := current.lsps.Load(name)
@@ -164,13 +152,13 @@ func (s *ScopeController) ScopeLspAcquire(name string, scope *scope.Scope) (stri
 	defer resource.rw.Unlock()
 
 	if !exist {
-		if err := s.plane.LspRegister(resource.fullname, resource.config); err != nil {
+		if err := s.plane.Lsp().Register(resource.fullname, resource.config); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.LspCreate(resource.fullname); err != nil {
+		if err := s.plane.Lsp().Create(resource.fullname); err != nil {
 			return "", nil, err
 		}
-		if err := s.plane.LspStart(resource.fullname); err != nil {
+		if err := s.plane.Lsp().Start(resource.fullname); err != nil {
 			return "", nil, err
 		}
 
@@ -185,7 +173,7 @@ func (s *ScopeController) ScopeLspAcquire(name string, scope *scope.Scope) (stri
 	return resource.fullname, token, nil
 }
 
-func (s *ScopeController) ScopeLspRelease(fullname string, token controller.ScopeToken) error {
+func (s *ScopeController) LspRelease(fullname string, token controller.ScopeToken) error {
 	name, scope := unmangleName(fullname)
 
 	current := scopeDescent(s.state.root, scope, false)
@@ -226,15 +214,15 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 			return true
 		}
 
-		if err := s.plane.LspStop(resource.fullname); err != nil {
+		if err := s.plane.Lsp().Stop(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.LspDelete(resource.fullname); err != nil {
+		if err := s.plane.Lsp().Delete(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.LspUnregister(resource.fullname); err != nil {
+		if err := s.plane.Lsp().Unregister(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
@@ -259,15 +247,15 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 			return true
 		}
 
-		if err := s.plane.ModelStop(resource.fullname); err != nil {
+		if err := s.plane.Model().Stop(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.ModelDelete(resource.fullname); err != nil {
+		if err := s.plane.Model().Delete(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
-		if err := s.plane.ModelUnregister(resource.fullname); err != nil {
+		if err := s.plane.Model().Unregister(resource.fullname); err != nil {
 			*errors = append(*errors, err)
 			return true
 		}
@@ -289,7 +277,7 @@ func (s *ScopeController) scopeCloseDFS(errors *[]error, current *Space) {
 	s.scopeClose(errors, current)
 }
 
-func (s *ScopeController) ScopeClose(scope *scope.Scope) []error {
+func (s *ScopeController) Close(scope *scope.Scope) []error {
 	errors := make([]error, 0)
 
 	current := s.state.root
@@ -308,7 +296,7 @@ func (s *ScopeController) ScopeClose(scope *scope.Scope) []error {
 	return errors
 }
 
-func (s *ScopeController) ScopeTreeRoot() *controller.Space {
+func (s *ScopeController) TreeRoot() *controller.Space {
 	return s.scopeTree(s.state.root)
 }
 

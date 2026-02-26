@@ -66,7 +66,7 @@ func LspGetAllOperation() huma.Operation {
 
 func LspGetAll(plane plane.Plane) func(ctx context.Context, input *struct{}) (*struct{ Body []LspDto }, error) {
 	return func(ctx context.Context, input *struct{}) (*struct{ Body []LspDto }, error) {
-		lsps := plane.LspGetAll()
+		lsps := plane.Lsp().GetAll()
 
 		result := make([]LspDto, len(lsps))
 		for i, lsp := range lsps {
@@ -89,7 +89,7 @@ func LspGetOperation() huma.Operation {
 
 func LspGet(plane plane.Plane) func(ctx context.Context, input *LspGetInput) (*struct{ Body LspDto }, error) {
 	return func(ctx context.Context, input *LspGetInput) (*struct{ Body LspDto }, error) {
-		lsp, err := plane.LspGet(input.Name)
+		lsp, err := plane.Lsp().Get(input.Name)
 
 		if err != nil {
 			return nil, huma.Error404NotFound("LSP not found", err)

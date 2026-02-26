@@ -83,12 +83,12 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, wor
 
 	modelName := step.Kind.(*config.StepKindModel).Name
 
-	modelKey, token, err := s.plane.ScopeModelAcquire(modelName, scope)
+	modelKey, token, err := s.plane.Scope().ModelAcquire(modelName, scope)
 	if err != nil {
 		s.plane.Errorf("step %T %v: %v", step, step, err)
 		return nil, err
 	}
-	defer s.plane.ScopeModelRelease(modelKey, token)
+	defer s.plane.Scope().ModelRelease(modelKey, token)
 
 	document := s.documentGet(workspace, params.TextDocument.URI)
 
@@ -106,7 +106,7 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, wor
 		"Generated completion items",
 	)
 
-	text, err := s.plane.ModelTaskExecClient(modelKey, task, s.clientName)
+	text, err := s.plane.Model().TaskExecClient(modelKey, task, s.clientName)
 	if err != nil {
 		s.plane.Errorf("step %T %v: %v", step, step, err)
 		return nil, err
@@ -141,14 +141,14 @@ func (s *Middleware) eventCompletionLsp(params *protocol.CompletionParams, _ *Wo
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
-	lspKey, token, err := s.plane.ScopeLspAcquire(lspName, scope)
+	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
 		s.plane.Errorf("TextDocumentCompletion %T %v: %v", step, step, err)
 		return nil, err
 	}
-	defer s.plane.ScopeLspRelease(lspKey, token)
+	defer s.plane.Scope().LspRelease(lspKey, token)
 
-	list, err := s.plane.LspEventTextDocumentCompletion(lspKey, params)
+	list, err := s.plane.Lsp().EventTextDocumentCompletion(lspKey, params)
 	if err != nil {
 		s.plane.Errorf("TextDocumentCompletion %T %v: %v", step, step, err)
 		return nil, err
@@ -217,7 +217,7 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 	listCh := make(chan *protocol.CompletionList)
 
 	for _, workspace := range workspaces {
-		usages := s.plane.UsageGetFilteredClient(
+		usages := s.plane.Usage().GetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: util.Ptr(params.TextDocument.URI)},
 			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.listenerName, s.clientName)
 

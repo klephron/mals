@@ -82,28 +82,12 @@ func (s *ListenerController) lspClientStatus(value *ListenerLspClient) controlle
 	return status
 }
 
-func (s *ListenerController) Shutdown() error {
-	s.state.listeners.Range(func(key string, value *Listener) bool {
-		s.ListenerStop(key)
-		s.ListenerDelete(key)
-		return true
-	})
-
-	s.state.statusRW.RLock()
-	cancel := s.state.statusCancel
-	s.state.statusRW.RUnlock()
-
-	cancel()
-
-	return nil
-}
-
-func (s *ListenerController) ListenerStatus(name string) controller.ListenerStatus {
+func (s *ListenerController) Status(name string) controller.ListenerStatus {
 	value, _ := s.state.listeners.Load(name)
 	return s.statusRW(value)
 }
 
-func (s *ListenerController) ListenerRegister(name string, cfg *config.Listener) error {
+func (s *ListenerController) Register(name string, cfg *config.Listener) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if status := s.statusRW(value); status != controller.ListenerAbsent {
@@ -120,7 +104,7 @@ func (s *ListenerController) ListenerRegister(name string, cfg *config.Listener)
 	return nil
 }
 
-func (s *ListenerController) ListenerUnregister(name string) error {
+func (s *ListenerController) Unregister(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -137,7 +121,7 @@ func (s *ListenerController) ListenerUnregister(name string) error {
 	return nil
 }
 
-func (s *ListenerController) ListenerCreate(name string) error {
+func (s *ListenerController) Create(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -183,7 +167,7 @@ func (s *ListenerController) ListenerCreate(name string) error {
 	return fmt.Errorf("unhandled listener %v kind=%v ipc=%v", value.config, value.config.Kind.Kind(), value.config.Ipc.Ipc())
 }
 
-func (s *ListenerController) ListenerDelete(name string) error {
+func (s *ListenerController) Delete(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -200,7 +184,7 @@ func (s *ListenerController) ListenerDelete(name string) error {
 	return nil
 }
 
-func (s *ListenerController) ListenerStart(name string) error {
+func (s *ListenerController) Start(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -219,13 +203,13 @@ func (s *ListenerController) ListenerStart(name string) error {
 
 	go func() {
 		listener.Listener().Run(ctx)
-		s.ListenerStop(listener.Listener().Name())
+		s.Stop(listener.Listener().Name())
 	}()
 
 	return nil
 }
 
-func (s *ListenerController) ListenerStop(name string) error {
+func (s *ListenerController) Stop(name string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -243,7 +227,7 @@ func (s *ListenerController) ListenerStop(name string) error {
 	case *config.ListenerKindLsp:
 		listener := value.listener.(*ListenerMixinLsp)
 		listener.clients.Range(func(key string, value *ListenerLspClient) bool {
-			s.ListenerLspClientShutdown(listener.listener.Name(), key)
+			s.LspClientShutdown(listener.listener.Name(), key)
 			return true
 		})
 	}
@@ -257,7 +241,7 @@ func (s *ListenerController) ListenerStop(name string) error {
 	return nil
 }
 
-func (s *ListenerController) ListenerLspClientOwn(name string, client listener.ListenerLspClient) error {
+func (s *ListenerController) LspClientOwn(name string, client listener.ListenerLspClient) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -290,7 +274,7 @@ func (s *ListenerController) ListenerLspClientOwn(name string, client listener.L
 	return nil
 }
 
-func (s *ListenerController) ListenerLspClientStatus(name string, clientName string) controller.ClientStatus {
+func (s *ListenerController) LspClientStatus(name string, clientName string) controller.ClientStatus {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -314,7 +298,7 @@ func (s *ListenerController) ListenerLspClientStatus(name string, clientName str
 	return s.lspClientStatus(client)
 }
 
-func (s *ListenerController) ListenerLspClientServe(name string, clientName string) error {
+func (s *ListenerController) LspClientServe(name string, clientName string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -345,13 +329,13 @@ func (s *ListenerController) ListenerLspClientServe(name string, clientName stri
 
 	go func() {
 		client.client.Serve(ctx)
-		s.ListenerLspClientShutdown(name, clientName)
+		s.LspClientShutdown(name, clientName)
 	}()
 
 	return nil
 }
 
-func (s *ListenerController) ListenerLspClientShutdown(name string, clientName string) error {
+func (s *ListenerController) LspClientShutdown(name string, clientName string) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -392,7 +376,7 @@ func (s *ListenerController) ListenerLspClientShutdown(name string, clientName s
 	return nil
 }
 
-func (s *ListenerController) ListenerGetConfig(name string) (*config.Listener, error) {
+func (s *ListenerController) GetConfig(name string) (*config.Listener, error) {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -407,7 +391,7 @@ func (s *ListenerController) ListenerGetConfig(name string) (*config.Listener, e
 	return value.config, nil
 }
 
-func (s *ListenerController) ListenerGet(name string) (*controller.ListenerData, error) {
+func (s *ListenerController) Get(name string) (*controller.ListenerData, error) {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -430,11 +414,11 @@ func (s *ListenerController) ListenerGet(name string) (*controller.ListenerData,
 	}, nil
 }
 
-func (s *ListenerController) ListenerGetAll() []*controller.ListenerData {
+func (s *ListenerController) GetAll() []*controller.ListenerData {
 	datas := make([]*controller.ListenerData, 0)
 
 	s.state.listeners.Range(func(key string, value *Listener) bool {
-		data, err := s.ListenerGet(key)
+		data, err := s.Get(key)
 
 		if err == nil {
 			datas = append(datas, data)
