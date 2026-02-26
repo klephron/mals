@@ -1,9 +1,8 @@
-package plane
+package planeimpl
 
 import (
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/internal/plane/controller/client"
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/log"
 	"mals/internal/plane/controller/lsp"
@@ -14,7 +13,6 @@ import (
 )
 
 type Plane struct {
-	client   controller.ClientController
 	listener controller.ListenerController
 	log      controller.LogController
 	lsp      controller.LspController
@@ -26,7 +24,6 @@ type Plane struct {
 func New() plane.Plane {
 	plane := &Plane{}
 
-	plane.client = client.New(plane)
 	plane.listener = listener.New(plane)
 	plane.log = log.New(plane)
 	plane.lsp = lsp.New(plane)
@@ -75,12 +72,6 @@ func (s *Plane) Run(onReady func()) {
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.client.Run(func() { wgReady.Done() })
-		})
-	}
-	{
-		wgReady.Add(1)
-		wg.Go(func() {
 			s.listener.Run(func() { wgReady.Done() })
 		})
 	}
@@ -91,10 +82,6 @@ func (s *Plane) Run(onReady func()) {
 }
 
 func (s *Plane) Shutdown() error {
-	if err := s.client.Shutdown(); err != nil {
-		s.Errorf("%v", err)
-		return err
-	}
 	if err := s.listener.Shutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err

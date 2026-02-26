@@ -13,7 +13,7 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 	if step.Scope != "client" {
 		s.plane.Warnf("TextDocumentDidChange %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
-	scope := scope.NewScopeClient(s.client.Name())
+	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
@@ -128,7 +128,7 @@ func (s *Middleware) eventTextDocumentDidChange(params *protocol.DidChangeTextDo
 	for _, workspace := range workspaces {
 		usages := s.plane.UsageGetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidOpen)}, s.client.Name())
+			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidOpen)}, s.listenerName, s.clientName)
 
 		for _, usage := range usages {
 			if err := s.eventTextDocumentDidChangeWorkflow(params, workspace, usage.Workflow); err != nil {

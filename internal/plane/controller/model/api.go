@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"fmt"
-	"mals/internal/client"
 	"mals/internal/model"
 	"mals/internal/model/metered"
 	"mals/internal/model/openai"
@@ -22,7 +21,7 @@ func statusErrorFlag(name string, actual controller.ModelStatus, expected contro
 	return fmt.Errorf("model %v expected flag %v, got %v", name, expected, actual)
 }
 
-func (s *ModelController) status(value *ModelValue) controller.ModelStatus {
+func (s *ModelController) status(value *Model) controller.ModelStatus {
 	status := controller.ModelAbsent
 
 	if value != nil {
@@ -39,7 +38,7 @@ func (s *ModelController) status(value *ModelValue) controller.ModelStatus {
 	return status
 }
 
-func (s *ModelController) statusRW(value *ModelValue) controller.ModelStatus {
+func (s *ModelController) statusRW(value *Model) controller.ModelStatus {
 	status := controller.ModelAbsent
 
 	if value != nil {
@@ -61,7 +60,7 @@ func (s *ModelController) statusRW(value *ModelValue) controller.ModelStatus {
 }
 
 func (s *ModelController) Shutdown() error {
-	s.state.models.Range(func(key string, value *ModelValue) bool {
+	s.state.models.Range(func(key string, value *Model) bool {
 		s.ModelStop(key)
 		s.ModelDelete(key)
 		return true
@@ -90,7 +89,7 @@ func (s *ModelController) ModelRegister(name string, cfg *config.Model) error {
 
 	switch settings := cfg.Settings.(type) {
 	case *config.ModelSettingsOpenAI:
-		s.state.models.Store(name, &ModelValue{
+		s.state.models.Store(name, &Model{
 			rw:         sync.RWMutex{},
 			config:     cfg,
 			model:      nil,
@@ -271,7 +270,7 @@ func (s *ModelController) ModelGet(name string) (*controller.ModelData, error) {
 func (s *ModelController) ModelGetAll() []*controller.ModelData {
 	datas := make([]*controller.ModelData, 0)
 
-	s.state.models.Range(func(key string, value *ModelValue) bool {
+	s.state.models.Range(func(key string, value *Model) bool {
 		data, err := s.ModelGet(key)
 
 		if err == nil {
@@ -284,7 +283,7 @@ func (s *ModelController) ModelGetAll() []*controller.ModelData {
 	return datas
 }
 
-func (s *ModelController) TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
+func (s *ModelController) TaskExecClient(modelName string, task *model.Task, clientName string) (string, error) {
 	value, _ := s.state.models.Load(modelName)
 
 	if value != nil {
@@ -296,7 +295,7 @@ func (s *ModelController) TaskExecClient(modelName string, task *model.Task, cli
 		return "", statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskExecClient(task, client)
+	return value.queue.taskExecClient(task, clientName)
 }
 
 func (s *ModelController) TaskGet(modelName string, id uuid.UUID) (*model.Task, error) {
@@ -314,7 +313,7 @@ func (s *ModelController) TaskGet(modelName string, id uuid.UUID) (*model.Task, 
 	return value.queue.taskGet(id)
 }
 
-func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
+func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error) {
 	value, _ := s.state.models.Load(modelName)
 
 	if value != nil {
@@ -326,7 +325,7 @@ func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, client c
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskGetClient(id, client)
+	return value.queue.taskGetClient(id, clientName)
 }
 
 func (s *ModelController) TaskGetAll(modelName string) ([]*model.Task, error) {
@@ -344,7 +343,7 @@ func (s *ModelController) TaskGetAll(modelName string) ([]*model.Task, error) {
 	return value.queue.taskGetAll(), nil
 }
 
-func (s *ModelController) TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error) {
+func (s *ModelController) TaskGetAllClient(modelName string, clientName string) ([]*model.Task, error) {
 	value, _ := s.state.models.Load(modelName)
 
 	if value != nil {
@@ -356,10 +355,10 @@ func (s *ModelController) TaskGetAllClient(modelName string, client client.Clien
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskGetAllClient(client), nil
+	return value.queue.taskGetAllClient(clientName), nil
 }
 
-func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
+func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error) {
 	value, _ := s.state.models.Load(modelName)
 
 	if value != nil {
@@ -371,10 +370,10 @@ func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, clien
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskCancelClient(id, client)
+	return value.queue.taskCancelClient(id, clientName)
 }
 
-func (s *ModelController) TaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error) {
+func (s *ModelController) TaskCancelAllClient(modelName string, clientName string) ([]*model.Task, error) {
 	value, _ := s.state.models.Load(modelName)
 
 	if value != nil {
@@ -386,5 +385,5 @@ func (s *ModelController) TaskCancelAllClient(modelName string, client client.Cl
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskCancelAllClient(client)
+	return value.queue.taskCancelAllClient(clientName)
 }

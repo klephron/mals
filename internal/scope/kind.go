@@ -4,14 +4,14 @@ func NewScopeGlobal() *Scope {
 	return NewScope()
 }
 
-func NewScopeClient(client string) *Scope {
-	return NewScope(NewSpace(client))
+func NewScopeClient(listener string, client string) *Scope {
+	return NewScope(NewSpace(listener), NewSpace(client))
 }
 
-func NewScopeWorkflow(client string, workflow string) *Scope {
-	return NewScope(NewSpace(client), NewSpace(workflow))
+func NewScopeWorkflow(listener string, client string, workflow string) *Scope {
+	return NewScope(NewSpace(listener), NewSpace(client), NewSpace(workflow))
 }
 
-func NewScopeStep(client string, workflow string, step string) *Scope {
-	return NewScope(NewSpace(client), NewSpace(workflow), NewSpace(step))
+func NewScopeStep(listener string, client string, workflow string, step string) *Scope {
+	return NewScope(NewSpace(listener), NewSpace(client), NewSpace(workflow), NewSpace(step))
 }

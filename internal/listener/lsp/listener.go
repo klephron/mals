@@ -1,23 +1,21 @@
-package lsp_tcp
+package lsp
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"mals/internal/listener"
 	"mals/internal/plane"
 	"net"
 )
 
-type ListenerLspTcp struct {
-	listener.Listener
+type ListenerLsp struct {
 	name  string
 	addr  string
 	plane plane.Plane
 }
 
-func NewListener(name string, port int, plane plane.Plane) (*ListenerLspTcp, error) {
-	l := &ListenerLspTcp{
+func NewTcp(name string, port int, plane plane.Plane) (*ListenerLsp, error) {
+	l := &ListenerLsp{
 		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
@@ -25,11 +23,11 @@ func NewListener(name string, port int, plane plane.Plane) (*ListenerLspTcp, err
 	return l, nil
 }
 
-func (s *ListenerLspTcp) Name() string {
+func (s *ListenerLsp) Name() string {
 	return s.name
 }
 
-func (s *ListenerLspTcp) Run(ctx context.Context) error {
+func (s *ListenerLsp) Run(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
@@ -60,14 +58,14 @@ func (s *ListenerLspTcp) Run(ctx context.Context) error {
 
 		s.plane.Infof("%s: accepted %v", s.Name(), conn.RemoteAddr())
 
-		client := newClient(s.plane, conn)
+		client := newLspClient(s.plane, s.name, conn)
 
-		if err := s.plane.ClientOwn(client.Name(), client, s); err != nil {
+		if err := s.plane.ListenerLspClientOwn(s.Name(), client); err != nil {
 			s.plane.Warnf("%s: %v", s.Name(), err)
 			continue
 		}
 
-		if err := s.plane.ClientServe(client.Name()); err != nil {
+		if err := s.plane.ListenerLspClientServe(s.Name(), client.Name()); err != nil {
 			s.plane.Warnf("%s: %v", s.Name(), err)
 			continue
 		}

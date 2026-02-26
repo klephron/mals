@@ -19,7 +19,7 @@ func New(plane plane.Plane) *ListenerController {
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			listeners:    xsync.NewMap[string, *ListenerValue](),
+			listeners:    xsync.NewMap[string, *Listener](),
 		},
 		plane: plane,
 	}

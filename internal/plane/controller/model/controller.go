@@ -19,7 +19,7 @@ func New(plane plane.Plane) *ModelController {
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			models:       xsync.NewMap[string, *ModelValue](),
+			models:       xsync.NewMap[string, *Model](),
 		},
 		plane: plane,
 	}

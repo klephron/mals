@@ -7,7 +7,7 @@ import (
 	"mals/pkg/config"
 )
 
-func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
+func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
 	req, ok := msg.(*jsonrpc.Request)
 
 	if !ok {
@@ -33,7 +33,7 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 		return
 	}
 
-	result, err := s.middleware.Initialize(&params, s.Client)
+	result, err := s.middleware.Initialize(&params, s.listenerName, s.clientName)
 	if err != nil {
 		s.plane.Errorf("%v", err)
 		return
@@ -51,7 +51,7 @@ func (s *ClientLsp) handleInitialize(msg jsonrpc.Message) {
 	s.send(&resp)
 }
 
-func (s *ClientLsp) handleInitialized(msg jsonrpc.Message) {
+func (s *LspClient) handleInitialized(msg jsonrpc.Message) {
 	ntf, ok := msg.(*jsonrpc.Notification)
 
 	if !ok {
@@ -71,7 +71,7 @@ func (s *ClientLsp) handleInitialized(msg jsonrpc.Message) {
 	}
 }
 
-func (s *ClientLsp) handleTextDocumentDidOpen(msg jsonrpc.Message) {
+func (s *LspClient) handleTextDocumentDidOpen(msg jsonrpc.Message) {
 	ntf, ok := msg.(*jsonrpc.Notification)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Notification](s)
@@ -90,7 +90,7 @@ func (s *ClientLsp) handleTextDocumentDidOpen(msg jsonrpc.Message) {
 	}
 }
 
-func (s *ClientLsp) handleTextDocumentDidChange(msg jsonrpc.Message) {
+func (s *LspClient) handleTextDocumentDidChange(msg jsonrpc.Message) {
 	ntf, ok := msg.(*jsonrpc.Notification)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Notification](s)
@@ -109,7 +109,7 @@ func (s *ClientLsp) handleTextDocumentDidChange(msg jsonrpc.Message) {
 	}
 }
 
-func (s *ClientLsp) handleTextDocumentDidClose(msg jsonrpc.Message) {
+func (s *LspClient) handleTextDocumentDidClose(msg jsonrpc.Message) {
 	ntf, ok := msg.(*jsonrpc.Notification)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Notification](s)
@@ -128,7 +128,7 @@ func (s *ClientLsp) handleTextDocumentDidClose(msg jsonrpc.Message) {
 	}
 }
 
-func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
+func (s *LspClient) handleTextDocumentCompletion(msg jsonrpc.Message) {
 	req, ok := msg.(*jsonrpc.Request)
 	if !ok {
 		errorParseUnexpectedType[*jsonrpc.Request](s)
@@ -161,7 +161,7 @@ func (s *ClientLsp) handleTextDocumentCompletion(msg jsonrpc.Message) {
 	}()
 }
 
-func (s *ClientLsp) handleShutdown(_ jsonrpc.Message) {
+func (s *LspClient) handleShutdown(_ jsonrpc.Message) {
 	err := s.middleware.Shutdown()
 	if err != nil {
 		s.plane.Errorf("TextDocumentShutdown %v", err)
@@ -169,7 +169,7 @@ func (s *ClientLsp) handleShutdown(_ jsonrpc.Message) {
 	}
 }
 
-func (s *ClientLsp) handle(bytes []byte) {
+func (s *LspClient) handle(bytes []byte) {
 	msg, err := jsonrpc.DecodeMessage(bytes)
 
 	if err != nil {

@@ -3,8 +3,9 @@ package listener
 import (
 	"context"
 	"fmt"
-	"mals/internal/listener/api_http"
-	"mals/internal/listener/lsp_tcp"
+	"mals/internal/listener"
+	"mals/internal/listener/api"
+	"mals/internal/listener/lsp"
 	"mals/internal/plane/controller"
 	"mals/pkg/config"
 	"sync"
@@ -20,7 +21,7 @@ func statusErrorFlag(name string, actual controller.ListenerStatus, expected con
 	return fmt.Errorf("listener %v expected flag %v, got %v", name, expected, actual)
 }
 
-func (s *ListenerController) status(value *ListenerValue) controller.ListenerStatus {
+func (s *ListenerController) status(value *Listener) controller.ListenerStatus {
 	status := controller.ListenerAbsent
 
 	if value != nil {
@@ -37,7 +38,7 @@ func (s *ListenerController) status(value *ListenerValue) controller.ListenerSta
 	return status
 }
 
-func (s *ListenerController) statusRW(value *ListenerValue) controller.ListenerStatus {
+func (s *ListenerController) statusRW(value *Listener) controller.ListenerStatus {
 	status := controller.ListenerAbsent
 
 	if value != nil {
@@ -58,8 +59,31 @@ func (s *ListenerController) statusRW(value *ListenerValue) controller.ListenerS
 	return status
 }
 
+func clientStatusErrorEq(name string, clientName string, actual controller.ClientStatus, expected controller.ClientStatus) error {
+	return fmt.Errorf("listener %v client %v expected eq %v, got %v", name, clientName, expected, actual)
+}
+
+func clientStatusErrorFlag(name string, clientName string, actual controller.ClientStatus, expected controller.ClientStatus) error {
+	return fmt.Errorf("listener %v client %v expected flag %v, got %v", name, clientName, expected, actual)
+}
+
+func (s *ListenerController) lspClientStatus(value *ListenerLspClient) controller.ClientStatus {
+	status := controller.ClientAbsent
+
+	if value != nil {
+		if value.client != nil {
+			status |= controller.ClientCreated
+		}
+		if value.cancelFunc != nil {
+			status |= controller.ClientStarted
+		}
+	}
+
+	return status
+}
+
 func (s *ListenerController) Shutdown() error {
-	s.state.listeners.Range(func(key string, value *ListenerValue) bool {
+	s.state.listeners.Range(func(key string, value *Listener) bool {
 		s.ListenerStop(key)
 		s.ListenerDelete(key)
 		return true
@@ -86,12 +110,11 @@ func (s *ListenerController) ListenerRegister(name string, cfg *config.Listener)
 		return statusErrorEq(name, status, controller.ListenerAbsent)
 	}
 
-	s.state.listeners.Store(name, &ListenerValue{
+	s.state.listeners.Store(name, &Listener{
 		rw:         sync.RWMutex{},
 		config:     cfg,
-		listener:   nil,
 		cancelFunc: nil,
-		clients:    xsync.NewMap[string, struct{}](),
+		listener:   nil,
 	})
 
 	return nil
@@ -131,11 +154,13 @@ func (s *ListenerController) ListenerCreate(name string) error {
 		switch ipc := value.config.Ipc.(type) {
 
 		case *config.ListenerIpcHttp:
-			listener, err := api_http.NewListener(name, ipc.Port, s.plane)
+			listener, err := api.NewHttp(name, ipc.Port, s.plane)
 			if err != nil {
 				return err
 			}
-			value.listener = listener
+			value.listener = &ListenerMixinApi{
+				listener: listener,
+			}
 			return nil
 		}
 
@@ -143,11 +168,14 @@ func (s *ListenerController) ListenerCreate(name string) error {
 		switch ipc := value.config.Ipc.(type) {
 
 		case *config.ListenerIpcTcp:
-			listener, err := lsp_tcp.NewListener(name, ipc.Port, s.plane)
+			listener, err := lsp.NewTcp(name, ipc.Port, s.plane)
 			if err != nil {
 				return err
 			}
-			value.listener = listener
+			value.listener = &ListenerMixinLsp{
+				listener: listener,
+				clients:  xsync.NewMap[string, *ListenerLspClient](),
+			}
 			return nil
 		}
 	}
@@ -190,8 +218,8 @@ func (s *ListenerController) ListenerStart(name string) error {
 	listener := value.listener
 
 	go func() {
-		listener.Run(ctx)
-		s.ListenerStop(listener.Name())
+		listener.Listener().Run(ctx)
+		s.ListenerStop(listener.Listener().Name())
 	}()
 
 	return nil
@@ -211,10 +239,14 @@ func (s *ListenerController) ListenerStop(name string) error {
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	value.clients.Range(func(key string, value struct{}) bool {
-		s.plane.ClientShutdown(key)
-		return true
-	})
+	switch value.config.Kind.(type) {
+	case *config.ListenerKindLsp:
+		listener := value.listener.(*ListenerMixinLsp)
+		listener.clients.Range(func(key string, value *ListenerLspClient) bool {
+			s.ListenerLspClientShutdown(listener.listener.Name(), key)
+			return true
+		})
+	}
 
 	cancel := value.cancelFunc
 	value.cancelFunc = nil
@@ -225,52 +257,137 @@ func (s *ListenerController) ListenerStop(name string) error {
 	return nil
 }
 
-func (s *ListenerController) ListenerClientAdd(name string, client string) error {
+func (s *ListenerController) ListenerLspClientOwn(name string, client listener.ListenerLspClient) error {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
-		value.rw.RLock()
+		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
 	if status := s.status(value); status&controller.ListenerStarted == 0 {
-		if value != nil {
-			value.rw.RUnlock()
-		}
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	value.rw.RUnlock()
-
-	_, ok := value.clients.Load(client)
-	if ok {
-		return fmt.Errorf("listener %v client %v exists", name, client)
+	switch kind := value.config.Kind.(type) {
+	case *config.ListenerKindLsp:
+	default:
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
 	}
 
-	value.clients.Store(client, struct{}{})
+	listener := value.listener.(*ListenerMixinLsp)
+	clientv, _ := listener.clients.Load(client.Name())
+
+	if status := s.lspClientStatus(clientv); status != controller.ClientAbsent {
+		return clientStatusErrorEq(name, client.Name(), status, controller.ClientAbsent)
+	}
+
+	listener.clients.Store(client.Name(), &ListenerLspClient{
+		client:     client,
+		cancelFunc: nil,
+	})
 
 	return nil
 }
 
-func (s *ListenerController) ListenerClientRemove(name string, client string) error {
+func (s *ListenerController) ListenerLspClientStatus(name string, clientName string) controller.ClientStatus {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
 		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.ListenerStarted == 0 {
+		return controller.ClientAbsent
+	}
+
+	switch value.config.Kind.(type) {
+	case *config.ListenerKindLsp:
+	default:
+		return controller.ClientAbsent
+	}
+
+	listener := value.listener.(*ListenerMixinLsp)
+	client, _ := listener.clients.Load(clientName)
+
+	return s.lspClientStatus(client)
+}
+
+func (s *ListenerController) ListenerLspClientServe(name string, clientName string) error {
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
+		defer value.rw.Unlock()
+	}
+
+	if status := s.status(value); status&controller.ListenerStarted == 0 {
+		return statusErrorFlag(name, status, controller.ListenerStarted)
+	}
+
+	switch kind := value.config.Kind.(type) {
+	case *config.ListenerKindLsp:
+	default:
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
+	}
+
+	listener := value.listener.(*ListenerMixinLsp)
+	client, _ := listener.clients.Load(clientName)
+
+	if status := s.lspClientStatus(client); status != controller.ClientCreated {
+		return clientStatusErrorEq(name, clientName, status, controller.ClientCreated)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	client.cancelFunc = cancel
+
+	go func() {
+		client.client.Serve(ctx)
+		s.ListenerLspClientShutdown(name, clientName)
+	}()
+
+	return nil
+}
+
+func (s *ListenerController) ListenerLspClientShutdown(name string, clientName string) error {
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.Lock()
 	}
 
 	if status := s.status(value); status&controller.ListenerStarted == 0 {
 		if value != nil {
-			value.rw.RUnlock()
+			value.rw.Unlock()
 		}
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	value.rw.RUnlock()
-
-	_, ok := value.clients.LoadAndDelete(client)
-	if !ok {
-		return fmt.Errorf("listener %v client %v does not exist", name, client)
+	switch kind := value.config.Kind.(type) {
+	case *config.ListenerKindLsp:
+	default:
+		value.rw.Unlock()
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
 	}
+
+	listener := value.listener.(*ListenerMixinLsp)
+	client, _ := listener.clients.Load(clientName)
+
+	if status := s.lspClientStatus(client); status&controller.ClientStarted == 0 {
+		value.rw.Unlock()
+		return clientStatusErrorFlag(name, clientName, controller.ClientStarted, status)
+	}
+
+	cancel := client.cancelFunc
+	client.cancelFunc = nil
+
+	listener.clients.Delete(clientName)
+
+	value.rw.Unlock()
+
+	cancel()
 
 	return nil
 }
@@ -316,7 +433,7 @@ func (s *ListenerController) ListenerGet(name string) (*controller.ListenerData,
 func (s *ListenerController) ListenerGetAll() []*controller.ListenerData {
 	datas := make([]*controller.ListenerData, 0)
 
-	s.state.listeners.Range(func(key string, value *ListenerValue) bool {
+	s.state.listeners.Range(func(key string, value *Listener) bool {
 		data, err := s.ListenerGet(key)
 
 		if err == nil {

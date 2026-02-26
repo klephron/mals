@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"mals/internal/client"
 	"mals/internal/model"
 	"mals/pkg/config"
 
@@ -39,11 +38,11 @@ type ModelController interface {
 	ModelGet(name string) (*ModelData, error)
 	ModelGetAll() []*ModelData
 
-	TaskExecClient(modelName string, task *model.Task, client client.Client) (string, error)
+	TaskExecClient(modelName string, task *model.Task, clientName string) (string, error)
 	TaskGet(modelName string, id uuid.UUID) (*model.Task, error)
-	TaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
+	TaskGetClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error)
 	TaskGetAll(modelName string) ([]*model.Task, error)
-	TaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error)
-	TaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
-	TaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error)
+	TaskGetAllClient(modelName string, clientName string) ([]*model.Task, error)
+	TaskCancelClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error)
+	TaskCancelAllClient(modelName string, clientName string) ([]*model.Task, error)
 }

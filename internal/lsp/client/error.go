@@ -6,7 +6,7 @@ import (
 	"mals/internal/lsp/protocol"
 )
 
-func errorParseUnexpectedType[T jsonrpc.Message](s *ClientLsp) {
+func errorParseUnexpectedType[T jsonrpc.Message](s *LspClient) {
 	var dummy T
 
 	resp := jsonrpc.Response{

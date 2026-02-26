@@ -106,7 +106,7 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, wor
 		"Generated completion items",
 	)
 
-	text, err := s.plane.ModelTaskExecClient(modelKey, task, s.client)
+	text, err := s.plane.ModelTaskExecClient(modelKey, task, s.clientName)
 	if err != nil {
 		s.plane.Errorf("step %T %v: %v", step, step, err)
 		return nil, err
@@ -137,7 +137,7 @@ func (s *Middleware) eventCompletionLsp(params *protocol.CompletionParams, _ *Wo
 	if step.Scope != "client" {
 		s.plane.Warnf("TextDocumentCompletion %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
-	scope := scope.NewScopeClient(s.client.Name())
+	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
@@ -219,7 +219,7 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 	for _, workspace := range workspaces {
 		usages := s.plane.UsageGetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: util.Ptr(params.TextDocument.URI)},
-			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.client.Name())
+			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.listenerName, s.clientName)
 
 		for _, usage := range usages {
 			s.plane.Infof("%T %v: usage %v: completion", s, s.Name(), usage.Name)

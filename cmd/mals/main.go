@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"mals/internal/plane/plane"
+	"mals/internal/plane/planeimpl"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	ctx, cancel := signalHandle(context.Background())
 	defer cancel()
 
-	plane := plane.New()
+	plane := planeimpl.New()
 
 	plane.Run(func() {
 		go func() {

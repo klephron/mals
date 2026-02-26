@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"mals/internal/client"
 	"mals/internal/lsp/protocol"
 	"mals/internal/scope"
 	"mals/internal/usage"
@@ -16,7 +15,7 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 	if step.Scope != "client" {
 		s.plane.Warnf("Initialize %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
-	scope := scope.NewScopeClient(s.client.Name())
+	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
@@ -93,7 +92,7 @@ func (s *Middleware) eventInitialize(params *protocol.InitializeParams, workspac
 	for _, workspace := range workspaces {
 		usages := s.plane.UsageGetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-			usage.EventFilter{Event: util.Ptr(config.EventInitialize)}, s.client.Name())
+			usage.EventFilter{Event: util.Ptr(config.EventInitialize)}, s.listenerName, s.clientName)
 
 		for _, usage := range usages {
 			if err := s.eventInitializeWorkflow(params, workspace, usage.Workflow); err != nil {
@@ -106,9 +105,9 @@ func (s *Middleware) eventInitialize(params *protocol.InitializeParams, workspac
 	return nil
 }
 
-func (s *Middleware) Initialize(params *protocol.InitializeParams, client client.Client) (*protocol.InitializeResult, error) {
-
-	s.client = client
+func (s *Middleware) Initialize(params *protocol.InitializeParams, listenerName string, clientName string) (*protocol.InitializeResult, error) {
+	s.listenerName = listenerName
+	s.clientName = clientName
 
 	for _, workspace := range params.WorkspaceFolders {
 		s.workspaceAdd(workspace.URI, workspace.Name)

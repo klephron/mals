@@ -17,7 +17,7 @@ func statusErrorFlag(name string, actual controller.LogStatus, expected controll
 	return fmt.Errorf("log %v expected flag %v, got %v", name, expected, actual)
 }
 
-func (s *LogController) status(value *LogValue) controller.LogStatus {
+func (s *LogController) status(value *Log) controller.LogStatus {
 	status := controller.LogAbsent
 
 	if value != nil {
@@ -34,7 +34,7 @@ func (s *LogController) status(value *LogValue) controller.LogStatus {
 	return status
 }
 
-func (s *LogController) statusRW(value *LogValue) controller.LogStatus {
+func (s *LogController) statusRW(value *Log) controller.LogStatus {
 	status := controller.LogAbsent
 
 	if value != nil {
@@ -56,7 +56,7 @@ func (s *LogController) statusRW(value *LogValue) controller.LogStatus {
 }
 
 func (s *LogController) Shutdown() error {
-	s.state.logs.Range(func(key string, value *LogValue) bool {
+	s.state.logs.Range(func(key string, value *Log) bool {
 		s.LogStop(key)
 		s.LogDelete(key)
 		return true
@@ -83,7 +83,7 @@ func (s *LogController) LogRegister(name string, cfg *config.Log) error {
 		return statusErrorEq(name, status, controller.LogAbsent)
 	}
 
-	s.state.logs.Store(name, &LogValue{
+	s.state.logs.Store(name, &Log{
 		rw:      sync.RWMutex{},
 		config:  cfg,
 		log:     nil,
@@ -214,7 +214,7 @@ func (s *LogController) LogGet(name string) (*controller.LogData, error) {
 func (s *LogController) LogGetAll() []*controller.LogData {
 	datas := make([]*controller.LogData, 0)
 
-	s.state.logs.Range(func(key string, value *LogValue) bool {
+	s.state.logs.Range(func(key string, value *Log) bool {
 		data, err := s.LogGet(key)
 
 		if err == nil {
@@ -228,7 +228,7 @@ func (s *LogController) LogGetAll() []*controller.LogData {
 }
 
 func (s *LogController) log(level log.Level, format string, a ...any) error {
-	s.state.logs.Range(func(key string, value *LogValue) bool {
+	s.state.logs.Range(func(key string, value *Log) bool {
 		value.rw.RLock()
 		defer value.rw.RUnlock()
 

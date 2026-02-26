@@ -18,7 +18,7 @@ func statusErrorFlag(name string, actual controller.LspStatus, expected controll
 	return fmt.Errorf("model %v expected flag %v, got %v", name, expected, actual)
 }
 
-func (s *LspController) status(value *LspValue) controller.LspStatus {
+func (s *LspController) status(value *Lsp) controller.LspStatus {
 	status := controller.LspAbsent
 
 	if value != nil {
@@ -35,7 +35,7 @@ func (s *LspController) status(value *LspValue) controller.LspStatus {
 	return status
 }
 
-func (s *LspController) statusRW(value *LspValue) controller.LspStatus {
+func (s *LspController) statusRW(value *Lsp) controller.LspStatus {
 	status := controller.LspAbsent
 
 	if value != nil {
@@ -57,7 +57,7 @@ func (s *LspController) statusRW(value *LspValue) controller.LspStatus {
 }
 
 func (s *LspController) Shutdown() error {
-	s.state.lsps.Range(func(key string, value *LspValue) bool {
+	s.state.lsps.Range(func(key string, value *Lsp) bool {
 		s.LspStop(key)
 		s.LspDelete(key)
 		return true
@@ -86,7 +86,7 @@ func (s *LspController) LspRegister(name string, cfg *config.Lsp) error {
 
 	switch settings := cfg.Settings.(type) {
 	case *config.LspSettingsStdio:
-		s.state.lsps.Store(name, &LspValue{
+		s.state.lsps.Store(name, &Lsp{
 			rw:         sync.RWMutex{},
 			config:     cfg,
 			lsp:        nil,
@@ -277,7 +277,7 @@ func (s *LspController) LspGet(lspName string) (*controller.LspData, error) {
 func (s *LspController) LspGetAll() []*controller.LspData {
 	datas := make([]*controller.LspData, 0)
 
-	s.state.lsps.Range(func(key string, value *LspValue) bool {
+	s.state.lsps.Range(func(key string, value *Lsp) bool {
 		data, err := s.LspGet(key)
 
 		if err == nil {

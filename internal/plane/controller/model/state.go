@@ -9,17 +9,17 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type ModelValue struct {
+type State struct {
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+
+	models *xsync.Map[string, *Model]
+}
+
+type Model struct {
 	rw         sync.RWMutex
 	config     *config.Model
 	model      model.Model
 	queue      *TaskQueue
 	cancelFunc context.CancelFunc
-}
-
-type State struct {
-	statusRW     sync.RWMutex
-	statusCancel context.CancelFunc
-
-	models *xsync.Map[string, *ModelValue]
 }

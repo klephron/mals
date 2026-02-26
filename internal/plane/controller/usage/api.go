@@ -60,13 +60,7 @@ func (s *UsageController) UsageGetFiltered(condition usage.ConditionFilter, even
 	return usage.UsagesFilter(usages, condition, event)
 }
 
-func (s *UsageController) UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage {
-	listener, err := s.plane.ClientGetListener(client)
-	if err != nil {
-		s.plane.Warnf("client %v listener is nil: %v", client, err)
-		return nil
-	}
-
+func (s *UsageController) UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, listener string, client string) []*config.Usage {
 	listenerConfig, err := s.plane.ListenerGetConfig(listener)
 	if err != nil {
 		s.plane.Warnf("%v", err)

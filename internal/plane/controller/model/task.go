@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"fmt"
-	"mals/internal/client"
 	"mals/internal/model"
 	"sync"
 
@@ -17,11 +16,11 @@ type TaskResult struct {
 }
 
 type TaskRequest struct {
-	client client.Client
-	task   *model.Task
-	result chan TaskResult
-	ctx    context.Context
-	cancel context.CancelFunc
+	clientName string
+	task       *model.Task
+	result     chan TaskResult
+	ctx        context.Context
+	cancel     context.CancelFunc
 }
 
 type TaskQueue struct {
@@ -96,7 +95,7 @@ func (s *TaskQueue) worker() {
 	}
 }
 
-func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) (string, error) {
+func (s *TaskQueue) taskExecClient(task *model.Task, clientName string) (string, error) {
 	s.rw.RLock()
 
 	if s.ctx == nil {
@@ -107,11 +106,11 @@ func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) (stri
 	taskCtx, taskCancel := context.WithCancel(s.ctx)
 
 	request := &TaskRequest{
-		client: client,
-		task:   task,
-		result: make(chan TaskResult, 1),
-		ctx:    taskCtx,
-		cancel: taskCancel,
+		clientName: clientName,
+		task:       task,
+		result:     make(chan TaskResult, 1),
+		ctx:        taskCtx,
+		cancel:     taskCancel,
 	}
 
 	s.mapped.Store(task.Id, request)
@@ -123,19 +122,19 @@ func (s *TaskQueue) taskExecClient(task *model.Task, client client.Client) (stri
 	return result.text, result.error
 }
 
-func (s *TaskQueue) taskCancelClient(id uuid.UUID, client client.Client) (*model.Task, error) {
+func (s *TaskQueue) taskCancelClient(id uuid.UUID, clientName string) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
-	if !ok || request.client != client {
+	if !ok || request.clientName != clientName {
 		return nil, fmt.Errorf("task %v not found", id)
 	}
 	request.cancel()
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskCancelAllClient(client client.Client) ([]*model.Task, error) {
+func (s *TaskQueue) taskCancelAllClient(clientName string) ([]*model.Task, error) {
 	ids := make([]*model.Task, 0)
 	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
-		if value.client != client {
+		if value.clientName != clientName {
 			return true
 		}
 		value.cancel()
@@ -145,9 +144,9 @@ func (s *TaskQueue) taskCancelAllClient(client client.Client) ([]*model.Task, er
 	return ids, nil
 }
 
-func (s *TaskQueue) taskGetClient(id uuid.UUID, client client.Client) (*model.Task, error) {
+func (s *TaskQueue) taskGetClient(id uuid.UUID, clientName string) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
-	if !ok || request.client != client {
+	if !ok || request.clientName != clientName {
 		return nil, fmt.Errorf("task %v not found", id)
 	}
 	return request.task, nil
@@ -161,10 +160,10 @@ func (s *TaskQueue) taskGet(id uuid.UUID) (*model.Task, error) {
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskGetAllClient(client client.Client) []*model.Task {
+func (s *TaskQueue) taskGetAllClient(clientName string) []*model.Task {
 	tasks := make([]*model.Task, 0)
 	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
-		if value.client != client {
+		if value.clientName != clientName {
 			return true
 		}
 		tasks = append(tasks, value.task)

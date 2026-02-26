@@ -19,7 +19,7 @@ func New(plane plane.Plane) *LogController {
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			logs:         xsync.NewMap[string, *LogValue](),
+			logs:         xsync.NewMap[string, *Log](),
 		},
 		plane: plane,
 	}

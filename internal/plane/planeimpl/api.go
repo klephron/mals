@@ -1,7 +1,6 @@
-package plane
+package planeimpl
 
 import (
-	"mals/internal/client"
 	"mals/internal/listener"
 	"mals/internal/lsp/protocol"
 	"mals/internal/model"
@@ -12,30 +11,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-func (s *Plane) ClientStatus(name string) controller.ClientStatus {
-	return s.client.ClientStatus(name)
-}
-
-func (s *Plane) ClientOwn(name string, client client.Client, listener listener.Listener) error {
-	return s.client.ClientOwn(name, client, listener)
-}
-
-func (s *Plane) ClientServe(name string) error {
-	return s.client.ClientServe(name)
-}
-
-func (s *Plane) ClientShutdown(name string) error {
-	return s.client.ClientShutdown(name)
-}
-
-func (s *Plane) ClientShutdownSilent(name string) error {
-	return s.client.ClientShutdownSilent(name)
-}
-
-func (s *Plane) ClientGetListener(name string) (string, error) {
-	return s.client.ClientGetListener(name)
-}
 
 func (s *Plane) ListenerStatus(name string) controller.ListenerStatus {
 	return s.listener.ListenerStatus(name)
@@ -65,12 +40,16 @@ func (s *Plane) ListenerStop(name string) error {
 	return s.listener.ListenerStop(name)
 }
 
-func (s *Plane) ListenerClientAdd(name string, client string) error {
-	return s.listener.ListenerClientAdd(name, client)
+func (s *Plane) ListenerLspClientOwn(name string, client listener.ListenerLspClient) error {
+	return s.listener.ListenerLspClientOwn(name, client)
 }
 
-func (s *Plane) ListenerClientRemove(name string, client string) error {
-	return s.listener.ListenerClientRemove(name, client)
+func (s *Plane) ListenerLspClientServe(name string, clientName string) error {
+	return s.listener.ListenerLspClientServe(name, clientName)
+}
+
+func (s *Plane) ListenerLspClientShutdown(name string, clientName string) error {
+	return s.listener.ListenerLspClientShutdown(name, clientName)
 }
 
 func (s *Plane) ListenerGetConfig(name string) (*config.Listener, error) {
@@ -245,24 +224,24 @@ func (s *Plane) ModelGetAll() []*controller.ModelData {
 	return s.model.ModelGetAll()
 }
 
-func (s *Plane) ModelTaskExecClient(modelName string, task *model.Task, client client.Client) (string, error) {
-	return s.model.TaskExecClient(modelName, task, client)
+func (s *Plane) ModelTaskExecClient(modelName string, task *model.Task, clientName string) (string, error) {
+	return s.model.TaskExecClient(modelName, task, clientName)
 }
 
-func (s *Plane) ModelTaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
-	return s.model.TaskGetClient(modelName, id, client)
+func (s *Plane) ModelTaskGetClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error) {
+	return s.model.TaskGetClient(modelName, id, clientName)
 }
 
-func (s *Plane) ModelTaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error) {
-	return s.model.TaskGetAllClient(modelName, client)
+func (s *Plane) ModelTaskGetAllClient(modelName string, clientName string) ([]*model.Task, error) {
+	return s.model.TaskGetAllClient(modelName, clientName)
 }
 
-func (s *Plane) ModelTaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error) {
-	return s.model.TaskCancelClient(modelName, id, client)
+func (s *Plane) ModelTaskCancelClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error) {
+	return s.model.TaskCancelClient(modelName, id, clientName)
 }
 
-func (s *Plane) ModelTaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error) {
-	return s.model.TaskCancelAllClient(modelName, client)
+func (s *Plane) ModelTaskCancelAllClient(modelName string, clientName string) ([]*model.Task, error) {
+	return s.model.TaskCancelAllClient(modelName, clientName)
 }
 
 func (s *Plane) ScopeModelRegister(config *config.Model) error {
@@ -313,8 +292,8 @@ func (s *Plane) UsageGetFiltered(condition usage.ConditionFilter, event usage.Ev
 	return s.usage.UsageGetFiltered(condition, event)
 }
 
-func (s *Plane) UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage {
-	return s.usage.UsageGetFilteredClient(condition, event, client)
+func (s *Plane) UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, listener string, client string) []*config.Usage {
+	return s.usage.UsageGetFilteredClient(condition, event, listener, client)
 }
 
 func (s *Plane) UsageGetAll() []*config.Usage {

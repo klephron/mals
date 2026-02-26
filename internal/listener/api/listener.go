@@ -1,23 +1,21 @@
-package api_http
+package api
 
 import (
 	"context"
 	"fmt"
-	"mals/internal/listener"
 	"mals/internal/plane"
 	"net/http"
 	"time"
 )
 
-type ListenerApiHttp struct {
-	listener.Listener
+type ListenerApi struct {
 	name  string
 	addr  string
 	plane plane.Plane
 }
 
-func NewListener(name string, port int, plane plane.Plane) (*ListenerApiHttp, error) {
-	l := &ListenerApiHttp{
+func NewHttp(name string, port int, plane plane.Plane) (*ListenerApi, error) {
+	l := &ListenerApi{
 		name:  name,
 		addr:  fmt.Sprintf(":%d", port),
 		plane: plane,
@@ -25,11 +23,11 @@ func NewListener(name string, port int, plane plane.Plane) (*ListenerApiHttp, er
 	return l, nil
 }
 
-func (s *ListenerApiHttp) Name() string {
+func (s *ListenerApi) Name() string {
 	return s.name
 }
 
-func (s *ListenerApiHttp) Run(ctx context.Context) error {
+func (s *ListenerApi) Run(ctx context.Context) error {
 	errCh := make(chan error)
 	defer close(errCh)
 

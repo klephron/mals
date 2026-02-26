@@ -61,7 +61,7 @@ func (s *ScopeController) ScopeModelAcquire(name string, scope *scope.Scope) (st
 			return "", nil, fmt.Errorf("ScopeModelAcquire model %v does not exist", name)
 		}
 
-		r := &ResourceModel{
+		r := &Model{
 			fullname:     mangleName(name, scope),
 			config:       config,
 			dependencies: xsync.NewMap[string, *ScopeToken](),
@@ -148,7 +148,7 @@ func (s *ScopeController) ScopeLspAcquire(name string, scope *scope.Scope) (stri
 			return "", nil, fmt.Errorf("ScopeLspAcquire lsp %v does not exist", name)
 		}
 
-		r := &ResourceLsp{
+		r := &Lsp{
 			fullname:     mangleName(name, scope),
 			config:       config,
 			dependencies: xsync.NewMap[string, *ScopeToken](),
@@ -213,7 +213,7 @@ func (s *ScopeController) ScopeLspRelease(fullname string, token controller.Scop
 }
 
 func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
-	current.lsps.Range(func(name string, resource *ResourceLsp) bool {
+	current.lsps.Range(func(name string, resource *Lsp) bool {
 		resource.rw.Lock()
 		defer resource.rw.Unlock()
 
@@ -246,7 +246,7 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 		return true
 	})
 
-	current.models.Range(func(name string, resource *ResourceModel) bool {
+	current.models.Range(func(name string, resource *Model) bool {
 		resource.rw.Lock()
 		defer resource.rw.Unlock()
 
@@ -329,7 +329,7 @@ func (s *ScopeController) scopeTree(src *Space) *controller.Space {
 		return true
 	})
 
-	src.lsps.Range(func(key string, val *ResourceLsp) bool {
+	src.lsps.Range(func(key string, val *Lsp) bool {
 		val.rw.RLock()
 		deps := make(map[string]controller.ScopeToken)
 		val.dependencies.Range(func(key string, value *ScopeToken) bool {
@@ -345,7 +345,7 @@ func (s *ScopeController) scopeTree(src *Space) *controller.Space {
 		return true
 	})
 
-	src.models.Range(func(key string, val *ResourceModel) bool {
+	src.models.Range(func(key string, val *Model) bool {
 		val.rw.RLock()
 		deps := make(map[string]controller.ScopeToken)
 		val.dependencies.Range(func(key string, value *ScopeToken) bool {

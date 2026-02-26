@@ -12,7 +12,7 @@ func (s *Middleware) eventShutdownLsp(_ *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
 		s.plane.Warnf("Shutdown %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
-	scope := scope.NewScopeClient(s.client.Name())
+	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
@@ -55,7 +55,7 @@ func (s *Middleware) eventShutdown(workspaces []*Workspace) error {
 	for _, workspace := range workspaces {
 		usages := s.plane.UsageGetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-			usage.EventFilter{Event: util.Ptr(config.EventShutdown)}, s.client.Name())
+			usage.EventFilter{Event: util.Ptr(config.EventShutdown)}, s.listenerName, s.clientName)
 
 		for _, usage := range usages {
 			if err := s.eventShutdownWorkflow(workspace, usage.Workflow); err != nil {

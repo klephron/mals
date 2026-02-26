@@ -19,7 +19,7 @@ func New(plane plane.Plane) *LspController {
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			lsps:         xsync.NewMap[string, *LspValue](),
+			lsps:         xsync.NewMap[string, *Lsp](),
 		},
 		plane: plane,
 	}

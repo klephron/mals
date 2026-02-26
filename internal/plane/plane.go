@@ -1,7 +1,6 @@
 package plane
 
 import (
-	"mals/internal/client"
 	"mals/internal/listener"
 	"mals/internal/lsp/protocol"
 	"mals/internal/model"
@@ -17,13 +16,6 @@ type Plane interface {
 	Run(onReady func())
 	Shutdown() error
 
-	ClientStatus(name string) controller.ClientStatus
-	ClientOwn(name string, client client.Client, listener listener.Listener) error
-	ClientServe(name string) error
-	ClientShutdown(name string) error
-	ClientShutdownSilent(name string) error
-	ClientGetListener(name string) (string, error)
-
 	ListenerStatus(name string) controller.ListenerStatus
 	ListenerRegister(name string, config *config.Listener) error
 	ListenerUnregister(name string) error
@@ -31,8 +23,9 @@ type Plane interface {
 	ListenerDelete(name string) error
 	ListenerStart(name string) error
 	ListenerStop(name string) error
-	ListenerClientAdd(name string, client string) error
-	ListenerClientRemove(name string, client string) error
+	ListenerLspClientOwn(name string, client listener.ListenerLspClient) error
+	ListenerLspClientServe(name string, clientName string) error
+	ListenerLspClientShutdown(name string, clientName string) error
 	ListenerGetConfig(name string) (*config.Listener, error)
 	ListenerGet(name string) (*controller.ListenerData, error)
 	ListenerGetAll() []*controller.ListenerData
@@ -80,11 +73,11 @@ type Plane interface {
 	ModelStop(name string) error
 	ModelGet(name string) (*controller.ModelData, error)
 	ModelGetAll() []*controller.ModelData
-	ModelTaskExecClient(modelName string, task *model.Task, client client.Client) (string, error)
-	ModelTaskGetClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
-	ModelTaskGetAllClient(modelName string, client client.Client) ([]*model.Task, error)
-	ModelTaskCancelClient(modelName string, id uuid.UUID, client client.Client) (*model.Task, error)
-	ModelTaskCancelAllClient(modelName string, client client.Client) ([]*model.Task, error)
+	ModelTaskExecClient(modelName string, task *model.Task, clientName string) (string, error)
+	ModelTaskGetClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error)
+	ModelTaskGetAllClient(modelName string, clientName string) ([]*model.Task, error)
+	ModelTaskCancelClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error)
+	ModelTaskCancelAllClient(modelName string, clientName string) ([]*model.Task, error)
 
 	ScopeModelRegister(config *config.Model) error
 	ScopeModelAcquire(name string, scope *scope.Scope) (string, controller.ScopeToken, error)
@@ -99,6 +92,6 @@ type Plane interface {
 	UsageUnregister(name string) error
 	UsageGet(name string) (*config.Usage, error)
 	UsageGetFiltered(condition usage.ConditionFilter, event usage.EventFilter) []*config.Usage
-	UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, client string) []*config.Usage
+	UsageGetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, listener string, client string) []*config.Usage
 	UsageGetAll() []*config.Usage
 }

@@ -3,42 +3,42 @@ package client
 import (
 	"bufio"
 	"context"
-	"mals/internal/client"
+	"fmt"
 	"mals/internal/jsonrpc"
 	"mals/internal/middleware"
 	"mals/internal/plane"
 	"mals/internal/scope"
 )
 
-type ClientLsp struct {
-	client.Client
-
-	plane   plane.Plane
-	scanner *bufio.Scanner
-	writer  *bufio.Writer
-
-	middleware *middleware.Middleware
+type LspClient struct {
+	listenerName string
+	clientName   string
+	plane        plane.Plane
+	scanner      *bufio.Scanner
+	writer       *bufio.Writer
+	middleware   *middleware.Middleware
 }
 
-func New(plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *ClientLsp {
-	s := &ClientLsp{
-		plane:      plane,
-		scanner:    scanner,
-		writer:     writer,
-		middleware: middleware.New(plane),
+func New(listenerName string, clientName string, plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *LspClient {
+	s := &LspClient{
+		listenerName: listenerName,
+		clientName:   clientName,
+		plane:        plane,
+		scanner:      scanner,
+		writer:       writer,
+		middleware:   middleware.New(plane),
 	}
-	s.Client = s
 
 	s.scanner.Split(jsonrpc.ScannerSplit)
 
 	return s
 }
 
-func (s *ClientLsp) Name() string {
-	return s.Client.Name()
+func (s *LspClient) Name() string {
+	return fmt.Sprintf("%v:%v", s.listenerName, s.clientName)
 }
 
-func (s *ClientLsp) Serve(ctx context.Context) error {
+func (s *LspClient) Serve(ctx context.Context) error {
 	s.plane.Infof("%v: listening", s.Name())
 
 	scanCtx, scanCancel := context.WithCancel(ctx)
@@ -64,7 +64,7 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 
 	<-scanCtx.Done()
 
-	errs := s.plane.ScopeClose(scope.NewScopeClient(s.Name()))
+	errs := s.plane.ScopeClose(scope.NewScopeClient(s.listenerName, s.clientName))
 	for _, err := range errs {
 		s.plane.Warnf("%v: %v", s.Name(), err)
 	}
@@ -81,7 +81,7 @@ func (s *ClientLsp) Serve(ctx context.Context) error {
 	return nil
 }
 
-func (s *ClientLsp) send(msg jsonrpc.Message) error {
+func (s *LspClient) send(msg jsonrpc.Message) error {
 	bytes, err := jsonrpc.EncodeMessage(msg)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)

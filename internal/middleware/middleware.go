@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"mals/internal/client"
+	"fmt"
 	"mals/internal/lsp/protocol"
 	"mals/internal/plane"
 
@@ -9,8 +9,11 @@ import (
 )
 
 type Middleware struct {
-	plane       plane.Plane
-	client      client.Client
+	plane plane.Plane
+
+	listenerName string
+	clientName   string
+
 	initialized bool
 	workspaces  *xsync.Map[string, *Workspace]
 
@@ -20,7 +23,8 @@ type Middleware struct {
 func New(plane plane.Plane) *Middleware {
 	return &Middleware{
 		plane:                plane,
-		client:               nil,
+		listenerName:         "",
+		clientName:           "",
 		initialized:          false,
 		workspaces:           xsync.NewMap[string, *Workspace](),
 		textDocumentSyncKind: protocol.Incremental,
@@ -28,8 +32,5 @@ func New(plane plane.Plane) *Middleware {
 }
 
 func (s *Middleware) Name() string {
-	if s.client != nil {
-		return s.client.Name()
-	}
-	return "middleware"
+	return fmt.Sprintf("%v:%v", s.listenerName, s.clientName)
 }

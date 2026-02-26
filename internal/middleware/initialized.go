@@ -13,7 +13,7 @@ func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Works
 	if step.Scope != "client" {
 		s.plane.Warnf("Initialized %T %v scope %v unsupported, set to client", step, step, step.Scope)
 	}
-	scope := scope.NewScopeClient(s.client.Name())
+	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
 	lspName := step.Kind.(*config.StepKindLsp).Name
 
@@ -58,7 +58,7 @@ func (s *Middleware) eventInitialized(params *protocol.InitializedParams, worksp
 	for _, workspace := range workspaces {
 		usages := s.plane.UsageGetFilteredClient(
 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-			usage.EventFilter{Event: util.Ptr(config.EventInitialized)}, s.client.Name())
+			usage.EventFilter{Event: util.Ptr(config.EventInitialized)}, s.listenerName, s.clientName)
 
 		for _, usage := range usages {
 			if err := s.eventInitializedWorkflow(params, workspace, usage.Workflow); err != nil {

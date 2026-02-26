@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"mals/internal/listener"
 	"mals/pkg/config"
 )
 
@@ -11,6 +12,14 @@ const (
 	ListenerRegistered ListenerStatus = (1 << 0)
 	ListenerCreated    ListenerStatus = (1 << 1)
 	ListenerStarted    ListenerStatus = (1 << 2)
+)
+
+type ClientStatus int32
+
+const (
+	ClientAbsent  ClientStatus = 0
+	ClientCreated ClientStatus = (1 << 1)
+	ClientStarted ClientStatus = (1 << 2)
 )
 
 type ListenerData struct {
@@ -31,8 +40,10 @@ type ListenerController interface {
 	ListenerStart(name string) error
 	ListenerStop(name string) error
 
-	ListenerClientAdd(name string, client string) error
-	ListenerClientRemove(name string, client string) error
+	ListenerLspClientOwn(name string, client listener.ListenerLspClient) error
+	ListenerLspClientStatus(name string, clientName string) ClientStatus
+	ListenerLspClientServe(name string, clientName string) error
+	ListenerLspClientShutdown(name string, clientName string) error
 
 	ListenerGetConfig(name string) (*config.Listener, error)
 	ListenerGet(name string) (*ListenerData, error)

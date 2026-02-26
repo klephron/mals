@@ -1,7 +1,7 @@
-package api_http
+package api
 
 import (
-	"mals/internal/listener/api_http/handlers"
+	"mals/internal/listener/api/handlers"
 	"mals/pkg/info"
 	"net/http"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (s *ListenerApiHttp) newServer() *http.Server {
+func (s *ListenerApi) newServer() *http.Server {
 	router := gin.New()
 
 	router.GET("/metrics", handlers.Metrics())
