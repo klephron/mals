@@ -1,0 +1,33 @@
+lsps: []
+logs:
+  - name: stderr
+    level: info
+    kind: file
+    file: /dev/stderr
+models:
+  - name: Llama-3.2-1B-Instruct-Q6_K
+    kind: openai
+    settings:
+      url: http://localhost:9652
+      max_tokens: 250
+      temperature: 0.5
+usages:
+  - name: completion
+    events:
+      - textDocument/completion
+    workflow:
+      steps:
+        - name: llm
+          model: Llama-3.2-1B-Instruct-Q6_K
+          scope: global
+listeners:
+  - name: lsp-tcp:9651
+    kind: lsp
+    ipc: tcp
+    port: 9651
+    usages:
+      - completion
+  - name: api-tcp:9650
+    kind: api
+    ipc: http
+    port: 9650
