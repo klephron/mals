@@ -109,7 +109,7 @@ func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {
 					}
 
 					bytes := scanner.Bytes()
-					s.plane.Debugf("%v: scanned %v", s.Name(), string(bytes))
+					s.plane.Debugf("%T %v: scanned %v", s, s.Name(), string(bytes))
 
 					s.handle(bytes)
 				}
@@ -119,7 +119,7 @@ func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {
 		s.running = true
 		s.rw.Unlock()
 
-		s.plane.Infof("%v: started", s.Name())
+		s.plane.Infof("%T %v: started", s, s.Name())
 
 		onReady()
 	}
@@ -131,7 +131,7 @@ func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {
 		defer s.rw.Unlock()
 
 		if err := s.writer.Flush(); err != nil {
-			s.plane.Errorf("%v: flush: %v", s.Name(), err)
+			s.plane.Errorf("%T %v: flush: %v", s, s.Name(), err)
 			return err
 		}
 
@@ -147,7 +147,7 @@ func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {
 
 		s.requestc.Store(0)
 
-		s.plane.Infof("%v: done", s.Name())
+		s.plane.Infof("%T %v: done", s, s.Name())
 
 		return nil
 	}

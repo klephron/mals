@@ -11,7 +11,8 @@ import (
 
 func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTextDocumentParams, workspace *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("TextDocumentDidChange %T %v scope %v unsupported, set to client", step, step, step.Scope)
+		s.plane.Warnf("%T %v: TextDocumentDidChange %T %v scope %v unsupported, set to client",
+			s, s.Name(), step, step, step.Scope)
 	}
 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
@@ -19,14 +20,14 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 
 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	capabilities, err := s.plane.Lsp().GetCapabilities(lspKey)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 
@@ -42,22 +43,22 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 	case map[string]any:
 		data, err := util.JsonMarshal(&v)
 		if err != nil {
-			s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
+			s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 			return err
 		}
 		if syncOptions, err := util.JsonUnmarshal[protocol.TextDocumentSyncOptions](data); err != nil {
-			s.plane.Warnf("TextDocumentDidChange %T %v: %v", step, step, err)
+			s.plane.Warnf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 			syncKind = syncOptions.Change
 		} else {
 			syncKind = syncOptions.Change
 		}
 	default:
 		err := fmt.Errorf("%v: capabilities.TextDocumentSync has unexpected type %T", lspKey, v)
-		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 
-	s.plane.Debugf("TextDocumentDidChange %T %v: sync kind %d", step, step, syncKind)
+	s.plane.Debugf("%T %v: TextDocumentDidChange %T %v: sync kind %d", s, s.Name(), step, step, syncKind)
 
 	// works for middleware in incremental mode:
 	// s.textDocumentSyncKind == protocol.Incremental
@@ -92,17 +93,17 @@ func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTex
 
 	default:
 		err := fmt.Errorf("%v: unhandled sync kind %d", lspKey, syncKind)
-		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 
 	err = s.plane.Lsp().EventTextDocumentDidChange(lspKey, lspParams)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidChange %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
 		return nil
 	}
 
-	s.plane.Debugf("TextDocumentDidChange %T %v", step, step)
+	s.plane.Debugf("%T %v: TextDocumentDidChange %T %v", s, s.Name(), step, step)
 
 	return nil
 }
@@ -116,7 +117,7 @@ func (s *Middleware) eventTextDocumentDidChangeWorkflow(params *protocol.DidChan
 			}
 		default:
 			err := fmt.Errorf("TextDocumentDidChange unhandled %T %v", step, step)
-			s.plane.Warnf("%v", err)
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 			return err
 		}
 	}
@@ -134,7 +135,7 @@ func (s *Middleware) eventTextDocumentDidChange(params *protocol.DidChangeTextDo
 			if err := s.eventTextDocumentDidChangeWorkflow(params, workspace, usage.Workflow); err != nil {
 				continue
 			}
-			s.plane.Infof("TextDocumentDidChange %T %v: usage %v ok", s, s.Name(), usage.Name)
+			s.plane.Infof("%T %v: TextDocumentDidChange usage %v ok", s, s.Name(), usage.Name)
 		}
 	}
 	return nil
@@ -145,7 +146,7 @@ func (s *Middleware) TextDocumentDidChange(params *protocol.DidChangeTextDocumen
 	workspaces := s.workspaceFindAllByPrefix(uri)
 
 	if len(workspaces) == 0 {
-		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), uri)
+		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
 	}
 
 	for _, workspace := range workspaces {

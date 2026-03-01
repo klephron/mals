@@ -31,13 +31,13 @@ func (s *ListenerLsp) Run(ctx context.Context) error {
 	listener, err := net.Listen("tcp", s.addr)
 
 	if err != nil {
-		s.plane.Errorf("%s: %v", s.Name(), err)
+		s.plane.Errorf("%T %s: %v", s, s.Name(), err)
 		return err
 	}
 
 	defer listener.Close()
 
-	s.plane.Infof("%s: listen", s.Name())
+	s.plane.Infof("%T %s: listen", s, s.Name())
 
 	go func() {
 		<-ctx.Done()
@@ -49,27 +49,27 @@ func (s *ListenerLsp) Run(ctx context.Context) error {
 
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				s.plane.Infof("%s: closed", s.Name())
+				s.plane.Infof("%T %s: closed", s, s.Name())
 				return nil
 			}
-			s.plane.Errorf("%s: %v", s.Name(), err)
+			s.plane.Errorf("%T %s: %v", s, s.Name(), err)
 			continue
 		}
 
-		s.plane.Infof("%s: accepted %v", s.Name(), conn.RemoteAddr())
+		s.plane.Infof("%T %s: accepted %v", s, s.Name(), conn.RemoteAddr())
 
 		client := newLspClient(s.plane, s.name, conn)
 
 		if err := s.plane.Listener().LspClientOwn(s.Name(), client); err != nil {
-			s.plane.Warnf("%s: %v", s.Name(), err)
+			s.plane.Warnf("%T %s: %v", s, s.Name(), err)
 			continue
 		}
 
 		if err := s.plane.Listener().LspClientServe(s.Name(), client.Name()); err != nil {
-			s.plane.Warnf("%s: %v", s.Name(), err)
+			s.plane.Warnf("%T %s: %v", s, s.Name(), err)
 			continue
 		}
 
-		s.plane.Infof("%s: started %v", s.Name(), conn.RemoteAddr())
+		s.plane.Infof("%T %s: started %v", s, s.Name(), conn.RemoteAddr())
 	}
 }

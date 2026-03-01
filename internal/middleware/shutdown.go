@@ -10,7 +10,8 @@ import (
 
 func (s *Middleware) eventShutdownLsp(_ *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("Shutdown %T %v scope %v unsupported, set to client", step, step, step.Scope)
+		s.plane.Warnf("%T %v: Shutdown %T %v scope %v unsupported, set to client",
+			s, s.Name(), step, step, step.Scope)
 	}
 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
@@ -18,18 +19,18 @@ func (s *Middleware) eventShutdownLsp(_ *Workspace, step *config.Step) error {
 
 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
-		s.plane.Errorf("Shutdown %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: Shutdown %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	err = s.plane.Lsp().EventShutdown(lspKey)
 	if err != nil {
-		s.plane.Errorf("Shutdown %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: Shutdown %T %v: %v", s, s.Name(), step, step, err)
 		return nil
 	}
 
-	s.plane.Debugf("Shutdown %T %v", step, step)
+	s.plane.Debugf("%T %v: Shutdown %T %v", s, s.Name(), step, step)
 
 	return nil
 }
@@ -43,7 +44,7 @@ func (s *Middleware) eventShutdownWorkflow(workspace *Workspace, workflow *confi
 			}
 		default:
 			err := fmt.Errorf("Shutdown unhandled %T %v", step, step)
-			s.plane.Warnf("%v", err)
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 			return err
 		}
 	}
@@ -61,7 +62,7 @@ func (s *Middleware) eventShutdown(workspaces []*Workspace) error {
 			if err := s.eventShutdownWorkflow(workspace, usage.Workflow); err != nil {
 				continue
 			}
-			s.plane.Infof("Shutdown %T %v: usage %v ok", s, s.Name(), usage.Name)
+			s.plane.Infof("%T %v: Shutdown usage %v ok", s, s.Name(), usage.Name)
 		}
 	}
 

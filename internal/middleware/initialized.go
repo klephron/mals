@@ -11,7 +11,7 @@ import (
 
 func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("Initialized %T %v scope %v unsupported, set to client", step, step, step.Scope)
+		s.plane.Warnf("%T %v: Initialized %T %v scope %v unsupported, set to client", s, s.Name(), step, step, step.Scope)
 	}
 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
@@ -19,7 +19,7 @@ func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Works
 
 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
-		s.plane.Errorf("Initialized %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: Initialized %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 	defer s.plane.Scope().LspRelease(lspKey, token)
@@ -28,11 +28,11 @@ func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Works
 
 	err = s.plane.Lsp().EventInitialized(lspKey, lspParams)
 	if err != nil {
-		s.plane.Errorf("Initialized %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: Initialized %T %v: %v", s, s.Name(), step, step, err)
 		return nil
 	}
 
-	s.plane.Debugf("Initialized %T %v", step, step)
+	s.plane.Debugf("%T %v: Initialized %T %v", s, s.Name(), step, step)
 
 	return nil
 }
@@ -46,7 +46,7 @@ func (s *Middleware) eventInitializedWorkflow(params *protocol.InitializedParams
 			}
 		default:
 			err := fmt.Errorf("Initialized unhandled %T %v", step, step)
-			s.plane.Warnf("%v", err)
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 			return err
 		}
 	}
@@ -64,7 +64,7 @@ func (s *Middleware) eventInitialized(params *protocol.InitializedParams, worksp
 			if err := s.eventInitializedWorkflow(params, workspace, usage.Workflow); err != nil {
 				continue
 			}
-			s.plane.Infof("Initialized %T %v: usage %v ok", s, s.Name(), usage.Name)
+			s.plane.Infof("%T %v: Initialized usage %v ok", s, s.Name(), usage.Name)
 		}
 	}
 	return nil
@@ -81,7 +81,7 @@ func (s *Middleware) Initialized(params *protocol.InitializedParams) error {
 
 	s.eventInitialized(params, workspaces)
 
-	s.plane.Infof("Initialized %v: event done", s.Name())
+	s.plane.Infof("%T %v: Initialized event done", s, s.Name())
 
 	return nil
 }

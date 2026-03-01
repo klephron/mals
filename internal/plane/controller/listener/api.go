@@ -27,7 +27,7 @@ func (s *ListenerController) status(value *Listener) controller.ListenerStatus {
 	if value != nil {
 		status |= controller.ListenerRegistered
 
-		if value.listener != nil {
+		if value.mixin != nil {
 			status |= controller.ListenerCreated
 		}
 		if value.cancelFunc != nil {
@@ -46,7 +46,7 @@ func (s *ListenerController) statusRW(value *Listener) controller.ListenerStatus
 
 		value.rw.RLock()
 
-		if value.listener != nil {
+		if value.mixin != nil {
 			status |= controller.ListenerCreated
 		}
 		if value.cancelFunc != nil {
@@ -98,7 +98,7 @@ func (s *ListenerController) Register(name string, cfg *config.Listener) error {
 		rw:         sync.RWMutex{},
 		config:     cfg,
 		cancelFunc: nil,
-		listener:   nil,
+		mixin:      nil,
 	})
 
 	return nil
@@ -142,7 +142,7 @@ func (s *ListenerController) Create(name string) error {
 			if err != nil {
 				return err
 			}
-			value.listener = &ListenerMixinApi{
+			value.mixin = &ListenerMixinApi{
 				listener: listener,
 			}
 			return nil
@@ -156,7 +156,7 @@ func (s *ListenerController) Create(name string) error {
 			if err != nil {
 				return err
 			}
-			value.listener = &ListenerMixinLsp{
+			value.mixin = &ListenerMixinLsp{
 				listener: listener,
 				clients:  xsync.NewMap[string, *ListenerLspClient](),
 			}
@@ -179,7 +179,11 @@ func (s *ListenerController) Delete(name string) error {
 		return statusErrorEq(name, status, controller.ListenerRegistered|controller.ListenerCreated)
 	}
 
-	value.listener = nil
+	listener := value.mixin.Listener()
+
+	value.mixin = nil
+
+	s.plane.Infof("%T: %T %v deleted", s, listener, listener.Name())
 
 	return nil
 }
@@ -199,11 +203,11 @@ func (s *ListenerController) Start(name string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	value.cancelFunc = cancel
-	listener := value.listener
+	listener := value.mixin.Listener()
 
 	go func() {
-		listener.Listener().Run(ctx)
-		s.Stop(listener.Listener().Name())
+		listener.Run(ctx)
+		s.Stop(listener.Name())
 	}()
 
 	return nil
@@ -225,18 +229,25 @@ func (s *ListenerController) Stop(name string) error {
 
 	switch value.config.Kind.(type) {
 	case *config.ListenerKindLsp:
-		listener := value.listener.(*ListenerMixinLsp)
-		listener.clients.Range(func(key string, value *ListenerLspClient) bool {
-			s.LspClientShutdown(listener.listener.Name(), key)
+		mixinLsp := value.mixin.(*ListenerMixinLsp)
+
+		mixinLsp.clients.Range(func(key string, value *ListenerLspClient) bool {
+			s.lspClientShutdown(mixinLsp, key)
 			return true
 		})
 	}
+
+	listener := value.mixin.Listener()
+
+	s.plane.Debugf("%T: %T %v to be stopped", s, listener, listener.Name())
 
 	cancel := value.cancelFunc
 	value.cancelFunc = nil
 	value.rw.Unlock()
 
 	cancel()
+
+	s.plane.Infof("%T: %T %v stopped", s, listener, listener.Name())
 
 	return nil
 }
@@ -259,14 +270,14 @@ func (s *ListenerController) LspClientOwn(name string, client listener.ListenerL
 		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
 	}
 
-	listener := value.listener.(*ListenerMixinLsp)
-	clientv, _ := listener.clients.Load(client.Name())
+	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	clientValue, _ := mixinLsp.clients.Load(client.Name())
 
-	if status := s.lspClientStatus(clientv); status != controller.ClientAbsent {
+	if status := s.lspClientStatus(clientValue); status != controller.ClientAbsent {
 		return clientStatusErrorEq(name, client.Name(), status, controller.ClientAbsent)
 	}
 
-	listener.clients.Store(client.Name(), &ListenerLspClient{
+	mixinLsp.clients.Store(client.Name(), &ListenerLspClient{
 		client:     client,
 		cancelFunc: nil,
 	})
@@ -292,10 +303,10 @@ func (s *ListenerController) LspClientStatus(name string, clientName string) con
 		return controller.ClientAbsent
 	}
 
-	listener := value.listener.(*ListenerMixinLsp)
-	client, _ := listener.clients.Load(clientName)
+	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	clientValue, _ := mixinLsp.clients.Load(clientName)
 
-	return s.lspClientStatus(client)
+	return s.lspClientStatus(clientValue)
 }
 
 func (s *ListenerController) LspClientServe(name string, clientName string) error {
@@ -316,21 +327,45 @@ func (s *ListenerController) LspClientServe(name string, clientName string) erro
 		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
 	}
 
-	listener := value.listener.(*ListenerMixinLsp)
-	client, _ := listener.clients.Load(clientName)
+	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	clientValue, _ := mixinLsp.clients.Load(clientName)
 
-	if status := s.lspClientStatus(client); status != controller.ClientCreated {
+	if status := s.lspClientStatus(clientValue); status != controller.ClientCreated {
 		return clientStatusErrorEq(name, clientName, status, controller.ClientCreated)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	client.cancelFunc = cancel
+	clientValue.cancelFunc = cancel
 
 	go func() {
-		client.client.Serve(ctx)
-		s.LspClientShutdown(name, clientName)
+		clientValue.client.Serve(ctx)
+		s.lspClientShutdown(mixinLsp, clientName)
 	}()
+
+	return nil
+}
+
+func (s *ListenerController) lspClientShutdown(mixinLsp *ListenerMixinLsp, clientName string) error {
+	name := mixinLsp.listener.Name()
+	value, _ := mixinLsp.clients.Load(clientName)
+
+	if status := s.lspClientStatus(value); status&controller.ClientStarted == 0 {
+		return clientStatusErrorFlag(name, clientName, controller.ClientStarted, status)
+	}
+
+	cancel := value.cancelFunc
+	value.cancelFunc = nil
+
+	mixinLsp.clients.Delete(clientName)
+
+	s.plane.Infof("%T: %T %v deleted", s, value.client, clientName)
+
+	s.plane.Debugf("%T: %T %v to be stopped", s, value.client, clientName)
+
+	cancel()
+
+	s.plane.Infof("%T: %T %v stopped", s, value.client, clientName)
 
 	return nil
 }
@@ -356,24 +391,11 @@ func (s *ListenerController) LspClientShutdown(name string, clientName string) e
 		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
 	}
 
-	listener := value.listener.(*ListenerMixinLsp)
-	client, _ := listener.clients.Load(clientName)
+	mixinLsp := value.mixin.(*ListenerMixinLsp)
 
-	if status := s.lspClientStatus(client); status&controller.ClientStarted == 0 {
-		value.rw.Unlock()
-		return clientStatusErrorFlag(name, clientName, controller.ClientStarted, status)
-	}
+	defer value.rw.Unlock()
 
-	cancel := client.cancelFunc
-	client.cancelFunc = nil
-
-	listener.clients.Delete(clientName)
-
-	value.rw.Unlock()
-
-	cancel()
-
-	return nil
+	return s.lspClientShutdown(mixinLsp, clientName)
 }
 
 func (s *ListenerController) GetConfig(name string) (*config.Listener, error) {

@@ -11,7 +11,8 @@ import (
 
 func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDocumentParams, _ *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("TextDocumentDidOpen %T %v scope %v unsupported, set to client", step, step, step.Scope)
+		s.plane.Warnf("%T %v: TextDocumentDidOpen %T %v scope %v unsupported, set to client",
+			s, s.Name(), step, step, step.Scope)
 	}
 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
@@ -19,7 +20,7 @@ func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDoc
 
 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidOpen %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidOpen %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 	defer s.plane.Scope().LspRelease(lspKey, token)
@@ -35,11 +36,11 @@ func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDoc
 
 	err = s.plane.Lsp().EventTextDocumentDidOpen(lspKey, lspParams)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidOpen %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentDidOpen %T %v: %v", s, s.Name(), step, step, err)
 		return nil
 	}
 
-	s.plane.Debugf("TextDocumentDidOpen %T %v", step, step)
+	s.plane.Debugf("%T %v: TextDocumentDidOpen %T %v", s, s.Name(), step, step)
 
 	return nil
 }
@@ -53,7 +54,7 @@ func (s *Middleware) eventTextDocumentDidOpenWorkflow(params *protocol.DidOpenTe
 			}
 		default:
 			err := fmt.Errorf("TextDocumentDidOpen unhandled %T %v", step, step)
-			s.plane.Warnf("%v", err)
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 			return err
 		}
 	}
@@ -71,7 +72,7 @@ func (s *Middleware) eventTextDocumentDidOpen(params *protocol.DidOpenTextDocume
 			if err := s.eventTextDocumentDidOpenWorkflow(params, workspace, usage.Workflow); err != nil {
 				continue
 			}
-			s.plane.Infof("TextDocumentDidOpen %T %v: usage %v ok", s, s.Name(), usage.Name)
+			s.plane.Infof("%T %v: TextDocumentDidOpen usage %v ok", s, s.Name(), usage.Name)
 		}
 	}
 	return nil
@@ -83,7 +84,7 @@ func (s *Middleware) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentPar
 	workspaces := s.workspaceFindAllByPrefix(uri)
 
 	if len(workspaces) == 0 {
-		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), uri)
+		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
 	}
 
 	for _, workspace := range workspaces {

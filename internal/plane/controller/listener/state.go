@@ -21,7 +21,7 @@ type Listener struct {
 	rw         sync.RWMutex
 	config     *config.Listener
 	cancelFunc context.CancelFunc
-	listener   ListenerMixin
+	mixin      ListenerMixin
 }
 
 type ListenerMixin interface {

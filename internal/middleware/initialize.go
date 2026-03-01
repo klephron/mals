@@ -13,7 +13,8 @@ import (
 
 func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, workspace *Workspace, step *config.Step) error {
 	if step.Scope != "client" {
-		s.plane.Warnf("Initialize %T %v scope %v unsupported, set to client", step, step, step.Scope)
+		s.plane.Warnf("%T %v: Initialize %T %v scope %v unsupported, set to client",
+			s, s.Name(), step, step, step.Scope)
 	}
 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
 
@@ -21,7 +22,7 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 
 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
-		s.plane.Errorf("Initialize %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), step, step, err)
 		return err
 	}
 	defer s.plane.Scope().LspRelease(lspKey, token)
@@ -62,11 +63,11 @@ func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, works
 
 	result, err := s.plane.Lsp().EventInitialize(lspKey, lspParams)
 	if err != nil {
-		s.plane.Errorf("Initialize %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), step, step, err)
 		return nil
 	}
 
-	s.plane.Debugf("Initialize %T %v: %+v", step, step, result)
+	s.plane.Debugf("%T %v: Initialize %T %v: %+v", s, s.Name(), step, step, result)
 
 	return nil
 }
@@ -80,7 +81,7 @@ func (s *Middleware) eventInitializeWorkflow(params *protocol.InitializeParams, 
 			}
 		default:
 			err := fmt.Errorf("Initialize unhandled %T %v", step, step)
-			s.plane.Warnf("%v", err)
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 			return err
 		}
 	}
@@ -98,7 +99,7 @@ func (s *Middleware) eventInitialize(params *protocol.InitializeParams, workspac
 			if err := s.eventInitializeWorkflow(params, workspace, usage.Workflow); err != nil {
 				continue
 			}
-			s.plane.Infof("Initialize %T %v: usage %v ok", s, s.Name(), usage.Name)
+			s.plane.Infof("%T %v: Initialize usage %v ok", s, s.Name(), usage.Name)
 		}
 	}
 
@@ -117,7 +118,7 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams, listenerName 
 
 	s.eventInitialize(params, workspaces)
 
-	s.plane.Infof("Initialize %v: event done", s.Name())
+	s.plane.Infof("%T %v: Initialize event done", s, s.Name())
 
 	result := &protocol.InitializeResult{
 		Capabilities: protocol.ServerCapabilities{

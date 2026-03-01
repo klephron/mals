@@ -39,7 +39,7 @@ func (s *LspClient) Name() string {
 }
 
 func (s *LspClient) Serve(ctx context.Context) error {
-	s.plane.Infof("%v: listening", s.Name())
+	s.plane.Infof("%T %v: listen", s, s.Name())
 
 	scanCtx, scanCancel := context.WithCancel(ctx)
 
@@ -55,7 +55,7 @@ func (s *LspClient) Serve(ctx context.Context) error {
 				}
 
 				bytes := s.scanner.Bytes()
-				s.plane.Debugf("%v: scanned %v", s.Name(), string(bytes))
+				s.plane.Debugf("%T %v: scanned %v", s, s.Name(), string(bytes))
 
 				s.handle(bytes)
 			}
@@ -66,17 +66,17 @@ func (s *LspClient) Serve(ctx context.Context) error {
 
 	errs := s.plane.Scope().Close(scope.NewScopeClient(s.listenerName, s.clientName))
 	for _, err := range errs {
-		s.plane.Warnf("%v: %v", s.Name(), err)
+		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}
 
-	s.plane.Infof("%v: done", s.Name())
+	s.plane.Infof("%T %v: done", s, s.Name())
 
 	if err := s.writer.Flush(); err != nil {
-		s.plane.Errorf("%v: flush: %v", s.Name(), err)
+		s.plane.Errorf("%T %v: flush: %v", s, s.Name(), err)
 		return err
 	}
 
-	s.plane.Infof("%s: closed", s.Name())
+	s.plane.Infof("%T %v: closed", s, s.Name())
 
 	return nil
 }

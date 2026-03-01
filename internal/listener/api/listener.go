@@ -39,14 +39,14 @@ func (s *ListenerApi) Run(ctx context.Context) error {
 			errCh <- err
 			return
 		}
-		s.plane.Infof("%s: closed", s.Name())
+		s.plane.Infof("%T %s: closed", s, s.Name())
 	}()
 
-	s.plane.Infof("%s: listen", s.Name())
+	s.plane.Infof("%T %s: listen", s, s.Name())
 
 	select {
 	case err := <-errCh:
-		s.plane.Errorf("%s: %v", s.Name(), err)
+		s.plane.Errorf("%T %s: %v", s, s.Name(), err)
 		return err
 
 	case <-ctx.Done():

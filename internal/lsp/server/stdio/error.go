@@ -7,5 +7,5 @@ func (s *LspServerStdio) errorNotRunning() error {
 }
 
 func (s *LspServerStdio) errorRunning() error {
-	return fmt.Errorf("%v:  running", s.Name())
+	return fmt.Errorf("%v: running", s.Name())
 }

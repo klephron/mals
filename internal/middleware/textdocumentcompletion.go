@@ -77,7 +77,8 @@ func eventCompletionModelSchema[T any]() any {
 
 func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, workspace *Workspace, step *config.Step) (*protocol.CompletionList, error) {
 	if step.Scope != "global" {
-		s.plane.Warnf("step %T %v scope %v unsupported, set to global", step, step, step.Scope)
+		s.plane.Warnf("%T %v: step %T %v scope %v unsupported, set to global",
+			s, s.Name(), step, step, step.Scope)
 	}
 	scope := scope.NewScopeGlobal()
 
@@ -85,7 +86,7 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, wor
 
 	modelKey, token, err := s.plane.Scope().ModelAcquire(modelName, scope)
 	if err != nil {
-		s.plane.Errorf("step %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: step %T %v: %v", s, s.Name(), step, step, err)
 		return nil, err
 	}
 	defer s.plane.Scope().ModelRelease(modelKey, token)
@@ -108,7 +109,7 @@ func (s *Middleware) eventCompletionModel(params *protocol.CompletionParams, wor
 
 	text, err := s.plane.Model().TaskExecClient(modelKey, task, s.clientName)
 	if err != nil {
-		s.plane.Errorf("step %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: step %T %v: %v", s, s.Name(), step, step, err)
 		return nil, err
 	}
 
@@ -143,18 +144,18 @@ func (s *Middleware) eventCompletionLsp(params *protocol.CompletionParams, _ *Wo
 
 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
 	if err != nil {
-		s.plane.Errorf("TextDocumentCompletion %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentCompletion %T %v: %v", s, s.Name(), step, step, err)
 		return nil, err
 	}
 	defer s.plane.Scope().LspRelease(lspKey, token)
 
 	list, err := s.plane.Lsp().EventTextDocumentCompletion(lspKey, params)
 	if err != nil {
-		s.plane.Errorf("TextDocumentCompletion %T %v: %v", step, step, err)
+		s.plane.Errorf("%T %v: TextDocumentCompletion %T %v: %v", s, s.Name(), step, step, err)
 		return nil, err
 	}
 
-	s.plane.Debugf("TextDocumentCompletion %T %v: %+v", step, step, list)
+	s.plane.Debugf("%T %v: TextDocumentCompletion %T %v: %+v", s, s.Name(), step, step, list)
 
 	// only return label, detail and documentation
 	items := make([]protocol.CompletionItem, len(list.Items))
@@ -222,7 +223,7 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentCompletion)}, s.listenerName, s.clientName)
 
 		for _, usage := range usages {
-			s.plane.Infof("%T %v: usage %v: completion", s, s.Name(), usage.Name)
+			s.plane.Infof("%T %v: usage %v completion", s, s.Name(), usage.Name)
 
 			wg.Go(func() {
 				list, err := s.eventCompletionWorkflow(params, workspace, usage.Workflow)
@@ -251,7 +252,7 @@ func (s *Middleware) eventCompletion(params *protocol.CompletionParams, workspac
 		}
 	}
 
-	s.plane.Infof("TextDocumentCompletion %+v", result)
+	s.plane.Infof("%T %v: TextDocumentCompletion %+v", s, s.Name(), result)
 
 	return &result, nil
 }
@@ -260,7 +261,7 @@ func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (
 	workspaces := s.workspaceFindAllByPrefix(params.TextDocument.URI)
 
 	if len(workspaces) == 0 {
-		s.plane.Warnf("%v: file %v is not bound to any workspace", s.Name(), params.TextDocument.URI)
+		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), params.TextDocument.URI)
 	}
 
 	return s.eventCompletion(params, workspaces)
