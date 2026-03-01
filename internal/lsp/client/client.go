@@ -96,7 +96,7 @@ func (s *LspClient) send(msg jsonrpc.Message) error {
 		return err
 	}
 
-	s.plane.Debugf("%s: sent %s", s.Name(), string(bytes))
+	s.plane.Debugf("%T %s: sent %s", s, s.Name(), string(bytes))
 
 	return nil
 }

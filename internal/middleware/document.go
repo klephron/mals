@@ -8,7 +8,7 @@ import (
 func (s *Middleware) documentGet(workspace *Workspace, uri string) *document.Document {
 	document, ok := workspace.documents.Load(uri)
 	if !ok {
-		s.plane.Warnf("%T %s: workspace %s document %s is not present",
+		s.plane.Warnf("%T %v: workspace %s document %s is not present",
 			s, s.Name(), workspace.name, document.Uri())
 		return nil
 	}
@@ -20,7 +20,7 @@ func (s *Middleware) documentAdd(workspace *Workspace, uri string, text *string,
 
 	workspace.documents.Store(uri, document)
 
-	s.plane.Infof("%T %s: workspace %s document %s added",
+	s.plane.Infof("%T %v: workspace %s document %s added",
 		s, s.Name(), workspace.name, document.Uri())
 }
 
@@ -28,10 +28,10 @@ func (s *Middleware) documentDelete(workspace *Workspace, uri string) {
 	document, ok := workspace.documents.LoadAndDelete(uri)
 
 	if ok {
-		s.plane.Infof("%T %s: workspace %s document %s deleted",
+		s.plane.Infof("%T %v: workspace %s document %s deleted",
 			s, s.Name(), workspace.name, document.Uri())
 	} else {
-		s.plane.Warnf("%T %s: workspace %s document %s is not present",
+		s.plane.Warnf("%T %v: workspace %s document %s is not present",
 			s, s.Name(), workspace.name, uri)
 	}
 }
@@ -40,10 +40,10 @@ func (s *Middleware) documentUpdate(workspace *Workspace, document *document.Doc
 	ok := document.TextUpdate(version, changes)
 
 	if ok {
-		s.plane.Infof("%T %s: workspace %s document %s updated version %d",
+		s.plane.Infof("%T %v: workspace %s document %s updated version %d",
 			s, s.Name(), workspace.name, document.Uri(), document.Version())
 	} else {
-		s.plane.Warnf("%T %s: workspace %s document %s version %d >= %d",
+		s.plane.Warnf("%T %v: workspace %s document %s version %d >= %d",
 			s, s.Name(), workspace.name, document.Uri(), document.Version(), version)
 	}
 }

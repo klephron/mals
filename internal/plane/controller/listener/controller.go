@@ -32,7 +32,7 @@ func (s *ListenerController) ControllerRun(onReady func()) error {
 		s.state.statusRW.Unlock()
 
 		err := fmt.Errorf("%T is already serving", s)
-		s.plane.Errorf("%v", err)
+		s.plane.Errorf("%T: %v", s, err)
 		return err
 	}
 

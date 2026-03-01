@@ -17,7 +17,7 @@ func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
 
 	params, err := util.JsonUnmarshal[protocol.InitializeParams](req.Params)
 	if err != nil {
-		s.plane.Warnf("%v", err)
+		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}
 
 	if len(params.WorkspaceFolders) == 0 {
@@ -28,20 +28,20 @@ func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
 				Message: "no workspace folders",
 			},
 		}
-		s.plane.Warnf("%v", resp.Error.Message)
+		s.plane.Warnf("%T %v: %v", s, s.Name(), resp.Error.Message)
 		s.send(&resp)
 		return
 	}
 
 	result, err := s.middleware.Initialize(&params, s.listenerName, s.clientName)
 	if err != nil {
-		s.plane.Errorf("%v", err)
+		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return
 	}
 
 	resultRaw, err := util.JsonMarshal(result)
 	if err != nil {
-		s.plane.Errorf("Initialize: %v", err)
+		s.plane.Errorf("%T %v: Initialize %v", s, s.Name(), err)
 		return
 	}
 	resp := jsonrpc.Response{
@@ -61,12 +61,12 @@ func (s *LspClient) handleInitialized(msg jsonrpc.Message) {
 
 	params, err := util.JsonUnmarshal[protocol.InitializedParams](ntf.Params)
 	if err != nil {
-		s.plane.Warnf("Initialized %v", err)
+		s.plane.Warnf("%T %v: Initialized %v", s, s.Name(), err)
 	}
 
 	err = s.middleware.Initialized(&params)
 	if err != nil {
-		s.plane.Errorf("Initialized %v", err)
+		s.plane.Errorf("%T %v: Initialized %v", s, s.Name(), err)
 		return
 	}
 }
@@ -80,12 +80,12 @@ func (s *LspClient) handleTextDocumentDidOpen(msg jsonrpc.Message) {
 
 	params, err := util.JsonUnmarshal[protocol.DidOpenTextDocumentParams](ntf.Params)
 	if err != nil {
-		s.plane.Warnf("TextDocumentDidOpen %v", err)
+		s.plane.Warnf("%T %v: TextDocumentDidOpen %v", s, s.Name(), err)
 	}
 
 	err = s.middleware.TextDocumentDidOpen(&params)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidOpen %v", err)
+		s.plane.Errorf("%T %v: TextDocumentDidOpen %v", s, s.Name(), err)
 		return
 	}
 }
@@ -99,12 +99,12 @@ func (s *LspClient) handleTextDocumentDidChange(msg jsonrpc.Message) {
 
 	params, err := util.JsonUnmarshal[protocol.DidChangeTextDocumentParams](ntf.Params)
 	if err != nil {
-		s.plane.Warnf("TextDocumentDidChange %v", err)
+		s.plane.Warnf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
 	}
 
 	err = s.middleware.TextDocumentDidChange(&params)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidChange %v", err)
+		s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
 		return
 	}
 }
@@ -118,12 +118,12 @@ func (s *LspClient) handleTextDocumentDidClose(msg jsonrpc.Message) {
 
 	params, err := util.JsonUnmarshal[protocol.DidCloseTextDocumentParams](ntf.Params)
 	if err != nil {
-		s.plane.Warnf("TextDocumentDidClose %v", err)
+		s.plane.Warnf("%T %v: TextDocumentDidClose %v", s, s.Name(), err)
 	}
 
 	err = s.middleware.TextDocumentDidClose(&params)
 	if err != nil {
-		s.plane.Errorf("TextDocumentDidClose %v", err)
+		s.plane.Errorf("%T %v: TextDocumentDidClose %v", s, s.Name(), err)
 		return
 	}
 }
@@ -137,19 +137,19 @@ func (s *LspClient) handleTextDocumentCompletion(msg jsonrpc.Message) {
 
 	params, err := util.JsonUnmarshal[protocol.CompletionParams](req.Params)
 	if err != nil {
-		s.plane.Warnf("TextDocumentCompletion %v", err)
+		s.plane.Warnf("%T %v: TextDocumentCompletion %v", s, s.Name(), err)
 	}
 
 	go func() {
 		list, err := s.middleware.TextDocumentCompletion(&params)
 		if err != nil {
-			s.plane.Errorf("TextDocumentCompletion %v", err)
+			s.plane.Errorf("%T %v: TextDocumentCompletion %v", s, s.Name(), err)
 			return
 		}
 
 		listRaw, err := util.JsonMarshal(&list)
 		if err != nil {
-			s.plane.Errorf("TextDocumentCompletion %v", err)
+			s.plane.Errorf("%T %v: TextDocumentCompletion %v", s, s.Name(), err)
 			return
 		}
 
@@ -164,7 +164,7 @@ func (s *LspClient) handleTextDocumentCompletion(msg jsonrpc.Message) {
 func (s *LspClient) handleShutdown(_ jsonrpc.Message) {
 	err := s.middleware.Shutdown()
 	if err != nil {
-		s.plane.Errorf("TextDocumentShutdown %v", err)
+		s.plane.Errorf("%T %v: TextDocumentShutdown %v", s, s.Name(), err)
 		return
 	}
 }

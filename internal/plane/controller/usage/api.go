@@ -53,7 +53,7 @@ func (s *UsageController) GetFiltered(condition usage.ConditionFilter, event usa
 func (s *UsageController) GetFilteredClient(condition usage.ConditionFilter, event usage.EventFilter, listener string, client string) []*config.Usage {
 	listenerConfig, err := s.plane.Listener().GetConfig(listener)
 	if err != nil {
-		s.plane.Warnf("%v", err)
+		s.plane.Warnf("%T: %v", s, err)
 		return nil
 	}
 

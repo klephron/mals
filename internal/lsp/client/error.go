@@ -16,6 +16,7 @@ func errorParseUnexpectedType[T jsonrpc.Message](s *LspClient) {
 		},
 	}
 
-	s.plane.Warnf("%v", resp.Error.Message)
+	s.plane.Warnf("%T %v: %v", s, s.Name(), resp.Error.Message)
+
 	s.send(&resp)
 }

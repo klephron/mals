@@ -58,7 +58,7 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 		resource = r
 		current.models.Store(name, resource)
 
-		s.plane.Infof("ScopeModelAcquire new stored %v", resource.fullname)
+		s.plane.Infof("%T: new stored %v", s, resource.fullname)
 	}
 
 	resource.rw.Lock()
@@ -75,13 +75,13 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 			return "", nil, err
 		}
 
-		s.plane.Infof("ScopeModelAcquire %v in scope %v started %v", resource.fullname, scope, resource.fullname)
+		s.plane.Infof("%T: %v in scope %v started %v", s, resource.fullname, scope, resource.fullname)
 	}
 
 	token := newToken()
 	resource.dependencies.Store(token.Token(), token)
 
-	s.plane.Infof("ScopeModelAcquire %v in scope %v token %v assigned", resource.fullname, scope, token)
+	s.plane.Infof("%T: %v in scope %v token %v assigned", s, resource.fullname, scope, token)
 
 	return resource.fullname, token, nil
 }
@@ -91,15 +91,15 @@ func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeTo
 
 	current := scopeDescent(s.state.root, scope, false)
 	if current == nil {
-		err := fmt.Errorf("ScopeModelRelease scope %v path not found", scope)
-		s.plane.Errorf("%v", err)
+		err := fmt.Errorf("scope %v path not found", scope)
+		s.plane.Errorf("%T: %v", s, err)
 		return err
 	}
 
 	resource, ok := current.models.Load(name)
 	if !ok {
-		err := fmt.Errorf("ScopeModelRelease resource %v in scope %v not found", name, scope)
-		s.plane.Errorf("%v", err)
+		err := fmt.Errorf("resource %v in scope %v not found", name, scope)
+		s.plane.Errorf("%T: %v", s, err)
 		return err
 	}
 
@@ -108,7 +108,7 @@ func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeTo
 
 	resource.dependencies.Delete(token.Token())
 
-	s.plane.Infof("ModelModelRelease %v in scope %v token %v released", resource.fullname, scope, token)
+	s.plane.Infof("%T: %v in scope %v token %v released", s, resource.fullname, scope, token)
 
 	return nil
 }
@@ -117,7 +117,7 @@ func (s *ScopeController) LspRegister(config *config.Lsp) error {
 	name := config.Name
 
 	if _, ok := s.state.lsps.Load(name); ok {
-		return fmt.Errorf("ScopeLspRegister lsp %v exists", name)
+		return fmt.Errorf("lsp %v exists", name)
 	}
 
 	s.state.lsps.Store(name, config)
@@ -133,7 +133,7 @@ func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, c
 		config, ok := s.state.lsps.Load(name)
 
 		if !ok {
-			return "", nil, fmt.Errorf("ScopeLspAcquire lsp %v does not exist", name)
+			return "", nil, fmt.Errorf("lsp %v does not exist", name)
 		}
 
 		r := &Lsp{
@@ -145,7 +145,7 @@ func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, c
 		resource = r
 		current.lsps.Store(name, resource)
 
-		s.plane.Infof("ScopeLspAcquire new stored %v", resource.fullname)
+		s.plane.Infof("%T: new stored %v", s, resource.fullname)
 	}
 
 	resource.rw.Lock()
@@ -162,13 +162,13 @@ func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, c
 			return "", nil, err
 		}
 
-		s.plane.Infof("ScopeLspAcquire %v in scope %v started %v", resource.fullname, scope, resource.fullname)
+		s.plane.Infof("%T: %v in scope %v started %v", s, resource.fullname, scope, resource.fullname)
 	}
 
 	token := newToken()
 	resource.dependencies.Store(token.Token(), token)
 
-	s.plane.Infof("ScopeLspAcquire %v in scope %v token %v assigned", resource.fullname, scope, token)
+	s.plane.Infof("%T: %v in scope %v token %v assigned", s, resource.fullname, scope, token)
 
 	return resource.fullname, token, nil
 }
@@ -178,15 +178,15 @@ func (s *ScopeController) LspRelease(fullname string, token controller.ScopeToke
 
 	current := scopeDescent(s.state.root, scope, false)
 	if current == nil {
-		err := fmt.Errorf("ScopeLspRelease scope %v path not found", scope)
-		s.plane.Errorf("%v", err)
+		err := fmt.Errorf("scope %v path not found", scope)
+		s.plane.Errorf("%T: %v", s, err)
 		return err
 	}
 
 	resource, ok := current.lsps.Load(name)
 	if !ok {
-		err := fmt.Errorf("ScopeLspRelease resource %v in scope %v not found", name, scope)
-		s.plane.Errorf("%v", err)
+		err := fmt.Errorf("resource %v in scope %v not found", name, scope)
+		s.plane.Errorf("%T: %v", s, err)
 		return err
 	}
 
@@ -195,7 +195,7 @@ func (s *ScopeController) LspRelease(fullname string, token controller.ScopeToke
 
 	resource.dependencies.Delete(token.Token())
 
-	s.plane.Infof("ScopeLspRelease %v in scope %v token %v released", resource.fullname, scope, token)
+	s.plane.Infof("%T: %v in scope %v token %v released", s, resource.fullname, scope, token)
 
 	return nil
 }
@@ -229,7 +229,7 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 
 		current.lsps.Delete(name)
 
-		s.plane.Infof("ScopeClose closed lsp %v", resource.fullname)
+		s.plane.Infof("%T: closed lsp %v", s, resource.fullname)
 
 		return true
 	})
@@ -262,7 +262,7 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 
 		current.models.Delete(name)
 
-		s.plane.Infof("ScopeClose close model %v", resource.fullname)
+		s.plane.Infof("%T: close model %v", s, resource.fullname)
 
 		return true
 	})
