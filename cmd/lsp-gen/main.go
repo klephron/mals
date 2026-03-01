@@ -52,19 +52,19 @@ func write(target string, bytes []byte) {
 	}
 }
 
-func modify(params Params, bytes []byte) []byte {
+func modify(args args, bytes []byte) []byte {
 	re := regexp.MustCompile(`(?m)^package\s+\w+`)
-	modified := re.ReplaceAll(bytes, []byte("package "+params.Package))
+	modified := re.ReplaceAll(bytes, []byte("package "+args.Package))
 	return modified
 }
 
-func getTargetPath(params Params, file string) string {
-	targetName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)) + "." + params.Suffix + filepath.Ext(file)
-	targetPath := path.Join(path.Join(params.Target, targetName))
+func getTargetPath(args args, file string) string {
+	targetName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)) + "." + args.Suffix + filepath.Ext(file)
+	targetPath := path.Join(path.Join(args.Target, targetName))
 	return targetPath
 }
 
-func genGopls(params Params) {
+func genGopls(args args) {
 	files := []string{
 		"gopls/internal/protocol/tsprotocol.go",
 		"gopls/internal/protocol/tsdocument_changes.go",
@@ -73,27 +73,27 @@ func genGopls(params Params) {
 
 	for _, file := range files {
 		bytes := httpRead(source, file)
-		modified := modify(params, bytes)
-		targetPath := getTargetPath(params, file)
+		modified := modify(args, bytes)
+		targetPath := getTargetPath(args, file)
 		write(targetPath, modified)
 	}
 }
 
-func genUri(params Params) {
+func genUri(args args) {
 	file := "uri.go"
 	bytes := []byte(`package protocol
 
 type URI = string
 type DocumentURI = string`)
 
-	modified := modify(params, bytes)
-	targetPath := getTargetPath(params, file)
+	modified := modify(args, bytes)
+	targetPath := getTargetPath(args, file)
 	write(targetPath, modified)
 }
 
 func main() {
-	params := argParse()
+	args := argParse()
 
-	genGopls(params)
-	genUri(params)
+	genGopls(args)
+	genUri(args)
 }

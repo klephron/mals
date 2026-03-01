@@ -5,17 +5,19 @@ import (
 	"mals/internal/plane"
 	"mals/pkg/config"
 	"mals/pkg/wire"
-	"os"
+
+	"github.com/spf13/viper"
 )
 
-func configLoad(params *Params) (*config.Config, error) {
-	bytes, err := os.ReadFile(params.Config)
-	if err != nil {
+func configLoad(options *options) (*config.Config, error) {
+	viper.SetConfigFile(options.ConfigPath)
+
+	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
 	var wire wire.Config
-	if err := json.Unmarshal(bytes, &wire); err != nil {
+	if err := viper.Unmarshal(&wire); err != nil {
 		return nil, err
 	}
 
@@ -95,5 +97,5 @@ func configLog(config *config.Config, plane plane.Plane) {
 		panic(err)
 	}
 
-	plane.Debugf("config: %v", string(bytes))
+	plane.Debugf("%v", string(bytes))
 }

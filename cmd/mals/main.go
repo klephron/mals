@@ -6,9 +6,9 @@ import (
 )
 
 func main() {
-	params := argParse()
+	options := newOptions(argParse())
 
-	config, err := configLoad(&params)
+	config, err := configLoad(options)
 	if err != nil {
 		panic(err)
 	}
