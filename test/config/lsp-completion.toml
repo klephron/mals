@@ -1,0 +1,50 @@
+models = []
+
+[[logs]]
+name = "stderr"
+level = "info"
+kind = "file"
+file = "/dev/stderr"
+
+[[lsps]]
+name = "clangd"
+kind = "stdio"
+settings.cmd = ["clangd"]
+
+[[usages]]
+name = "completion"
+events = ["textDocument/completion"]
+
+[[usages.workflow.steps]]
+name = "lsp"
+lsp = "clangd"
+scope = "client"
+
+[[usages]]
+name = "lspsync"
+events = [
+  "initialize",
+  "initialized",
+  "textDocument/didOpen",
+  "textDocument/didChange",
+  "textDocument/didClose",
+  "shutdown"
+]
+
+[[usages.workflow.steps]]
+name = "lsp"
+scope = "client"
+lsp = "clangd"
+
+[[listeners]]
+name = "lsp-tcp:9651"
+kind = "lsp"
+ipc = "tcp"
+port = 9_651
+usages = ["lspsync", "completion"]
+
+[[listeners]]
+name = "api-http:9650"
+kind = "api"
+ipc = "http"
+port = 9_650
