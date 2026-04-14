@@ -1,0 +1,112 @@
+models:
+  - name: Llama-3.2-1B-Instruct-Q6_K
+    api:
+      kind: openai
+      url: http://localhost:9652
+      max_tokens: 250
+      temperature: 0.5
+
+lsps:
+  - name: clangd
+    api:
+      kind: stdio
+      cmd:
+        - clangd
+
+logs:
+  - name: stderr
+    level: info
+    output:
+      kind: file
+      file: /dev/stderr
+
+handlers:
+  - name: completion
+    kind: lsp
+    resources:
+      - name: llama
+        model: Llama-3.2-1B-Instruct-Q6_K
+        scope: global
+      - name: clangd
+        lsp: clangd
+        scope: client
+    endpoints:
+      "initialize":
+        default: true
+      "initialized":
+        default: true
+      "textDocument/didOpen":
+        default: true
+      "textDocument/didChange":
+        default: true
+      "textDocument/didClose":
+        default: true
+      "shutdown":
+        default: true
+      "textDocument/completion":
+        default: false
+        execution:
+          - lsp/completion:
+              resource: clangd
+            assign: clangdrm for agen
+
+          - json/dumps:
+              input: "{{ clangd.out }}"
+            assign: clangd_str
+
+          - model/simple:
+              resource: llama
+              prompt: |
+                Write system prompt for model to generate LSP completion list. Model must generate a valid JSON with the type of []string.
+            assign: llm_result
+
+          - while:
+              condition: "{{ llm_result }}"
+              max: 5
+              do:
+                - model/template:
+                    resource: llama
+                    prompt: |
+                      {{ llm_system.out }}
+
+                      Document info:
+                        - path: {{ file.path }}
+
+                      Text:
+                      {{ file.text }}
+
+                      Text before:
+                      {{ file.text_before }}
+                  assign: llm_result
+
+          - if: "{{ llm_result }}"
+            then:
+              - json/parse/completion:
+                  input: "{{ llm_result.out }}"
+                assign: completion_json
+            else:
+              - json/parse/completion:
+                  input: "[]"
+                assign: completion_json
+
+          - return: "{{ completion_json.out }}"
+
+listeners:
+  - name: api-tcp:9651
+    ipc:
+      kind: tcp
+      port: 9651
+    protocol:
+      kind: api
+  - name: lsp-tcp:9652
+    ipc:
+      kind: tcp
+      port: 9652
+    protocol:
+      kind: lsp
+      handlers:
+        - name:
+          condition:
+            filetypes: null
+            path: null
+          handler: completion
