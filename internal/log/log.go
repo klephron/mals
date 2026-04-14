@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"mals/pkg/config"
 )
 
 type Log interface {
@@ -24,15 +25,15 @@ const (
 	LevelOff   Level = iota
 )
 
-func GetLevel(level string) (Level, error) {
+func GetLevel(level config.LogLevel) (Level, error) {
 	switch level {
-	case "error":
+	case config.LogLevelError:
 		return LevelError, nil
-	case "warn":
+	case config.LogLevelWarn:
 		return LevelWarn, nil
-	case "info":
+	case config.LogLevelInfo:
 		return LevelInfo, nil
-	case "debug":
+	case config.LogLevelDebug:
 		return LevelDebug, nil
 	default:
 		return LevelOff, fmt.Errorf("unexpected log level %v", level)

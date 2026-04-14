@@ -68,8 +68,8 @@ func (s *LspController) Register(name string, cfg *config.Lsp) error {
 		return statusErrorEq(name, status, controller.LspAbsent)
 	}
 
-	switch settings := cfg.Settings.(type) {
-	case *config.LspSettingsStdio:
+	switch settings := cfg.Api.(type) {
+	case *config.LspApiStdio:
 		s.state.lsps.Store(name, &Lsp{
 			rw:         sync.RWMutex{},
 			config:     cfg,
@@ -112,8 +112,8 @@ func (s *LspController) Create(name string) error {
 		return statusErrorEq(name, status, controller.LspRegistered)
 	}
 
-	switch settings := value.config.Settings.(type) {
-	case *config.LspSettingsStdio:
+	switch settings := value.config.Api.(type) {
+	case *config.LspApiStdio:
 		value.lsp = stdio.New(name, settings, s.plane)
 
 	default:

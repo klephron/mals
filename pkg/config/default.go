@@ -13,11 +13,11 @@ func DefaultConfig(c *Config) {
 	for _, lsp := range c.Lsps {
 		DefaultLsp(lsp)
 	}
-	if c.Usages == nil {
-		c.Usages = make([]*Usage, 0)
+	if c.Handlers == nil {
+		c.Handlers = make([]*Handler, 0)
 	}
-	for _, usage := range c.Usages {
-		DefaultUsage(usage)
+	for _, usage := range c.Handlers {
+		DefaultHandler(usage)
 	}
 	if c.Listeners == nil {
 		c.Listeners = make([]*Listener, 0)
@@ -28,35 +28,23 @@ func DefaultConfig(c *Config) {
 }
 
 func DefaultListener(c *Listener) {
-	switch kind := c.Kind.(type) {
-	case *ListenerKindLsp:
-		if kind.Usages == nil {
-			kind.Usages = make([]string, 0)
+	switch kind := c.Protocol.(type) {
+	case *ListenerProtocolLsp:
+		if kind.Handlers == nil {
+			kind.Handlers = make([]ListenerProtocolLspHandler, 0)
 		}
-	case *ListenerKindApi:
+	case *ListenerProtocolApi:
 	}
 }
 
 func DefaultLsp(c *Lsp) {
-	switch settings := c.Settings.(type) {
-	case *LspSettingsStdio:
+	switch settings := c.Api.(type) {
+	case *LspApiStdio:
 		if settings.Cmd == nil {
 			settings.Cmd = make([]string, 0)
 		}
 	}
 }
 
-func DefaultUsage(c *Usage) {
-	if c.Events == nil {
-		c.Events = make([]Event, 0)
-	}
-	if c.Workflow != nil {
-		DefaultWorkflow(c.Workflow)
-	}
-}
-
-func DefaultWorkflow(c *Workflow) {
-	if c.Steps == nil {
-		c.Steps = make([]*Step, 0)
-	}
+func DefaultHandler(c *Handler) {
 }

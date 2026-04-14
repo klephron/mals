@@ -37,8 +37,8 @@ type LspServerStdio struct {
 	requestc atomic.Int32
 }
 
-func New(name string, settings *config.LspSettingsStdio, plane plane.Plane) *LspServerStdio {
-	cmd := settings.Cmd
+func New(name string, api *config.LspApiStdio, plane plane.Plane) *LspServerStdio {
+	cmd := api.Cmd
 
 	return &LspServerStdio{
 		name:         name,
@@ -60,7 +60,7 @@ func (s *LspServerStdio) Name() string {
 }
 
 func (s *LspServerStdio) Kind() string {
-	var settings config.LspSettingsStdio
+	var settings config.LspApiStdio
 	return settings.Kind()
 }
 

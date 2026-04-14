@@ -11,7 +11,7 @@ import (
 	"github.com/openai/openai-go/packages/param"
 )
 
-type ModelOpenAI struct {
+type ModelOpenai struct {
 	name string
 
 	client      openai.Client
@@ -21,12 +21,12 @@ type ModelOpenAI struct {
 	plane plane.Plane
 }
 
-func New(name string, settings *config.ModelSettingsOpenAI, plane plane.Plane) *ModelOpenAI {
-	client := openai.NewClient(option.WithBaseURL(settings.Url), option.WithAPIKey("sk-dummy"))
-	maxTokens := openai.Int(int64(settings.MaxTokens))
-	temperature := openai.Float(float64(settings.Temperature))
+func New(name string, api *config.ModelApiOpenai, plane plane.Plane) *ModelOpenai {
+	client := openai.NewClient(option.WithBaseURL(api.Url), option.WithAPIKey("sk-dummy"))
+	maxTokens := openai.Int(int64(api.MaxTokens))
+	temperature := openai.Float(float64(api.Temperature))
 
-	return &ModelOpenAI{
+	return &ModelOpenai{
 		name:        name,
 		client:      client,
 		maxTokens:   maxTokens,
@@ -35,16 +35,16 @@ func New(name string, settings *config.ModelSettingsOpenAI, plane plane.Plane) *
 	}
 }
 
-func (s *ModelOpenAI) Name() string {
+func (s *ModelOpenai) Name() string {
 	return s.name
 }
 
-func (s *ModelOpenAI) Kind() string {
-	var settings config.ModelSettingsOpenAI
+func (s *ModelOpenai) Kind() string {
+	var settings config.ModelApiOpenai
 	return settings.Kind()
 }
 
-func (s *ModelOpenAI) Run(ctx context.Context) error {
+func (s *ModelOpenai) Run(ctx context.Context) error {
 	s.plane.Infof("%T %v: started", s, s.Name())
 
 	<-ctx.Done()
@@ -54,7 +54,7 @@ func (s *ModelOpenAI) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *ModelOpenAI) Execute(ctx context.Context, task *model.Task) (string, error) {
+func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, error) {
 
 	s.plane.Infof("%T %v task %v: received", s, s.Name(), task)
 

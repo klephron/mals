@@ -65,11 +65,11 @@ func configInit(config *config.Config, plane plane.Plane) {
 		}
 	}
 
-	for _, usage := range config.Usages {
-		if usage == nil {
+	for _, handler := range config.Handlers {
+		if handler == nil {
 			continue
 		}
-		if err := plane.Usage().Register(usage); err != nil {
+		if err := plane.Handler().Register(handler); err != nil {
 			plane.Errorf("%v", err)
 		}
 	}

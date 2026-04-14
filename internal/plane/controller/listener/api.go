@@ -133,11 +133,11 @@ func (s *ListenerController) Create(name string) error {
 		return statusErrorEq(name, status, controller.ListenerRegistered)
 	}
 
-	switch value.config.Kind.(type) {
-	case *config.ListenerKindApi:
+	switch value.config.Protocol.(type) {
+	case *config.ListenerProtocolApi:
 		switch ipc := value.config.Ipc.(type) {
 
-		case *config.ListenerIpcHttp:
+		case *config.ListenerIpcTcp:
 			listener, err := api.NewHttp(name, ipc.Port, s.plane)
 			if err != nil {
 				return err
@@ -148,7 +148,7 @@ func (s *ListenerController) Create(name string) error {
 			return nil
 		}
 
-	case *config.ListenerKindLsp:
+	case *config.ListenerProtocolLsp:
 		switch ipc := value.config.Ipc.(type) {
 
 		case *config.ListenerIpcTcp:
@@ -164,7 +164,7 @@ func (s *ListenerController) Create(name string) error {
 		}
 	}
 
-	return fmt.Errorf("unhandled listener %v kind=%v ipc=%v", value.config, value.config.Kind.Kind(), value.config.Ipc.Ipc())
+	return fmt.Errorf("unhandled listener %v protocol=%v ipc=%v", value.config, value.config.Protocol.Kind(), value.config.Ipc.Kind())
 }
 
 func (s *ListenerController) Delete(name string) error {
@@ -227,8 +227,8 @@ func (s *ListenerController) Stop(name string) error {
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	switch value.config.Kind.(type) {
-	case *config.ListenerKindLsp:
+	switch value.config.Protocol.(type) {
+	case *config.ListenerProtocolLsp:
 		mixinLsp := value.mixin.(*ListenerMixinLsp)
 
 		mixinLsp.clients.Range(func(key string, value *ListenerLspClient) bool {
@@ -264,10 +264,10 @@ func (s *ListenerController) LspClientOwn(name string, client listener.ListenerL
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	switch kind := value.config.Kind.(type) {
-	case *config.ListenerKindLsp:
+	switch kind := value.config.Protocol.(type) {
+	case *config.ListenerProtocolLsp:
 	default:
-		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
 	}
 
 	mixinLsp := value.mixin.(*ListenerMixinLsp)
@@ -297,8 +297,8 @@ func (s *ListenerController) LspClientStatus(name string, clientName string) con
 		return controller.ClientAbsent
 	}
 
-	switch value.config.Kind.(type) {
-	case *config.ListenerKindLsp:
+	switch value.config.Protocol.(type) {
+	case *config.ListenerProtocolLsp:
 	default:
 		return controller.ClientAbsent
 	}
@@ -321,10 +321,10 @@ func (s *ListenerController) LspClientServe(name string, clientName string) erro
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	switch kind := value.config.Kind.(type) {
-	case *config.ListenerKindLsp:
+	switch kind := value.config.Protocol.(type) {
+	case *config.ListenerProtocolLsp:
 	default:
-		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
 	}
 
 	mixinLsp := value.mixin.(*ListenerMixinLsp)
@@ -384,11 +384,11 @@ func (s *ListenerController) LspClientShutdown(name string, clientName string) e
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	switch kind := value.config.Kind.(type) {
-	case *config.ListenerKindLsp:
+	switch kind := value.config.Protocol.(type) {
+	case *config.ListenerProtocolLsp:
 	default:
 		value.rw.Unlock()
-		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerKindLsp)(nil), kind)
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
 	}
 
 	mixinLsp := value.mixin.(*ListenerMixinLsp)

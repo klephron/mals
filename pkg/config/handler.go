@@ -2,6 +2,7 @@ package config
 
 type Handler struct {
 	Name string
+	Type HandlerType
 }
 
 type HandlerType interface {
@@ -70,7 +71,7 @@ type HandlerLspEndpointShutdown struct {
 
 type HandlerLspEndpointTextDocumentCompletion struct {
 	HandlerLspEndpoint
-	Execution Execution
+	Execution []Step
 }
 
 type HandlerLspEndpointTextDocumentDidChange struct {

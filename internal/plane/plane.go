@@ -13,7 +13,7 @@ type Plane interface {
 	Lsp() controller.LspController
 	Model() controller.ModelController
 	Scope() controller.ScopeController
-	Usage() controller.UsageController
+	Handler() controller.HandlerController
 
 	Debugf(format string, a ...any) error
 	Infof(format string, a ...any) error

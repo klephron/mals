@@ -1,4 +1,4 @@
-package usage
+package handler
 
 import (
 	"context"
@@ -12,5 +12,5 @@ type State struct {
 	statusRW     sync.RWMutex
 	statusCancel context.CancelFunc
 
-	usages *xsync.Map[string, *config.Usage]
+	handlers *xsync.Map[string, *config.Handler]
 }

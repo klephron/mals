@@ -4,7 +4,6 @@ import (
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
 	"mals/internal/util"
-	"mals/pkg/config"
 )
 
 func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
@@ -177,32 +176,31 @@ func (s *LspClient) handle(bytes []byte) {
 		return
 	}
 
-	var method config.Event
+	var method string
 
 	switch msg := msg.(type) {
 	case *jsonrpc.Request:
-		method = config.Event(msg.Method)
 	case *jsonrpc.Notification:
-		method = config.Event(msg.Method)
+		method = msg.Method
 	default:
 		s.plane.Warnf("%T %v: unhandled type %T", s, s.Name(), msg)
 		return
 	}
 
 	switch method {
-	case config.EventInitialize:
+	case "initialize":
 		s.handleInitialize(msg)
-	case config.EventInitialized:
+	case "initialized":
 		s.handleInitialized(msg)
-	case config.EventTextDocumentDidOpen:
+	case "textDocument/didOpen":
 		s.handleTextDocumentDidOpen(msg)
-	case config.EventTextDocumentDidChange:
+	case "textDocument/didChange":
 		s.handleTextDocumentDidChange(msg)
-	case config.EventTextDocumentDidClose:
+	case "textDocument/didClose":
 		s.handleTextDocumentDidClose(msg)
-	case config.EventTextDocumentCompletion:
+	case "textDocument/completion":
 		s.handleTextDocumentCompletion(msg)
-	case config.EventShutdown:
+	case "textDocument/shutdown":
 		s.handleShutdown(msg)
 	default:
 		s.plane.Warnf("%T %v: unhandled method %v", s, s.Name(), method)

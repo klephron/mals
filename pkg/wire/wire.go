@@ -24,9 +24,15 @@ const (
 )
 
 type LogOutput struct {
-	Kind string  `json:"kind"`
-	File *string `json:"file"`
+	Kind LogOutputKind `json:"kind"`
+	File *string       `json:"file"`
 }
+
+type LogOutputKind string
+
+const (
+	LogOutputKindFile LogOutputKind = "file"
+)
 
 type Model struct {
 	Name string   `json:"name"`

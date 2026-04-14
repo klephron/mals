@@ -3,12 +3,12 @@ package planeimpl
 import (
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
+	"mals/internal/plane/controller/handler"
 	"mals/internal/plane/controller/listener"
 	"mals/internal/plane/controller/log"
 	"mals/internal/plane/controller/lsp"
 	"mals/internal/plane/controller/model"
 	"mals/internal/plane/controller/scope"
-	"mals/internal/plane/controller/usage"
 	"sync"
 )
 
@@ -18,7 +18,7 @@ type Plane struct {
 	lsp      controller.LspController
 	model    controller.ModelController
 	scope    controller.ScopeController
-	usage    controller.UsageController
+	handler  controller.HandlerController
 }
 
 func New() plane.Plane {
@@ -29,7 +29,7 @@ func New() plane.Plane {
 	plane.lsp = lsp.New(plane)
 	plane.model = model.New(plane)
 	plane.scope = scope.New(plane)
-	plane.usage = usage.New(plane)
+	plane.handler = handler.New(plane)
 
 	return plane
 }
@@ -65,7 +65,7 @@ func (s *Plane) Run(onReady func()) {
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
-			s.usage.ControllerRun(func() { wgReady.Done() })
+			s.handler.ControllerRun(func() { wgReady.Done() })
 		})
 	}
 
@@ -87,7 +87,7 @@ func (s *Plane) Shutdown() error {
 		return err
 	}
 
-	if err := s.usage.ControllerShutdown(); err != nil {
+	if err := s.handler.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
 	}

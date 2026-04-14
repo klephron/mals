@@ -22,8 +22,8 @@ func (s *Plane) Scope() controller.ScopeController {
 	return s.scope
 }
 
-func (s *Plane) Usage() controller.UsageController {
-	return s.usage
+func (s *Plane) Handler() controller.HandlerController {
+	return s.handler
 }
 
 func (s *Plane) Debugf(format string, a ...any) error {

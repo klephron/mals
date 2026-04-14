@@ -34,8 +34,8 @@ func (s *ListenerApi) newServer() *http.Server {
 	huma.Register(api, handlers.ModelGetAllOperation(), handlers.ModelGetAll(s.plane))
 	huma.Register(api, handlers.ModelGetOperation(), handlers.ModelGet(s.plane))
 
-	huma.Register(api, handlers.UsageGetAllOperation(), handlers.UsageGetAll(s.plane))
-	huma.Register(api, handlers.UsageGetOperation(), handlers.UsageGet(s.plane))
+	huma.Register(api, handlers.HandlerGetAllOperation(), handlers.HandlerGetAll(s.plane))
+	huma.Register(api, handlers.HandlerGetOperation(), handlers.HandlerGet(s.plane))
 
 	huma.Register(api, handlers.ScopeTreeRootOperation(), handlers.ScopeTreeRoot(s.plane))
 

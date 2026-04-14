@@ -39,14 +39,14 @@ func (o *Config) Wire(c *config.Config) error {
 		}
 	}
 
-	if c.Usages != nil {
-		o.Usages = make([]*Handler, 0, len(c.Usages))
-		for _, usage := range c.Usages {
+	if c.Handlers != nil {
+		o.Handlers = make([]*Handler, 0, len(c.Handlers))
+		for _, handler := range c.Handlers {
 			wire := &Handler{}
-			if err := wire.Wire(usage); err != nil {
+			if err := wire.Wire(handler); err != nil {
 				return err
 			}
-			o.Usages = append(o.Usages, wire)
+			o.Handlers = append(o.Handlers, wire)
 		}
 	}
 
@@ -100,14 +100,14 @@ func (o *Config) Unwire() (*config.Config, error) {
 		}
 	}
 
-	if o.Usages != nil {
-		c.Usages = make([]*config.Usage, 0, len(o.Usages))
-		for _, usage := range o.Usages {
-			unwired, err := usage.Unwire()
+	if o.Handlers != nil {
+		c.Handlers = make([]*config.Handler, 0, len(o.Handlers))
+		for _, handler := range o.Handlers {
+			unwired, err := handler.Unwire()
 			if err != nil {
 				return nil, err
 			}
-			c.Usages = append(c.Usages, unwired)
+			c.Handlers = append(c.Handlers, unwired)
 		}
 	}
 
@@ -127,12 +127,26 @@ func (o *Config) Unwire() (*config.Config, error) {
 
 func (o *Log) Wire(c *config.Log) error {
 	o.Name = c.Name
-	o.Level = c.Level
 
-	switch k := c.Kind.(type) {
-	case *config.LogKindFile:
-		o.Kind = k.Kind()
-		o.File = &k.File
+	switch c.Level {
+	case config.LogLevelError:
+		o.Level = LogLevelError
+	case config.LogLevelWarn:
+		o.Level = LogLevelWarn
+	case config.LogLevelInfo:
+		o.Level = LogLevelInfo
+	case config.LogLevelDebug:
+		o.Level = LogLevelDebug
+	default:
+		return fmt.Errorf("unknown log level")
+	}
+
+	switch k := c.Output.(type) {
+	case *config.LogOutputFile:
+		o.Output = LogOutput{
+			Kind: LogOutputKindFile,
+			File: &k.File,
+		}
 	default:
 		return fmt.Errorf("unknown log kind")
 	}
@@ -142,19 +156,31 @@ func (o *Log) Wire(c *config.Log) error {
 
 func (o *Log) Unwire() (*config.Log, error) {
 	c := &config.Log{
-		Name:  o.Name,
-		Level: o.Level,
+		Name: o.Name,
 	}
 
-	switch o.Kind {
-	case (&config.LogKindFile{}).Kind():
-		file := &config.LogKindFile{}
-		if o.File != nil {
-			file.File = *o.File
-		}
-		c.Kind = file
+	switch o.Level {
+	case LogLevelError:
+		c.Level = config.LogLevelError
+	case LogLevelWarn:
+		c.Level = config.LogLevelWarn
+	case LogLevelInfo:
+		c.Level = config.LogLevelInfo
+	case LogLevelDebug:
+		c.Level = config.LogLevelDebug
 	default:
-		return nil, fmt.Errorf("unknown log kind: %v", o.Kind)
+		return nil, fmt.Errorf("unknown log level")
+	}
+
+	switch o.Output.Kind {
+	case LogOutputKindFile:
+		output := &config.LogOutputFile{}
+		if o.Output.File != nil {
+			output.File = *o.Output.File
+		}
+		c.Output = output
+	default:
+		return nil, fmt.Errorf("unknown log kind: %v", o.Output.Kind)
 	}
 
 	return c, nil
@@ -163,10 +189,10 @@ func (o *Log) Unwire() (*config.Log, error) {
 func (o *Model) Wire(c *config.Model) error {
 	o.Name = c.Name
 
-	switch s := c.Settings.(type) {
-	case *config.ModelSettingsOpenAI:
-		o.Kind = s.Kind()
-		o.Settings = ModelSettings{
+	switch s := c.Api.(type) {
+	case *config.ModelApiOpenai:
+		o.Api = ModelApi{
+			Kind:        ModelApiKindOpenai,
 			Url:         s.Url,
 			MaxTokens:   s.MaxTokens,
 			Temperature: s.Temperature,
@@ -183,15 +209,15 @@ func (o *Model) Unwire() (*config.Model, error) {
 		Name: o.Name,
 	}
 
-	switch o.Kind {
-	case (&config.ModelSettingsOpenAI{}).Kind():
-		c.Settings = &config.ModelSettingsOpenAI{
-			Url:         o.Settings.Url,
-			MaxTokens:   o.Settings.MaxTokens,
-			Temperature: o.Settings.Temperature,
+	switch o.Api.Kind {
+	case ModelApiKindOpenai:
+		c.Api = &config.ModelApiOpenai{
+			Url:         o.Api.Url,
+			MaxTokens:   o.Api.MaxTokens,
+			Temperature: o.Api.Temperature,
 		}
 	default:
-		c.Settings = nil
+		c.Api = nil
 	}
 
 	return c, nil
@@ -200,11 +226,11 @@ func (o *Model) Unwire() (*config.Model, error) {
 func (o *Lsp) Wire(c *config.Lsp) error {
 	o.Name = c.Name
 
-	switch s := c.Settings.(type) {
-	case *config.LspSettingsStdio:
-		o.Kind = s.Kind()
-		o.Settings = LspSettings{
-			Cmd: s.Cmd,
+	switch s := c.Api.(type) {
+	case *config.LspApiStdio:
+		o.Api = LspApi{
+			Kind: LspApiKindStdio,
+			Cmd:  s.Cmd,
 		}
 	default:
 		return fmt.Errorf("unknown lsp settings kind")
@@ -218,66 +244,13 @@ func (o *Lsp) Unwire() (*config.Lsp, error) {
 		Name: o.Name,
 	}
 
-	switch o.Kind {
-	case (&config.LspSettingsStdio{}).Kind():
-		c.Settings = &config.LspSettingsStdio{
-			Cmd: o.Settings.Cmd,
+	switch o.Api.Kind {
+	case LspApiKindStdio:
+		c.Api = &config.LspApiStdio{
+			Cmd: o.Api.Cmd,
 		}
 	default:
-		c.Settings = nil
-	}
-
-	return c, nil
-}
-
-func (o *Handler) Wire(c *config.Usage) error {
-	o.Name = c.Name
-	o.Events = c.Events
-
-	if c.Conditions != nil {
-		o.Conditions = make([]*Condition, 0, len(c.Conditions))
-		for _, cond := range c.Conditions {
-			wire := &Condition{}
-			if err := wire.Wire(cond); err != nil {
-				return err
-			}
-			o.Conditions = append(o.Conditions, wire)
-		}
-	}
-
-	if c.Workflow != nil {
-		o.Workflow = &Workflow{}
-		if err := o.Workflow.Wire(c.Workflow); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (o *Handler) Unwire() (*config.Usage, error) {
-	c := &config.Usage{
-		Name:   o.Name,
-		Events: o.Events,
-	}
-
-	if o.Conditions != nil {
-		c.Conditions = make([]*config.Condition, 0, len(o.Conditions))
-		for _, cond := range o.Conditions {
-			unwired, err := cond.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Conditions = append(c.Conditions, unwired)
-		}
-	}
-
-	if o.Workflow != nil {
-		unwired, err := o.Workflow.Unwire()
-		if err != nil {
-			return nil, err
-		}
-		c.Workflow = unwired
+		c.Api = nil
 	}
 
 	return c, nil
@@ -286,25 +259,36 @@ func (o *Handler) Unwire() (*config.Usage, error) {
 func (o *Listener) Wire(c *config.Listener) error {
 	o.Name = c.Name
 
-	switch k := c.Kind.(type) {
-	case *config.ListenerKindApi:
-		o.Kind = k.Kind()
-	case *config.ListenerKindLsp:
-		o.Kind = k.Kind()
-		o.Usages = k.Usages
+	switch k := c.Protocol.(type) {
+	case *config.ListenerProtocolApi:
+		o.Protocol = ListenerProtocol{
+			Kind:     ListenerProtocolKindApi,
+			Handlers: nil,
+		}
+	case *config.ListenerProtocolLsp:
+		handlers := make([]*ListenerProtocolHandler, 0, len(k.Handlers))
+		for _, handler := range k.Handlers {
+			wire := &ListenerProtocolHandler{}
+			if err := wire.Wire(&handler); err != nil {
+				return err
+			}
+			handlers = append(handlers, wire)
+		}
+
+		o.Protocol = ListenerProtocol{
+			Kind:     ListenerProtocolKindLsp,
+			Handlers: handlers,
+		}
 	default:
 		return fmt.Errorf("unknown listener kind")
 	}
 
 	switch i := c.Ipc.(type) {
-	case *config.ListenerIpcStdio:
-		o.Ipc = i.Ipc()
 	case *config.ListenerIpcTcp:
-		o.Ipc = i.Ipc()
-		o.Port = &i.Port
-	case *config.ListenerIpcHttp:
-		o.Ipc = i.Ipc()
-		o.Port = &i.Port
+		o.Ipc = ListenerIpc{
+			Kind: ListenerIpcKindTcp,
+			Port: &i.Port,
+		}
 	default:
 		return fmt.Errorf("unknown listener ipc")
 	}
@@ -317,30 +301,34 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 		Name: o.Name,
 	}
 
-	switch o.Kind {
-	case (&config.ListenerKindApi{}).Kind():
-		c.Kind = &config.ListenerKindApi{}
-	case (&config.ListenerKindLsp{}).Kind():
-		c.Kind = &config.ListenerKindLsp{Usages: o.Usages}
+	switch o.Protocol.Kind {
+	case ListenerProtocolKindApi:
+		c.Protocol = &config.ListenerProtocolApi{}
+	case ListenerProtocolKindLsp:
+		handlers := make([]config.ListenerProtocolLspHandler, 0, len(o.Protocol.Handlers))
+
+		for _, handler := range o.Protocol.Handlers {
+			unwired, err := handler.Unwire()
+			if err != nil {
+				return nil, err
+			}
+			handlers = append(handlers, *unwired)
+		}
+
+		c.Protocol = &config.ListenerProtocolLsp{
+			Handlers: handlers,
+		}
 	default:
-		return nil, fmt.Errorf("unknown listener kind: %v", o.Kind)
+		return nil, fmt.Errorf("unknown listener kind: %v", o.Protocol.Kind)
 	}
 
-	switch o.Ipc {
-	case (&config.ListenerIpcStdio{}).Ipc():
-		c.Ipc = &config.ListenerIpcStdio{}
-	case (&config.ListenerIpcTcp{}).Ipc():
+	switch o.Ipc.Kind {
+	case ListenerIpcKindTcp:
 		tcp := &config.ListenerIpcTcp{}
-		if o.Port != nil {
-			tcp.Port = *o.Port
+		if o.Ipc.Port != nil {
+			tcp.Port = *o.Ipc.Port
 		}
 		c.Ipc = tcp
-	case (&config.ListenerIpcHttp{}).Ipc():
-		http := &config.ListenerIpcHttp{}
-		if o.Port != nil {
-			http.Port = *o.Port
-		}
-		c.Ipc = http
 	default:
 		return nil, fmt.Errorf("unknown listener ipc: %v", o.Ipc)
 	}
@@ -348,110 +336,39 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 	return c, nil
 }
 
-func (o *Workflow) Wire(c *config.Workflow) error {
-	if c.Steps != nil {
-		o.Steps = make([]*Step, 0, len(c.Steps))
-		for _, step := range c.Steps {
-			wire := &Step{}
-			if err := wire.Wire(step); err != nil {
-				return err
-			}
-			o.Steps = append(o.Steps, wire)
-		}
-	}
-	return nil
-}
-
-func (o *Workflow) Unwire() (*config.Workflow, error) {
-	c := &config.Workflow{}
-
-	if o.Steps != nil {
-		c.Steps = make([]*config.Step, 0, len(o.Steps))
-		for _, step := range o.Steps {
-			unwired, err := step.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Steps = append(c.Steps, unwired)
-		}
-	}
-
-	return c, nil
-}
-
-func (o *Step) Wire(c *config.Step) error {
+func (o *ListenerProtocolHandler) Wire(c *config.ListenerProtocolLspHandler) error {
 	o.Name = c.Name
-	o.Scope = c.Scope
 
-	if c.Conditions != nil {
-		o.Conditions = make([]*Condition, 0, len(c.Conditions))
-		for _, cond := range c.Conditions {
-			wire := &Condition{}
-			if err := wire.Wire(cond); err != nil {
-				return err
-			}
-			o.Conditions = append(o.Conditions, wire)
-		}
+	o.Condition = ListenerProtocolHandlerCondition{
+		Filetypes: c.Condition.Filetypes,
+		Paths:     c.Condition.Paths,
 	}
 
-	switch k := c.Kind.(type) {
-	case *config.StepKindModel:
-		o.Model = &k.Name
-	case *config.StepKindLsp:
-		o.Lsp = &k.Name
-	default:
-		return fmt.Errorf("unknown step kind")
-	}
+	o.Handler = c.Handler
 
 	return nil
 }
 
-func (o *Step) Unwire() (*config.Step, error) {
-	c := &config.Step{
-		Name:  o.Name,
-		Scope: o.Scope,
+func (o *ListenerProtocolHandler) Unwire() (*config.ListenerProtocolLspHandler, error) {
+	c := config.ListenerProtocolLspHandler{
+		Name:    o.Name,
+		Handler: o.Handler,
 	}
 
-	if o.Conditions != nil {
-		c.Conditions = make([]*config.Condition, 0, len(o.Conditions))
-		for _, cond := range o.Conditions {
-			unwired, err := cond.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Conditions = append(c.Conditions, unwired)
-		}
+	c.Condition = config.ListenerProtocolLspHandlerCondition{
+		Filetypes: o.Condition.Filetypes,
+		Paths:     o.Condition.Paths,
 	}
 
-	if o.Model != nil && o.Lsp != nil {
-		return nil, fmt.Errorf("both model and lsp are set")
-	}
-
-	if o.Model == nil && o.Lsp == nil {
-		return nil, fmt.Errorf("none model and lsp are set")
-	}
-
-	if o.Model != nil {
-		c.Kind = &config.StepKindModel{Name: *o.Model}
-	}
-
-	if o.Lsp != nil {
-		c.Kind = &config.StepKindLsp{Name: *o.Lsp}
-	}
-
-	return c, nil
+	return &c, nil
 }
 
-func (o *Condition) Wire(c *config.Condition) error {
-	o.Filetypes = c.Filetypes
-	o.Paths = c.Paths
+func (o *Handler) Wire(c *config.Handler) error {
+	// TODO
 	return nil
 }
 
-func (o *Condition) Unwire() (*config.Condition, error) {
-	c := &config.Condition{
-		Filetypes: o.Filetypes,
-		Paths:     o.Paths,
-	}
-	return c, nil
+func (o *Handler) Unwire() (*config.Handler, error) {
+	// TODO
+	return nil, nil
 }

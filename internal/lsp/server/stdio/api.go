@@ -5,7 +5,6 @@ import (
 	"mals/internal/jsonrpc"
 	"mals/internal/lsp/protocol"
 	"mals/internal/util"
-	"mals/pkg/config"
 )
 
 func (s *LspServerStdio) Capabilities() (*protocol.ServerCapabilities, error) {
@@ -38,7 +37,7 @@ func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protoco
 	}
 
 	request := &jsonrpc.Request{
-		Method: string(config.EventInitialize),
+		Method: "initialize",
 		Params: paramsRaw,
 	}
 
@@ -81,7 +80,7 @@ func (s *LspServerStdio) Initialized(params *protocol.InitializedParams) error {
 	}
 
 	notification := &jsonrpc.Notification{
-		Method: string(config.EventInitialized),
+		Method: "initialized",
 		Params: paramsRaw,
 	}
 
@@ -101,7 +100,7 @@ func (s *LspServerStdio) TextDocumentDidOpen(params *protocol.DidOpenTextDocumen
 	}
 
 	notification := &jsonrpc.Notification{
-		Method: string(config.EventTextDocumentDidOpen),
+		Method: "textDocument/didOpen",
 		Params: paramsRaw,
 	}
 
@@ -121,7 +120,7 @@ func (s *LspServerStdio) TextDocumentDidChange(params *protocol.DidChangeTextDoc
 	}
 
 	notification := &jsonrpc.Notification{
-		Method: string(config.EventTextDocumentDidChange),
+		Method: "textDocument/didChange",
 		Params: paramsRaw,
 	}
 
@@ -141,7 +140,7 @@ func (s *LspServerStdio) TextDocumentDidClose(params *protocol.DidCloseTextDocum
 	}
 
 	notification := &jsonrpc.Notification{
-		Method: string(config.EventTextDocumentDidClose),
+		Method: "textDocument/didClose",
 		Params: paramsRaw,
 	}
 
@@ -161,7 +160,7 @@ func (s *LspServerStdio) TextDocumentCompletion(params *protocol.CompletionParam
 	}
 
 	request := &jsonrpc.Request{
-		Method: string(config.EventTextDocumentCompletion),
+		Method: "textDocument/completion",
 		Params: paramsRaw,
 	}
 
@@ -190,7 +189,7 @@ func (s *LspServerStdio) TextDocumentCompletion(params *protocol.CompletionParam
 
 func (s *LspServerStdio) Shutdown() error {
 	notification := &jsonrpc.Notification{
-		Method: string(config.EventShutdown),
+		Method: "shutdown",
 		Params: nil,
 	}
 

@@ -106,8 +106,8 @@ func (s *LogController) Create(name string) error {
 		return statusErrorEq(name, status, controller.LogRegistered)
 	}
 
-	switch kind := value.config.Kind.(type) {
-	case *config.LogKindFile:
+	switch kind := value.config.Output.(type) {
+	case *config.LogOutputFile:
 		log, err := file.Open(kind.File, value.config.Level)
 		if err != nil {
 			return err

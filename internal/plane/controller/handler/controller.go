@@ -1,4 +1,4 @@
-package usage
+package handler
 
 import (
 	"context"
@@ -10,23 +10,23 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type UsageController struct {
+type HandlerController struct {
 	state State
 	plane plane.Plane
 }
 
-func New(plane plane.Plane) *UsageController {
-	return &UsageController{
+func New(plane plane.Plane) *HandlerController {
+	return &HandlerController{
 		state: State{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			usages:       xsync.NewMap[string, *config.Usage](),
+			handlers:     xsync.NewMap[string, *config.Handler](),
 		},
 		plane: plane,
 	}
 }
 
-func (s *UsageController) ControllerRun(onReady func()) error {
+func (s *HandlerController) ControllerRun(onReady func()) error {
 	s.state.statusRW.Lock()
 
 	if s.state.statusCancel != nil {
@@ -51,7 +51,7 @@ func (s *UsageController) ControllerRun(onReady func()) error {
 	return nil
 }
 
-func (s *UsageController) ControllerShutdown() error {
+func (s *HandlerController) ControllerShutdown() error {
 	s.state.statusRW.RLock()
 	cancel := s.state.statusCancel
 	s.state.statusRW.RUnlock()

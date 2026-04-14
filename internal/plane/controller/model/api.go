@@ -71,8 +71,8 @@ func (s *ModelController) Register(name string, cfg *config.Model) error {
 		return statusErrorEq(name, status, controller.ModelAbsent)
 	}
 
-	switch settings := cfg.Settings.(type) {
-	case *config.ModelSettingsOpenAI:
+	switch settings := cfg.Api.(type) {
+	case *config.ModelApiOpenai:
 		s.state.models.Store(name, &Model{
 			rw:         sync.RWMutex{},
 			config:     cfg,
@@ -116,8 +116,8 @@ func (s *ModelController) Create(name string) error {
 		return statusErrorEq(name, status, controller.ModelRegistered)
 	}
 
-	switch settings := value.config.Settings.(type) {
-	case *config.ModelSettingsOpenAI:
+	switch settings := value.config.Api.(type) {
+	case *config.ModelApiOpenai:
 		value.model = openai.New(name, settings, s.plane)
 
 	default:
