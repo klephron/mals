@@ -1,19 +1,28 @@
 package config
 
 type Log struct {
-	Name  string
-	Level string
-	Kind  LogKind
+	Name   string
+	Level  LogLevel
+	Output LogOutput
 }
 
-type LogKind interface {
+type LogLevel string
+
+const (
+	LogLevelDebug LogLevel = "debug"
+	LogLevelInfo  LogLevel = "info"
+	LogLevelWarn  LogLevel = "warn"
+	LogLevelError LogLevel = "error"
+)
+
+type LogOutput interface {
 	Kind() string
 }
 
-type LogKindFile struct {
+type LogOutputFile struct {
 	File string
 }
 
-func (s *LogKindFile) Kind() string {
+func (s *LogOutputFile) Kind() string {
 	return "file"
 }

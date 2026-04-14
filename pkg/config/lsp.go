@@ -1,18 +1,18 @@
 package config
 
 type Lsp struct {
-	Name     string
-	Settings LspSettings
+	Name string
+	Api  LspApi
 }
 
-type LspSettings interface {
+type LspApi interface {
 	Kind() string
 }
 
-type LspSettingsStdio struct {
+type LspApiStdio struct {
 	Cmd []string
 }
 
-func (s *LspSettingsStdio) Kind() string {
+func (s *LspApiStdio) Kind() string {
 	return "stdio"
 }

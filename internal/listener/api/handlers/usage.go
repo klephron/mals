@@ -10,14 +10,14 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-type UsageDto wire.Usage
+type UsageDto wire.Handler
 
 type UsageGetInput struct {
 	Name string `path:"name" doc:"usage name"`
 }
 
 func usageToDto(usage *config.Usage) UsageDto {
-	t := wire.Usage{}
+	t := wire.Handler{}
 	t.Wire(usage)
 	return UsageDto(t)
 }

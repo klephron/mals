@@ -1,20 +1,20 @@
 package config
 
 type Model struct {
-	Name     string
-	Settings ModelSettings
+	Name string
+	Api  ModelApi
 }
 
-type ModelSettings interface {
+type ModelApi interface {
 	Kind() string
 }
 
-type ModelSettingsOpenAI struct {
+type ModelApiOpenai struct {
 	Url         string
 	MaxTokens   int
 	Temperature float32
 }
 
-func (s *ModelSettingsOpenAI) Kind() string {
+func (s *ModelApiOpenai) Kind() string {
 	return "openai"
 }

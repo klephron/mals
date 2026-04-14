@@ -1,3 +1,10 @@
+logs:
+  - name: stderr
+    level: info
+    output:
+      kind: file
+      file: /dev/stderr
+
 models:
   - name: Llama-3.2-1B-Instruct-Q6_K
     api:
@@ -13,13 +20,6 @@ lsps:
       cmd:
         - clangd
 
-logs:
-  - name: stderr
-    level: info
-    output:
-      kind: file
-      file: /dev/stderr
-
 handlers:
   - name: completion
     kind: lsp
@@ -31,24 +31,24 @@ handlers:
         lsp: clangd
         scope: client
     endpoints:
-      "initialize":
+      initialize:
         default: true
-      "initialized":
+      initialized:
         default: true
-      "textDocument/didOpen":
+      textDocument/didOpen:
         default: true
-      "textDocument/didChange":
+      textDocument/didChange:
         default: true
-      "textDocument/didClose":
+      textDocument/didClose:
         default: true
-      "shutdown":
+      shutdown:
         default: true
-      "textDocument/completion":
+      textDocument/completion:
         default: false
         execution:
           - lsp/completion:
               resource: clangd
-            assign: clangdrm for agen
+            assign: clangd
 
           - json/dumps:
               input: "{{ clangd.out }}"
@@ -79,15 +79,16 @@ handlers:
                       {{ file.text_before }}
                   assign: llm_result
 
-          - if: "{{ llm_result }}"
-            then:
-              - json/parse/completion:
-                  input: "{{ llm_result.out }}"
-                assign: completion_json
-            else:
-              - json/parse/completion:
-                  input: "[]"
-                assign: completion_json
+          - if:
+              condition: "{{ llm_result }}"
+              then:
+                - json/parse/completion:
+                    input: "{{ llm_result.out }}"
+                  assign: completion_json
+              else:
+                - json/parse/completion:
+                    input: "[]"
+                  assign: completion_json
 
           - return: "{{ completion_json.out }}"
 
