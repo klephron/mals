@@ -6,7 +6,7 @@ type Model struct {
 }
 
 type ModelApi interface {
-	Kind() string
+	ModelApi() string
 }
 
 type ModelApiOpenai struct {
@@ -15,6 +15,6 @@ type ModelApiOpenai struct {
 	Temperature float32
 }
 
-func (s *ModelApiOpenai) Kind() string {
+func (s *ModelApiOpenai) ModelApi() string {
 	return "openai"
 }

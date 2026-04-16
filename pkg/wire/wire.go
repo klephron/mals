@@ -72,7 +72,7 @@ type Handler struct {
 	Name      string             `json:"name"`
 	Kind      HandlerKind        `json:"kind"`
 	Resources []*HandlerResource `json:"resources"`
-	Endpoints HandlerEndpoints   `json:"endpoints"`
+	Endpoints *HandlerEndpoints  `json:"endpoints"`
 }
 
 type HandlerKind string

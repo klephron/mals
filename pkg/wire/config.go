@@ -364,11 +364,307 @@ func (o *ListenerProtocolHandler) Unwire() (*config.ListenerProtocolLspHandler, 
 }
 
 func (o *Handler) Wire(c *config.Handler) error {
-	// TODO
+	o.Name = c.Name
+
+	switch s := c.Spec.(type) {
+	case *config.HandlerSpecLsp:
+		o.Kind = HandlerKindLsp
+
+		o.Resources = make([]*HandlerResource, len(s.Resources))
+		for _, resource := range s.Resources {
+			wire := &HandlerResource{}
+			if err := wire.Wire(&resource); err != nil {
+				return err
+			}
+			o.Resources = append(o.Resources, wire)
+		}
+
+		o.Endpoints = &HandlerEndpoints{
+			Initialize:             HandlerEndpoint{},
+			Initialized:            HandlerEndpoint{},
+			Shutdown:               HandlerEndpoint{},
+			TextDocumentCompletion: HandlerEndpointCompletion{},
+			TextDocumentDidChange:  HandlerEndpoint{},
+			TextDocumentDidClose:   HandlerEndpoint{},
+			TextDocumentDidOpen:    HandlerEndpoint{},
+		}
+
+		if err := o.Endpoints.Initialize.WireInitialize(&s.Endpoints.Initialize); err != nil {
+			return err
+		}
+
+		if err := o.Endpoints.Initialized.WireInitialized(&s.Endpoints.Initialized); err != nil {
+			return err
+		}
+
+		if err := o.Endpoints.Shutdown.WireShutdown(&s.Endpoints.Shutdown); err != nil {
+			return err
+		}
+
+		if err := o.Endpoints.TextDocumentCompletion.WireTextDocumentCompletion(&s.Endpoints.TextDocumentCompletion); err != nil {
+			return err
+		}
+
+		if err := o.Endpoints.TextDocumentDidChange.WireTextDocumentDidChange(&s.Endpoints.TextDocumentDidChange); err != nil {
+			return err
+		}
+
+		if err := o.Endpoints.TextDocumentDidClose.WireTextDocumentDidClose(&s.Endpoints.TextDocumentDidClose); err != nil {
+			return err
+		}
+
+		if err := o.Endpoints.TextDocumentDidOpen.WireTextDocumentDidOpen(&s.Endpoints.TextDocumentDidOpen); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unknown handler kind")
+	}
+
 	return nil
 }
 
 func (o *Handler) Unwire() (*config.Handler, error) {
-	// TODO
-	return nil, nil
+	c := config.Handler{
+		Name: o.Name,
+	}
+
+	switch o.Kind {
+	case HandlerKindLsp:
+		resources := make([]config.HandlerLspResource, len(o.Resources))
+		for _, resource := range o.Resources {
+			unwired, err := resource.Unwire()
+			if err != nil {
+				return nil, err
+			}
+			resources = append(resources, *unwired)
+		}
+
+		initialize, err := o.Endpoints.Initialize.UnwireInitialize()
+		if err != nil {
+			return nil, err
+		}
+
+		initialized, err := o.Endpoints.Initialized.UnwireInitialized()
+		if err != nil {
+			return nil, err
+		}
+
+		shutdown, err := o.Endpoints.Shutdown.UnwireShutdown()
+		if err != nil {
+			return nil, err
+		}
+
+		textDocumentCompletion, err := o.Endpoints.TextDocumentCompletion.UnwireTextDocumentCompletion()
+		if err != nil {
+			return nil, err
+		}
+
+		textDocumentDidChange, err := o.Endpoints.TextDocumentDidChange.UnwireTextDocumentDidChange()
+		if err != nil {
+			return nil, err
+		}
+
+		textDocumentDidClose, err := o.Endpoints.TextDocumentDidClose.UnwireTextDocumentDidClose()
+		if err != nil {
+			return nil, err
+		}
+
+		textDocumentDidOpen, err := o.Endpoints.TextDocumentDidOpen.UnwireTextDocumentDidOpen()
+		if err != nil {
+			return nil, err
+		}
+
+		c.Spec = &config.HandlerSpecLsp{
+			Resources: resources,
+			Endpoints: config.HandlerLspEndpoints{
+				Initialize:             *initialize,
+				Initialized:            *initialized,
+				Shutdown:               *shutdown,
+				TextDocumentCompletion: *textDocumentCompletion,
+				TextDocumentDidChange:  *textDocumentDidChange,
+				TextDocumentDidClose:   *textDocumentDidClose,
+				TextDocumentDidOpen:    *textDocumentDidOpen,
+			},
+		}
+
+	default:
+		return nil, fmt.Errorf("unknown handler kind")
+	}
+
+	return &c, nil
+}
+
+func (o *HandlerResource) Wire(c *config.HandlerLspResource) error {
+	o.Name = c.Name
+
+	switch c.Scope {
+	case config.HandlerLspResourceScopeGlobal:
+		o.Scope = HandlerResourceScopeGlobal
+	case config.HandlerLspResourceScopeClient:
+		o.Scope = HandlerResourceScopeClient
+	default:
+		return fmt.Errorf("unknown lsp resource scope")
+	}
+
+	switch s := c.Spec.(type) {
+	case *config.HandlerLspResourceSpecLsp:
+		o.Lsp = &s.Name
+	case *config.HandlerLspResourceSpecModel:
+		o.Model = &s.Name
+	default:
+		return fmt.Errorf("unknown lsp resource spec")
+	}
+	return nil
+}
+
+func (o *HandlerResource) Unwire() (*config.HandlerLspResource, error) {
+	c := config.HandlerLspResource{
+		Name: o.Name,
+	}
+
+	switch o.Scope {
+	case HandlerResourceScopeGlobal:
+		c.Scope = config.HandlerLspResourceScopeGlobal
+	case HandlerResourceScopeClient:
+		c.Scope = config.HandlerLspResourceScopeClient
+	default:
+		return nil, fmt.Errorf("unknown lsp resource scope")
+	}
+
+	if o.Lsp == nil && o.Model == nil {
+		return nil, fmt.Errorf("both model and lsp are not set")
+	}
+
+	if o.Lsp != nil && o.Model != nil {
+		return nil, fmt.Errorf("both lsp and model are set")
+	}
+
+	if o.Lsp != nil {
+		c.Spec = &config.HandlerLspResourceSpecLsp{
+			Name: *o.Lsp,
+		}
+	}
+
+	if o.Model != nil {
+		c.Spec = &config.HandlerLspResourceSpecModel{
+			Name: *o.Model,
+		}
+	}
+
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) Wire(c *config.HandlerLspEndpoint) error {
+	o.Default = c.Default
+	return nil
+}
+
+func (o *HandlerEndpoint) Unwire() (*config.HandlerLspEndpoint, error) {
+	c := config.HandlerLspEndpoint{
+		Default: o.Default,
+	}
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) WireInitialize(c *config.HandlerLspEndpointInitialize) error {
+	return o.Wire(&c.HandlerLspEndpoint)
+}
+
+func (o *HandlerEndpoint) UnwireInitialize() (*config.HandlerLspEndpointInitialize, error) {
+	c := config.HandlerLspEndpointInitialize{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) WireInitialized(c *config.HandlerLspEndpointInitialized) error {
+	return o.Wire(&c.HandlerLspEndpoint)
+}
+
+func (o *HandlerEndpoint) UnwireInitialized() (*config.HandlerLspEndpointInitialized, error) {
+	c := config.HandlerLspEndpointInitialized{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) WireShutdown(c *config.HandlerLspEndpointShutdown) error {
+	return o.Wire(&c.HandlerLspEndpoint)
+}
+
+func (o *HandlerEndpoint) UnwireShutdown() (*config.HandlerLspEndpointShutdown, error) {
+	c := config.HandlerLspEndpointShutdown{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+	return &c, nil
+}
+
+func (o *HandlerEndpointCompletion) WireTextDocumentCompletion(c *config.HandlerLspEndpointTextDocumentCompletion) error {
+	if err := o.HandlerEndpoint.Wire(&c.HandlerLspEndpoint); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *HandlerEndpoint) UnwireTextDocumentCompletion() (*config.HandlerLspEndpointTextDocumentCompletion, error) {
+	c := config.HandlerLspEndpointTextDocumentCompletion{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) WireTextDocumentDidChange(c *config.HandlerLspEndpointTextDocumentDidChange) error {
+	return o.Wire(&c.HandlerLspEndpoint)
+}
+
+func (o *HandlerEndpoint) UnwireTextDocumentDidChange() (*config.HandlerLspEndpointTextDocumentDidChange, error) {
+	c := config.HandlerLspEndpointTextDocumentDidChange{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) WireTextDocumentDidClose(c *config.HandlerLspEndpointTextDocumentDidClose) error {
+	return o.Wire(&c.HandlerLspEndpoint)
+}
+
+func (o *HandlerEndpoint) UnwireTextDocumentDidClose() (*config.HandlerLspEndpointTextDocumentDidClose, error) {
+	c := config.HandlerLspEndpointTextDocumentDidClose{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+	return &c, nil
+}
+
+func (o *HandlerEndpoint) WireTextDocumentDidOpen(c *config.HandlerLspEndpointTextDocumentDidOpen) error {
+	return o.Wire(&c.HandlerLspEndpoint)
+}
+
+func (o *HandlerEndpoint) UnwireTextDocumentDidOpen() (*config.HandlerLspEndpointTextDocumentDidOpen, error) {
+	c := config.HandlerLspEndpointTextDocumentDidOpen{}
+	endpoint, err := o.Unwire()
+	if err != nil {
+		return nil, err
+	}
+	c.HandlerLspEndpoint = *endpoint
+	return &c, nil
 }

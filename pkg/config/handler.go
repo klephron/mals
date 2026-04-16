@@ -2,20 +2,26 @@ package config
 
 type Handler struct {
 	Name string
-	Type HandlerType
+	Spec HandlerSpec
 }
 
-type HandlerType interface {
-	Kind() string
+type HandlerSpec interface {
+	HandlerSpec() string
 }
 
-type HandlerLsp struct {
+type HandlerSpecLsp struct {
 	Resources []HandlerLspResource
 	Endpoints HandlerLspEndpoints
 }
 
-type HandlerLspResource interface {
-	Kind() string
+func (s *HandlerSpecLsp) HandlerSpec() string {
+	return "lsp"
+}
+
+type HandlerLspResource struct {
+	Name  string
+	Scope HandlerLspResourceScope
+	Spec  HandlerLspResourceSpec
 }
 
 type HandlerLspResourceScope string
@@ -25,21 +31,23 @@ const (
 	HandlerLspResourceScopeClient HandlerLspResourceScope = "client"
 )
 
-type HandlerLspResourceLsp struct {
-	Lsp   string
-	Scope HandlerLspResourceScope
+type HandlerLspResourceSpec interface {
+	HandlerLspResourceSpec() string
 }
 
-func (s *HandlerLspResourceLsp) Kind() string {
+type HandlerLspResourceSpecLsp struct {
+	Name string
+}
+
+func (s *HandlerLspResourceSpecLsp) HandlerLspResourceSpec() string {
 	return "lsp"
 }
 
-type HandlerLspResourceModel struct {
-	Model string
-	Scope HandlerLspResourceScope
+type HandlerLspResourceSpecModel struct {
+	Name string
 }
 
-func (s *HandlerLspResourceModel) Kind() string {
+func (s *HandlerLspResourceSpecModel) HandlerLspResourceSpec() string {
 	return "model"
 }
 

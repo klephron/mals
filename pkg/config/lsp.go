@@ -6,13 +6,13 @@ type Lsp struct {
 }
 
 type LspApi interface {
-	Kind() string
+	LspApi() string
 }
 
 type LspApiStdio struct {
 	Cmd []string
 }
 
-func (s *LspApiStdio) Kind() string {
+func (s *LspApiStdio) LspApi() string {
 	return "stdio"
 }
