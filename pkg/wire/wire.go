@@ -1,17 +1,17 @@
 package wire
 
 type Config struct {
-	Logs      []*Log      `json:"logs"`
-	Models    []*Model    `json:"models"`
-	Lsps      []*Lsp      `json:"lsps"`
-	Handlers  []*Handler  `json:"handlers"`
-	Listeners []*Listener `json:"listeners"`
+	Logs      []*Log      `mapstructure:"logs"`
+	Models    []*Model    `mapstructure:"models"`
+	Lsps      []*Lsp      `mapstructure:"lsps"`
+	Handlers  []*Handler  `mapstructure:"handlers"`
+	Listeners []*Listener `mapstructure:"listeners"`
 }
 
 type Log struct {
-	Name   string    `json:"name"`
-	Level  LogLevel  `json:"level"`
-	Output LogOutput `json:"output"`
+	Name   string     `mapstructure:"name"`
+	Level  LogLevel   `mapstructure:"level"`
+	Output *LogOutput `mapstructure:"output"`
 }
 
 type LogLevel string
@@ -24,8 +24,8 @@ const (
 )
 
 type LogOutput struct {
-	Kind LogOutputKind `json:"kind"`
-	File *string       `json:"file"`
+	Kind LogOutputKind `mapstructure:"kind"`
+	File *string       `mapstructure:"file"`
 }
 
 type LogOutputKind string
@@ -35,15 +35,15 @@ const (
 )
 
 type Model struct {
-	Name string   `json:"name"`
-	Api  ModelApi `json:"api"`
+	Name string    `mapstructure:"name"`
+	Api  *ModelApi `mapstructure:"api"`
 }
 
 type ModelApi struct {
-	Kind        ModelApiKind `json:"kind"`
-	Url         string       `json:"url"`
-	MaxTokens   int          `json:"max_tokens"`
-	Temperature float32      `json:"temperature"`
+	Kind        ModelApiKind `mapstructure:"kind"`
+	Url         *string      `mapstructure:"url"`
+	MaxTokens   *int32       `mapstructure:"max_tokens"`
+	Temperature *float32     `mapstructure:"temperature"`
 }
 
 type ModelApiKind string
@@ -53,13 +53,13 @@ const (
 )
 
 type Lsp struct {
-	Name string `json:"name"`
-	Api  LspApi `json:"api"`
+	Name string  `mapstructure:"name"`
+	Api  *LspApi `mapstructure:"api"`
 }
 
 type LspApi struct {
-	Kind LspApiKind `json:"kind"`
-	Cmd  []string   `json:"cmd"`
+	Kind LspApiKind `mapstructure:"kind"`
+	Cmd  []string   `mapstructure:"cmd"`
 }
 
 type LspApiKind string
@@ -69,23 +69,23 @@ const (
 )
 
 type Handler struct {
-	Name      string             `json:"name"`
-	Kind      HandlerKind        `json:"kind"`
-	Resources []*HandlerResource `json:"resources"`
-	Endpoints *HandlerEndpoints  `json:"endpoints"`
+	Name      string            `mapstructure:"name"`
+	Kind      HandlerKind       `mapstructure:"kind"`
+	Resources []HandlerResource `mapstructure:"resources"`
+	Endpoints *HandlerEndpoints `mapstructure:"endpoints"`
 }
 
 type HandlerKind string
 
 const (
-	HandlerKindLsp HandlerKind = "lsp"
+	HandlerKindLspCompletion HandlerKind = "lsp/completion"
 )
 
 type HandlerResource struct {
-	Name  string               `json:"name"`
-	Model *string              `json:"model"`
-	Lsp   *string              `json:"lsp"`
-	Scope HandlerResourceScope `json:"scope"`
+	Name  string               `mapstructure:"name"`
+	Model *string              `mapstructure:"model"`
+	Lsp   *string              `mapstructure:"lsp"`
+	Scope HandlerResourceScope `mapstructure:"scope"`
 }
 
 type HandlerResourceScope string
@@ -96,35 +96,35 @@ const (
 )
 
 type HandlerEndpoints struct {
-	Initialize             HandlerEndpoint           `json:"initialize"`
-	Initialized            HandlerEndpoint           `json:"initialized"`
-	Shutdown               HandlerEndpoint           `json:"shutdown"`
-	TextDocumentCompletion HandlerEndpointCompletion `json:"textDocument/completion"`
-	TextDocumentDidChange  HandlerEndpoint           `json:"textDocument/didChange"`
-	TextDocumentDidClose   HandlerEndpoint           `json:"textDocument/didClose"`
-	TextDocumentDidOpen    HandlerEndpoint           `json:"textDocument/didOpen"`
+	Initialize             *HandlerEndpoint           `mapstructure:"initialize"`
+	Initialized            *HandlerEndpoint           `mapstructure:"initialized"`
+	Shutdown               *HandlerEndpoint           `mapstructure:"shutdown"`
+	TextDocumentCompletion *HandlerEndpointCompletion `mapstructure:"textDocument/completion"`
+	TextDocumentDidChange  *HandlerEndpoint           `mapstructure:"textDocument/didChange"`
+	TextDocumentDidClose   *HandlerEndpoint           `mapstructure:"textDocument/didClose"`
+	TextDocumentDidOpen    *HandlerEndpoint           `mapstructure:"textDocument/didOpen"`
 }
 
 type HandlerEndpoint struct {
-	Default bool `json:"default"`
+	Default *bool `mapstructure:"default"`
 }
 
 type HandlerEndpointCompletion struct {
-	HandlerEndpoint
-	Execution []ExecutionStep `json:"execution"`
+	HandlerEndpoint `mapstructure:",squash"`
+	Execution       []Step `mapstructure:"execution"`
 }
 
-type ExecutionStep map[string]any
+type Step map[string]any
 
 type Listener struct {
-	Name     string           `json:"name"`
-	Ipc      ListenerIpc      `json:"ipc"`
-	Protocol ListenerProtocol `json:"protocol"`
+	Name     string            `mapstructure:"name"`
+	Ipc      *ListenerIpc      `mapstructure:"ipc"`
+	Protocol *ListenerProtocol `mapstructure:"protocol"`
 }
 
 type ListenerIpc struct {
-	Kind ListenerIpcKind `json:"kind"`
-	Port *int            `json:"port"`
+	Kind ListenerIpcKind `mapstructure:"kind"`
+	Port *int32          `mapstructure:"port"`
 }
 
 type ListenerIpcKind string
@@ -134,8 +134,8 @@ const (
 )
 
 type ListenerProtocol struct {
-	Kind     ListenerProtocolKind       `json:"kind"`
-	Handlers []*ListenerProtocolHandler `json:"handlers"`
+	Kind     ListenerProtocolKind      `mapstructure:"kind"`
+	Handlers []ListenerProtocolHandler `mapstructure:"handlers"`
 }
 
 type ListenerProtocolKind string
@@ -146,12 +146,12 @@ const (
 )
 
 type ListenerProtocolHandler struct {
-	Name      string                           `json:"name"`
-	Condition ListenerProtocolHandlerCondition `json:"condition"`
-	Handler   string                           `json:"handler"`
+	Name      string                            `mapstructure:"name"`
+	Condition *ListenerProtocolHandlerCondition `mapstructure:"condition"`
+	Handler   string                            `mapstructure:"handler"`
 }
 
 type ListenerProtocolHandlerCondition struct {
-	Filetypes []string `json:"filetypes"`
-	Paths     []string `json:"paths"`
+	Filetypes []string `mapstructure:"filetypes"`
+	Paths     []string `mapstructure:"paths"`
 }

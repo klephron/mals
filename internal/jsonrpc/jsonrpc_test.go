@@ -1,12 +1,11 @@
-package test
+package jsonrpc
 
 import (
 	"bytes"
-	. "mals/internal/jsonrpc"
 	"testing"
 )
 
-func Test_ScannerSplit(t *testing.T) {
+func TestScannerSplit(t *testing.T) {
 	tests := []struct {
 		name            string
 		input           []byte
@@ -106,7 +105,7 @@ func Test_ScannerSplit(t *testing.T) {
 	}
 }
 
-func Test_DecodeMessage_Request(t *testing.T) {
+func TestDecodeMessageRequest(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         []byte
@@ -204,7 +203,7 @@ func Test_DecodeMessage_Request(t *testing.T) {
 	}
 }
 
-func Test_DecodeMessage_Notification(t *testing.T) {
+func TestDecodeMessageNotification(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         []byte
@@ -283,7 +282,7 @@ func Test_DecodeMessage_Notification(t *testing.T) {
 	}
 }
 
-func Test_DecodeMessage_Response(t *testing.T) {
+func TestDecodeMessageResponse(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         []byte
@@ -390,7 +389,7 @@ func Test_DecodeMessage_Response(t *testing.T) {
 	}
 }
 
-func Test_EncodeMessage(t *testing.T) {
+func TestEncodeMessage(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          Message

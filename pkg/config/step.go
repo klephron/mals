@@ -7,7 +7,7 @@ type Step struct {
 }
 
 type StepDefinition interface {
-	StepDefinition() string
+	StepDefinitionKind() string
 }
 
 // lsp/completion
@@ -15,7 +15,7 @@ type StepLspCompetion struct {
 	Resource string
 }
 
-func (s *StepLspCompetion) StepDefinition() string {
+func (s *StepLspCompetion) StepDefinitionKind() string {
 	return "lsp/completion"
 }
 
@@ -24,7 +24,7 @@ type StepJsonDumps struct {
 	Input string
 }
 
-func (s *StepJsonDumps) StepDefinition() string {
+func (s *StepJsonDumps) StepDefinitionKind() string {
 	return "json/dumps"
 }
 
@@ -33,7 +33,7 @@ type StepJsonParse struct {
 	Input string
 }
 
-func (s *StepJsonParse) StepDefinition() string {
+func (s *StepJsonParse) StepDefinitionKind() string {
 	return "json/parse"
 }
 
@@ -42,7 +42,7 @@ type StepJsonParseCompletion struct {
 	Input string
 }
 
-func (s *StepJsonParseCompletion) StepDefinition() string {
+func (s *StepJsonParseCompletion) StepDefinitionKind() string {
 	return "json/parse/completion"
 }
 
@@ -52,7 +52,7 @@ type StepModelSimple struct {
 	Prompt   string
 }
 
-func (s *StepModelSimple) StepDefinition() string {
+func (s *StepModelSimple) StepDefinitionKind() string {
 	return "model/simple"
 }
 
@@ -62,7 +62,7 @@ type StepModelTemplate struct {
 	Prompt   string
 }
 
-func (s *StepModelTemplate) StepDefinition() string {
+func (s *StepModelTemplate) StepDefinitionKind() string {
 	return "model/template"
 }
 
@@ -71,7 +71,7 @@ type StepReturn struct {
 	Input string
 }
 
-func (s *StepReturn) StepDefinition() string {
+func (s *StepReturn) StepDefinitionKind() string {
 	return "return"
 }
 
@@ -82,7 +82,7 @@ type StepIf struct {
 	Else      []Step
 }
 
-func (s *StepIf) StepDefinition() string {
+func (s *StepIf) StepDefinitionKind() string {
 	return "if"
 }
 
@@ -93,6 +93,6 @@ type StepWhile struct {
 	Max       *int
 }
 
-func (s *StepWhile) StepDefinition() string {
+func (s *StepWhile) StepDefinitionKind() string {
 	return "while"
 }

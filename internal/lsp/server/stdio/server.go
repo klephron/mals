@@ -61,7 +61,7 @@ func (s *LspServerStdio) Name() string {
 
 func (s *LspServerStdio) Kind() string {
 	var settings config.LspApiStdio
-	return settings.Kind()
+	return settings.LspApiKind()
 }
 
 func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {

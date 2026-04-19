@@ -164,7 +164,7 @@ func (s *ListenerController) Create(name string) error {
 		}
 	}
 
-	return fmt.Errorf("unhandled listener %v protocol=%v ipc=%v", value.config, value.config.Protocol.Kind(), value.config.Ipc.Kind())
+	return fmt.Errorf("unhandled listener %v protocol=%v ipc=%v", value.config, value.config.Protocol.ListenerProtocolKind(), value.config.Ipc.ListenerIpcKind())
 }
 
 func (s *ListenerController) Delete(name string) error {

@@ -6,15 +6,15 @@ type Model struct {
 }
 
 type ModelApi interface {
-	ModelApi() string
+	ModelApiKind() string
 }
 
 type ModelApiOpenai struct {
-	Url         string
-	MaxTokens   int
-	Temperature float32
+	Url         *string
+	MaxTokens   *int32
+	Temperature *float32
 }
 
-func (s *ModelApiOpenai) ModelApi() string {
+func (s *ModelApiOpenai) ModelApiKind() string {
 	return "openai"
 }

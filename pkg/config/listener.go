@@ -7,25 +7,25 @@ type Listener struct {
 }
 
 type ListenerIpc interface {
-	ListenerIpc() string
+	ListenerIpcKind() string
 }
 
 type ListenerIpcTcp struct {
-	Port int
+	Port int32
 }
 
-func (s *ListenerIpcTcp) ListenerIpc() string {
+func (s *ListenerIpcTcp) ListenerIpcKind() string {
 	return "tcp"
 }
 
 type ListenerProtocol interface {
-	ListenerProtocol() string
+	ListenerProtocolKind() string
 }
 
 type ListenerProtocolApi struct {
 }
 
-func (s *ListenerProtocolApi) ListenerProtocol() string {
+func (s *ListenerProtocolApi) ListenerProtocolKind() string {
 	return "api"
 }
 
@@ -33,7 +33,7 @@ type ListenerProtocolLsp struct {
 	Handlers []ListenerProtocolLspHandler
 }
 
-func (s *ListenerProtocolLsp) ListenerProtocol() string {
+func (s *ListenerProtocolLsp) ListenerProtocolKind() string {
 	return "lsp"
 }
 

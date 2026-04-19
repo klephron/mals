@@ -6,7 +6,7 @@ type Handler struct {
 }
 
 type HandlerSpec interface {
-	HandlerSpec() string
+	HandlerSpecKind() string
 }
 
 type HandlerSpecLsp struct {
@@ -14,7 +14,7 @@ type HandlerSpecLsp struct {
 	Endpoints HandlerLspEndpoints
 }
 
-func (s *HandlerSpecLsp) HandlerSpec() string {
+func (s *HandlerSpecLsp) HandlerSpecKind() string {
 	return "lsp"
 }
 
@@ -32,14 +32,14 @@ const (
 )
 
 type HandlerLspResourceSpec interface {
-	HandlerLspResourceSpec() string
+	HandlerLspResourceSpecKind() string
 }
 
 type HandlerLspResourceSpecLsp struct {
 	Name string
 }
 
-func (s *HandlerLspResourceSpecLsp) HandlerLspResourceSpec() string {
+func (s *HandlerLspResourceSpecLsp) HandlerLspResourceSpecKind() string {
 	return "lsp"
 }
 
@@ -47,7 +47,7 @@ type HandlerLspResourceSpecModel struct {
 	Name string
 }
 
-func (s *HandlerLspResourceSpecModel) HandlerLspResourceSpec() string {
+func (s *HandlerLspResourceSpecModel) HandlerLspResourceSpecKind() string {
 	return "model"
 }
 
@@ -62,7 +62,7 @@ type HandlerLspEndpoints struct {
 }
 
 type HandlerLspEndpoint struct {
-	Default bool
+	Default *bool
 }
 
 type HandlerLspEndpointInitialize struct {

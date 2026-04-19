@@ -16,13 +16,13 @@ const (
 )
 
 type LogOutput interface {
-	LogOutput() string
+	LogOutputKind() string
 }
 
 type LogOutputFile struct {
 	File string
 }
 
-func (s *LogOutputFile) LogOutput() string {
+func (s *LogOutputFile) LogOutputKind() string {
 	return "file"
 }

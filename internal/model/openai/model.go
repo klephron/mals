@@ -41,7 +41,7 @@ func (s *ModelOpenai) Name() string {
 
 func (s *ModelOpenai) Kind() string {
 	var settings config.ModelApiOpenai
-	return settings.Kind()
+	return settings.ModelApiKind()
 }
 
 func (s *ModelOpenai) Run(ctx context.Context) error {
