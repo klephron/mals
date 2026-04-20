@@ -78,8 +78,8 @@ func (s *StepReturn) StepDefinitionKind() string {
 // if
 type StepIf struct {
 	Condition *string
-	Then      []Step
-	Else      []Step
+	Then      []*Step
+	Else      []*Step
 }
 
 func (s *StepIf) StepDefinitionKind() string {
@@ -89,7 +89,7 @@ func (s *StepIf) StepDefinitionKind() string {
 // while
 type StepWhile struct {
 	Condition *string
-	Do        []Step
+	Do        []*Step
 	Max       *int
 }
 
