@@ -55,11 +55,11 @@ listeners: []
 `),
 			expected: testExpected{
 				output: &Config{
-					Logs:      []*Log{},
-					Models:    []*Model{},
-					Lsps:      []*Lsp{},
-					Handlers:  []*Handler{},
-					Listeners: []*Listener{},
+					Logs:      []Log{},
+					Models:    []Model{},
+					Lsps:      []Lsp{},
+					Handlers:  []Handler{},
+					Listeners: []Listener{},
 				},
 				error: false,
 			},
@@ -82,7 +82,7 @@ logs:
 `),
 			expected: testExpected{
 				output: &Config{
-					Logs: []*Log{
+					Logs: []Log{
 						{
 							Name:  "first",
 							Level: LogLevelDebug,
@@ -118,7 +118,7 @@ models:
 `),
 			expected: testExpected{
 				output: &Config{
-					Models: []*Model{
+					Models: []Model{
 						{
 							Name: "first",
 							Api: &ModelApi{
@@ -145,7 +145,7 @@ models:
 `),
 			expected: testExpected{
 				output: &Config{
-					Models: []*Model{
+					Models: []Model{
 						{
 							Name: "second",
 							Api: &ModelApi{
@@ -169,7 +169,7 @@ models:
 `),
 			expected: testExpected{
 				output: &Config{
-					Models: []*Model{
+					Models: []Model{
 						{
 							Name: "third",
 							Api:  nil,
@@ -194,7 +194,7 @@ lsps:
 `),
 			expected: testExpected{
 				output: &Config{
-					Lsps: []*Lsp{
+					Lsps: []Lsp{
 						{
 							Name: "first",
 							Api: &LspApi{
@@ -218,7 +218,7 @@ lsps:
 `),
 			expected: testExpected{
 				output: &Config{
-					Lsps: []*Lsp{
+					Lsps: []Lsp{
 						{
 							Name: "second",
 							Api: &LspApi{
@@ -240,7 +240,7 @@ lsps:
 `),
 			expected: testExpected{
 				output: &Config{
-					Lsps: []*Lsp{
+					Lsps: []Lsp{
 						{
 							Name: "third",
 							Api:  nil,
@@ -264,7 +264,7 @@ listeners:
 `),
 			expected: testExpected{
 				output: &Config{
-					Listeners: []*Listener{
+					Listeners: []Listener{
 						{
 							Name: "first",
 							Ipc: &ListenerIpc{
@@ -302,7 +302,7 @@ listeners:
 `),
 			expected: testExpected{
 				output: &Config{
-					Listeners: []*Listener{
+					Listeners: []Listener{
 						{
 							Name: "first",
 							Ipc:  nil,
@@ -342,7 +342,7 @@ listeners:
 `),
 			expected: testExpected{
 				output: &Config{
-					Listeners: []*Listener{
+					Listeners: []Listener{
 						{
 							Name: "first",
 							Ipc:  nil,
@@ -383,7 +383,7 @@ listeners:
 `),
 			expected: testExpected{
 				output: &Config{
-					Listeners: []*Listener{
+					Listeners: []Listener{
 						{
 							Name: "first",
 							Ipc:  nil,
@@ -416,7 +416,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -447,7 +447,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -482,7 +482,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -512,7 +512,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -540,7 +540,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name:      "first",
 							Kind:      HandlerKindLspCompletion,
@@ -569,7 +569,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -603,7 +603,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -634,7 +634,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -665,7 +665,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -699,7 +699,7 @@ handlers:
 `),
 			expected: testExpected{
 				output: &Config{
-					Handlers: []*Handler{
+					Handlers: []Handler{
 						{
 							Name: "first",
 							Kind: HandlerKindLspCompletion,
@@ -771,44 +771,3 @@ handlers:
 		})
 	}
 }
-
-// func TestWire(t *testing.T) {
-// 	tests := []struct {
-// 		name          string
-// 		input         []byte
-// 		expected      *Config
-// 		expectedError bool
-// 	}{}
-
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			var wire wire.Config
-// 			err := json.Unmarshal(tt.input, &wire)
-
-// 			var config *Config
-// 			if err == nil {
-// 				config, err = wire.Unwire()
-// 			}
-
-// 			if tt.expectedError {
-// 				if err == nil {
-// 					t.Errorf("Unmarshal() expected error but got none")
-// 				}
-// 				return
-// 			}
-
-// 			if err != nil {
-// 				t.Errorf("Unmarshal() unexpected error: %v", err)
-// 				return
-// 			}
-
-// 			configJson, err := json.Marshal(config)
-// 			expectedJson, err := json.Marshal(tt.expected)
-
-// 			if !bytes.Equal(configJson, expectedJson) {
-// 				t.Errorf("expected %v, got %v", string(expectedJson), string(configJson))
-// 				return
-// 			}
-// 		})
-// 	}
-// }

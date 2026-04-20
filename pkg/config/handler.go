@@ -10,7 +10,7 @@ type HandlerSpec interface {
 }
 
 type HandlerSpecLsp struct {
-	Resources []HandlerLspResource
+	Resources []*HandlerLspResource
 	Endpoints HandlerLspEndpoints
 }
 
@@ -52,13 +52,13 @@ func (s *HandlerLspResourceSpecModel) HandlerLspResourceSpecKind() string {
 }
 
 type HandlerLspEndpoints struct {
-	Initialize             HandlerLspEndpointInitialize
-	Initialized            HandlerLspEndpointInitialized
-	Shutdown               HandlerLspEndpointShutdown
-	TextDocumentCompletion HandlerLspEndpointTextDocumentCompletion
-	TextDocumentDidChange  HandlerLspEndpointTextDocumentDidChange
-	TextDocumentDidClose   HandlerLspEndpointTextDocumentDidClose
-	TextDocumentDidOpen    HandlerLspEndpointTextDocumentDidOpen
+	Initialize             *HandlerLspEndpointInitialize
+	Initialized            *HandlerLspEndpointInitialized
+	Shutdown               *HandlerLspEndpointShutdown
+	TextDocumentCompletion *HandlerLspEndpointTextDocumentCompletion
+	TextDocumentDidChange  *HandlerLspEndpointTextDocumentDidChange
+	TextDocumentDidClose   *HandlerLspEndpointTextDocumentDidClose
+	TextDocumentDidOpen    *HandlerLspEndpointTextDocumentDidOpen
 }
 
 type HandlerLspEndpoint struct {
@@ -79,7 +79,7 @@ type HandlerLspEndpointShutdown struct {
 
 type HandlerLspEndpointTextDocumentCompletion struct {
 	HandlerLspEndpoint
-	Execution []Step
+	Execution []*Step
 }
 
 type HandlerLspEndpointTextDocumentDidChange struct {

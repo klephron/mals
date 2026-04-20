@@ -1,11 +1,11 @@
 package wire
 
 type Config struct {
-	Logs      []*Log      `mapstructure:"logs"`
-	Models    []*Model    `mapstructure:"models"`
-	Lsps      []*Lsp      `mapstructure:"lsps"`
-	Handlers  []*Handler  `mapstructure:"handlers"`
-	Listeners []*Listener `mapstructure:"listeners"`
+	Logs      []Log      `mapstructure:"logs"`
+	Models    []Model    `mapstructure:"models"`
+	Lsps      []Lsp      `mapstructure:"lsps"`
+	Handlers  []Handler  `mapstructure:"handlers"`
+	Listeners []Listener `mapstructure:"listeners"`
 }
 
 type Log struct {

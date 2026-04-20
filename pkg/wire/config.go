@@ -7,57 +7,57 @@ import (
 
 func (o *Config) Wire(c *config.Config) error {
 	if c.Logs != nil {
-		o.Logs = make([]*Log, 0, len(c.Logs))
-		for _, log := range c.Logs {
-			wire := &Log{}
-			if err := wire.Wire(log); err != nil {
+		o.Logs = make([]Log, len(c.Logs))
+		for i, log := range c.Logs {
+			wired := Log{}
+			if err := wired.Wire(log); err != nil {
 				return err
 			}
-			o.Logs = append(o.Logs, wire)
+			o.Logs[i] = wired
 		}
 	}
 
 	if c.Models != nil {
-		o.Models = make([]*Model, 0, len(c.Models))
-		for _, model := range c.Models {
-			wire := &Model{}
-			if err := wire.Wire(model); err != nil {
+		o.Models = make([]Model, len(c.Models))
+		for i, model := range c.Models {
+			wired := Model{}
+			if err := wired.Wire(model); err != nil {
 				return err
 			}
-			o.Models = append(o.Models, wire)
+			o.Models[i] = wired
 		}
 	}
 
 	if c.Lsps != nil {
-		o.Lsps = make([]*Lsp, 0, len(c.Lsps))
-		for _, lsp := range c.Lsps {
-			wire := &Lsp{}
-			if err := wire.Wire(lsp); err != nil {
+		o.Lsps = make([]Lsp, 0, len(c.Lsps))
+		for i, lsp := range c.Lsps {
+			wired := Lsp{}
+			if err := wired.Wire(lsp); err != nil {
 				return err
 			}
-			o.Lsps = append(o.Lsps, wire)
+			o.Lsps[i] = wired
 		}
 	}
 
 	if c.Handlers != nil {
-		o.Handlers = make([]*Handler, 0, len(c.Handlers))
-		for _, handler := range c.Handlers {
-			wire := &Handler{}
-			if err := wire.Wire(handler); err != nil {
+		o.Handlers = make([]Handler, 0, len(c.Handlers))
+		for i, handler := range c.Handlers {
+			wired := Handler{}
+			if err := wired.Wire(handler); err != nil {
 				return err
 			}
-			o.Handlers = append(o.Handlers, wire)
+			o.Handlers[i] = wired
 		}
 	}
 
 	if c.Listeners != nil {
-		o.Listeners = make([]*Listener, 0, len(c.Listeners))
-		for _, listener := range c.Listeners {
-			wire := &Listener{}
-			if err := wire.Wire(listener); err != nil {
+		o.Listeners = make([]Listener, 0, len(c.Listeners))
+		for i, listener := range c.Listeners {
+			wired := Listener{}
+			if err := wired.Wire(listener); err != nil {
 				return err
 			}
-			o.Listeners = append(o.Listeners, wire)
+			o.Listeners[i] = wired
 		}
 	}
 
@@ -68,57 +68,57 @@ func (o *Config) Unwire() (*config.Config, error) {
 	c := &config.Config{}
 
 	if o.Logs != nil {
-		c.Logs = make([]*config.Log, 0, len(o.Logs))
-		for _, log := range o.Logs {
+		c.Logs = make([]*config.Log, len(o.Logs))
+		for i, log := range o.Logs {
 			unwired, err := log.Unwire()
 			if err != nil {
 				return nil, err
 			}
-			c.Logs = append(c.Logs, unwired)
+			c.Logs[i] = unwired
 		}
 	}
 
 	if o.Models != nil {
-		c.Models = make([]*config.Model, 0, len(o.Models))
-		for _, model := range o.Models {
+		c.Models = make([]*config.Model, len(o.Models))
+		for i, model := range o.Models {
 			unwired, err := model.Unwire()
 			if err != nil {
 				return nil, err
 			}
-			c.Models = append(c.Models, unwired)
+			c.Models[i] = unwired
 		}
 	}
 
 	if o.Lsps != nil {
-		c.Lsps = make([]*config.Lsp, 0, len(o.Lsps))
-		for _, lsp := range o.Lsps {
+		c.Lsps = make([]*config.Lsp, len(o.Lsps))
+		for i, lsp := range o.Lsps {
 			unwired, err := lsp.Unwire()
 			if err != nil {
 				return nil, err
 			}
-			c.Lsps = append(c.Lsps, unwired)
+			c.Lsps[i] = unwired
 		}
 	}
 
 	if o.Handlers != nil {
-		c.Handlers = make([]*config.Handler, 0, len(o.Handlers))
-		for _, handler := range o.Handlers {
+		c.Handlers = make([]*config.Handler, len(o.Handlers))
+		for i, handler := range o.Handlers {
 			unwired, err := handler.Unwire()
 			if err != nil {
 				return nil, err
 			}
-			c.Handlers = append(c.Handlers, unwired)
+			c.Handlers[i] = unwired
 		}
 	}
 
 	if o.Listeners != nil {
-		c.Listeners = make([]*config.Listener, 0, len(o.Listeners))
-		for _, listener := range o.Listeners {
+		c.Listeners = make([]*config.Listener, len(o.Listeners))
+		for i, listener := range o.Listeners {
 			unwired, err := listener.Unwire()
 			if err != nil {
 				return nil, err
 			}
-			c.Listeners = append(c.Listeners, unwired)
+			c.Listeners[i] = unwired
 		}
 	}
 
@@ -189,20 +189,20 @@ func (o *Log) Unwire() (*config.Log, error) {
 func (o *Model) Wire(c *config.Model) error {
 	o.Name = c.Name
 
-	switch s := c.Api.(type) {
+	switch ca := c.Api.(type) {
 	case *config.ModelApiOpenai:
 		o.Api = &ModelApi{
 			Kind: ModelApiKindOpenai,
 		}
 
-		if s.Url != nil {
-			o.Api.Url = s.Url
+		if ca.Url != "" {
+			o.Api.Url = &ca.Url
 		}
-		if s.MaxTokens != nil {
-			o.Api.MaxTokens = s.MaxTokens
+		if ca.MaxTokens != nil {
+			o.Api.MaxTokens = ca.MaxTokens
 		}
-		if s.Temperature != nil {
-			o.Api.Temperature = s.Temperature
+		if ca.Temperature != nil {
+			o.Api.Temperature = ca.Temperature
 		}
 
 	default:
@@ -220,11 +220,14 @@ func (o *Model) Unwire() (*config.Model, error) {
 	if o.Api != nil {
 		switch o.Api.Kind {
 		case ModelApiKindOpenai:
-			c.Api = &config.ModelApiOpenai{
-				Url:         o.Api.Url,
+			api := &config.ModelApiOpenai{
 				MaxTokens:   o.Api.MaxTokens,
 				Temperature: o.Api.Temperature,
 			}
+			if o.Api.Url != nil {
+				api.Url = *o.Api.Url
+			}
+			c.Api = api
 		default:
 			c.Api = nil
 		}
@@ -236,11 +239,11 @@ func (o *Model) Unwire() (*config.Model, error) {
 func (o *Lsp) Wire(c *config.Lsp) error {
 	o.Name = c.Name
 
-	switch s := c.Api.(type) {
+	switch ca := c.Api.(type) {
 	case *config.LspApiStdio:
 		o.Api = &LspApi{
 			Kind: LspApiKindStdio,
-			Cmd:  s.Cmd,
+			Cmd:  ca.Cmd,
 		}
 	default:
 		return fmt.Errorf("unknown lsp settings kind")
@@ -269,15 +272,15 @@ func (o *Lsp) Unwire() (*config.Lsp, error) {
 func (o *Listener) Wire(c *config.Listener) error {
 	o.Name = c.Name
 
-	switch k := c.Protocol.(type) {
+	switch cp := c.Protocol.(type) {
 	case *config.ListenerProtocolApi:
 		o.Protocol = &ListenerProtocol{
 			Kind:     ListenerProtocolKindApi,
 			Handlers: nil,
 		}
 	case *config.ListenerProtocolLsp:
-		handlers := make([]ListenerProtocolHandler, 0, len(k.Handlers))
-		for _, handler := range k.Handlers {
+		handlers := make([]ListenerProtocolHandler, 0, len(cp.Handlers))
+		for _, handler := range cp.Handlers {
 			wire := ListenerProtocolHandler{}
 			if err := wire.Wire(&handler); err != nil {
 				return err
@@ -311,36 +314,40 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 		Name: o.Name,
 	}
 
-	switch o.Protocol.Kind {
-	case ListenerProtocolKindApi:
-		c.Protocol = &config.ListenerProtocolApi{}
-	case ListenerProtocolKindLsp:
-		handlers := make([]config.ListenerProtocolLspHandler, 0, len(o.Protocol.Handlers))
+	if o.Protocol != nil {
+		switch o.Protocol.Kind {
+		case ListenerProtocolKindApi:
+			c.Protocol = &config.ListenerProtocolApi{}
+		case ListenerProtocolKindLsp:
+			handlers := make([]config.ListenerProtocolLspHandler, 0, len(o.Protocol.Handlers))
 
-		for _, handler := range o.Protocol.Handlers {
-			unwired, err := handler.Unwire()
-			if err != nil {
-				return nil, err
+			for _, handler := range o.Protocol.Handlers {
+				unwired, err := handler.Unwire()
+				if err != nil {
+					return nil, err
+				}
+				handlers = append(handlers, *unwired)
 			}
-			handlers = append(handlers, *unwired)
-		}
 
-		c.Protocol = &config.ListenerProtocolLsp{
-			Handlers: handlers,
+			c.Protocol = &config.ListenerProtocolLsp{
+				Handlers: handlers,
+			}
+		default:
+			return nil, fmt.Errorf("unknown listener kind: %v", o.Protocol.Kind)
 		}
-	default:
-		return nil, fmt.Errorf("unknown listener kind: %v", o.Protocol.Kind)
 	}
 
-	switch o.Ipc.Kind {
-	case ListenerIpcKindTcp:
-		tcp := &config.ListenerIpcTcp{}
-		if o.Ipc.Port != nil {
-			tcp.Port = *o.Ipc.Port
+	if o.Ipc != nil {
+		switch o.Ipc.Kind {
+		case ListenerIpcKindTcp:
+			tcp := &config.ListenerIpcTcp{}
+			if o.Ipc.Port != nil {
+				tcp.Port = *o.Ipc.Port
+			}
+			c.Ipc = tcp
+		default:
+			return nil, fmt.Errorf("unknown listener ipc: %v", o.Ipc)
 		}
-		c.Ipc = tcp
-	default:
-		return nil, fmt.Errorf("unknown listener ipc: %v", o.Ipc)
 	}
 
 	return c, nil
@@ -349,9 +356,11 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 func (o *ListenerProtocolHandler) Wire(c *config.ListenerProtocolLspHandler) error {
 	o.Name = c.Name
 
-	o.Condition = &ListenerProtocolHandlerCondition{
-		Filetypes: c.Condition.Filetypes,
-		Paths:     c.Condition.Paths,
+	if c.Condition != nil {
+		o.Condition = &ListenerProtocolHandlerCondition{
+			Filetypes: c.Condition.Filetypes,
+			Paths:     c.Condition.Paths,
+		}
 	}
 
 	o.Handler = c.Handler
@@ -365,9 +374,11 @@ func (o *ListenerProtocolHandler) Unwire() (*config.ListenerProtocolLspHandler, 
 		Handler: o.Handler,
 	}
 
-	c.Condition = config.ListenerProtocolLspHandlerCondition{
-		Filetypes: o.Condition.Filetypes,
-		Paths:     o.Condition.Paths,
+	if o.Condition != nil {
+		c.Condition = &config.ListenerProtocolLspHandlerCondition{
+			Filetypes: o.Condition.Filetypes,
+			Paths:     o.Condition.Paths,
+		}
 	}
 
 	return &c, nil
@@ -376,14 +387,14 @@ func (o *ListenerProtocolHandler) Unwire() (*config.ListenerProtocolLspHandler, 
 func (o *Handler) Wire(c *config.Handler) error {
 	o.Name = c.Name
 
-	switch s := c.Spec.(type) {
+	switch cs := c.Spec.(type) {
 	case *config.HandlerSpecLsp:
 		o.Kind = HandlerKindLspCompletion
 
-		o.Resources = make([]HandlerResource, len(s.Resources))
-		for _, resource := range s.Resources {
+		o.Resources = make([]HandlerResource, len(cs.Resources))
+		for _, resource := range cs.Resources {
 			wire := HandlerResource{}
-			if err := wire.Wire(&resource); err != nil {
+			if err := wire.Wire(resource); err != nil {
 				return err
 			}
 			o.Resources = append(o.Resources, wire)
@@ -399,31 +410,31 @@ func (o *Handler) Wire(c *config.Handler) error {
 			TextDocumentDidOpen:    &HandlerEndpoint{},
 		}
 
-		if err := o.Endpoints.Initialize.WireInitialize(&s.Endpoints.Initialize); err != nil {
+		if err := o.Endpoints.Initialize.WireInitialize(cs.Endpoints.Initialize); err != nil {
 			return err
 		}
 
-		if err := o.Endpoints.Initialized.WireInitialized(&s.Endpoints.Initialized); err != nil {
+		if err := o.Endpoints.Initialized.WireInitialized(cs.Endpoints.Initialized); err != nil {
 			return err
 		}
 
-		if err := o.Endpoints.Shutdown.WireShutdown(&s.Endpoints.Shutdown); err != nil {
+		if err := o.Endpoints.Shutdown.WireShutdown(cs.Endpoints.Shutdown); err != nil {
 			return err
 		}
 
-		if err := o.Endpoints.TextDocumentCompletion.Wire(&s.Endpoints.TextDocumentCompletion); err != nil {
+		if err := o.Endpoints.TextDocumentCompletion.Wire(cs.Endpoints.TextDocumentCompletion); err != nil {
 			return err
 		}
 
-		if err := o.Endpoints.TextDocumentDidChange.WireTextDocumentDidChange(&s.Endpoints.TextDocumentDidChange); err != nil {
+		if err := o.Endpoints.TextDocumentDidChange.WireTextDocumentDidChange(cs.Endpoints.TextDocumentDidChange); err != nil {
 			return err
 		}
 
-		if err := o.Endpoints.TextDocumentDidClose.WireTextDocumentDidClose(&s.Endpoints.TextDocumentDidClose); err != nil {
+		if err := o.Endpoints.TextDocumentDidClose.WireTextDocumentDidClose(cs.Endpoints.TextDocumentDidClose); err != nil {
 			return err
 		}
 
-		if err := o.Endpoints.TextDocumentDidOpen.WireTextDocumentDidOpen(&s.Endpoints.TextDocumentDidOpen); err != nil {
+		if err := o.Endpoints.TextDocumentDidOpen.WireTextDocumentDidOpen(cs.Endpoints.TextDocumentDidOpen); err != nil {
 			return err
 		}
 	default:
@@ -440,61 +451,80 @@ func (o *Handler) Unwire() (*config.Handler, error) {
 
 	switch o.Kind {
 	case HandlerKindLspCompletion:
-		resources := make([]config.HandlerLspResource, len(o.Resources))
-		for _, resource := range o.Resources {
-			unwired, err := resource.Unwire()
-			if err != nil {
-				return nil, err
+		var resources []*config.HandlerLspResource
+		if o.Resources != nil {
+			resources = make([]*config.HandlerLspResource, len(o.Resources))
+			for i, resource := range o.Resources {
+				unwired, err := resource.Unwire()
+				if err != nil {
+					return nil, err
+				}
+				resources[i] = unwired
 			}
-			resources = append(resources, *unwired)
 		}
 
-		initialize, err := o.Endpoints.Initialize.UnwireInitialize()
-		if err != nil {
-			return nil, err
-		}
+		var endpoints config.HandlerLspEndpoints
+		if o.Endpoints != nil {
+			if o.Endpoints.Initialize != nil {
+				endpoint, err := o.Endpoints.Initialize.UnwireInitialize()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.Initialize = endpoint
+			}
 
-		initialized, err := o.Endpoints.Initialized.UnwireInitialized()
-		if err != nil {
-			return nil, err
-		}
+			if o.Endpoints.Initialized != nil {
+				endpoint, err := o.Endpoints.Initialized.UnwireInitialized()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.Initialized = endpoint
+			}
 
-		shutdown, err := o.Endpoints.Shutdown.UnwireShutdown()
-		if err != nil {
-			return nil, err
-		}
+			if o.Endpoints.Shutdown != nil {
+				endpoint, err := o.Endpoints.Shutdown.UnwireShutdown()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.Shutdown = endpoint
+			}
 
-		textDocumentCompletion, err := o.Endpoints.TextDocumentCompletion.Unwire()
-		if err != nil {
-			return nil, err
-		}
+			if o.Endpoints.TextDocumentCompletion != nil {
+				endpoint, err := o.Endpoints.TextDocumentCompletion.Unwire()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.TextDocumentCompletion = endpoint
+			}
 
-		textDocumentDidChange, err := o.Endpoints.TextDocumentDidChange.UnwireTextDocumentDidChange()
-		if err != nil {
-			return nil, err
-		}
+			if o.Endpoints.TextDocumentDidChange != nil {
+				endpoint, err := o.Endpoints.TextDocumentDidChange.UnwireTextDocumentDidChange()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.TextDocumentDidChange = endpoint
+			}
 
-		textDocumentDidClose, err := o.Endpoints.TextDocumentDidClose.UnwireTextDocumentDidClose()
-		if err != nil {
-			return nil, err
-		}
+			if o.Endpoints.TextDocumentDidClose != nil {
+				endpoint, err := o.Endpoints.TextDocumentDidClose.UnwireTextDocumentDidClose()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.TextDocumentDidClose = endpoint
+			}
 
-		textDocumentDidOpen, err := o.Endpoints.TextDocumentDidOpen.UnwireTextDocumentDidOpen()
-		if err != nil {
-			return nil, err
+			if o.Endpoints.TextDocumentDidOpen != nil {
+				endpoint, err := o.Endpoints.TextDocumentDidOpen.UnwireTextDocumentDidOpen()
+				if err != nil {
+					return nil, err
+				}
+				endpoints.TextDocumentDidOpen = endpoint
+			}
 		}
 
 		c.Spec = &config.HandlerSpecLsp{
 			Resources: resources,
-			Endpoints: config.HandlerLspEndpoints{
-				Initialize:             *initialize,
-				Initialized:            *initialized,
-				Shutdown:               *shutdown,
-				TextDocumentCompletion: *textDocumentCompletion,
-				TextDocumentDidChange:  *textDocumentDidChange,
-				TextDocumentDidClose:   *textDocumentDidClose,
-				TextDocumentDidOpen:    *textDocumentDidOpen,
-			},
+			Endpoints: endpoints,
 		}
 
 	default:
@@ -516,11 +546,11 @@ func (o *HandlerResource) Wire(c *config.HandlerLspResource) error {
 		return fmt.Errorf("unknown lsp resource scope")
 	}
 
-	switch s := c.Spec.(type) {
+	switch cs := c.Spec.(type) {
 	case *config.HandlerLspResourceSpecLsp:
-		o.Lsp = &s.Name
+		o.Lsp = &cs.Name
 	case *config.HandlerLspResourceSpecModel:
-		o.Model = &s.Name
+		o.Model = &cs.Name
 	default:
 		return fmt.Errorf("unknown lsp resource spec")
 	}
@@ -623,13 +653,16 @@ func (o *HandlerEndpointCompletion) Wire(c *config.HandlerLspEndpointTextDocumen
 		return err
 	}
 
-	execution := make([]Step, len(c.Execution))
-	for _, step := range c.Execution {
-		wire := Step{}
-		if err := wire.Wire(&step); err != nil {
-			return err
+	var execution []Step
+	if c.Execution != nil {
+		execution = make([]Step, len(c.Execution))
+		for i, step := range c.Execution {
+			wired := Step{}
+			if err := wired.Wire(step); err != nil {
+				return err
+			}
+			execution[i] = wired
 		}
-		execution = append(execution, wire)
 	}
 	o.Execution = execution
 
@@ -645,13 +678,16 @@ func (o *HandlerEndpointCompletion) Unwire() (*config.HandlerLspEndpointTextDocu
 	}
 	c.HandlerLspEndpoint = *endpoint
 
-	execution := make([]config.Step, len(o.Execution))
-	for _, step := range o.Execution {
-		unwired, err := step.Unwire()
-		if err != nil {
-			return nil, err
+	var execution []*config.Step
+	if o.Execution != nil {
+		execution = make([]*config.Step, len(o.Execution))
+		for i, step := range o.Execution {
+			unwired, err := step.Unwire()
+			if err != nil {
+				return nil, err
+			}
+			execution[i] = unwired
 		}
-		execution = append(execution, *unwired)
 	}
 	c.Execution = execution
 
@@ -698,12 +734,4 @@ func (o *HandlerEndpoint) UnwireTextDocumentDidOpen() (*config.HandlerLspEndpoin
 	}
 	c.HandlerLspEndpoint = *endpoint
 	return &c, nil
-}
-
-func (o *Step) Wire(c *config.Step) error {
-	return nil
-}
-
-func (o *Step) Unwire() (*config.Step, error) {
-	return nil, nil
 }

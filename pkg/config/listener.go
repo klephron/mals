@@ -39,7 +39,7 @@ func (s *ListenerProtocolLsp) ListenerProtocolKind() string {
 
 type ListenerProtocolLspHandler struct {
 	Name      string
-	Condition ListenerProtocolLspHandlerCondition
+	Condition *ListenerProtocolLspHandlerCondition
 	Handler   string
 }
 

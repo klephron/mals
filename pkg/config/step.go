@@ -1,8 +1,8 @@
 package config
 
 type Step struct {
-	Name       string
-	Assign     string
+	Name       *string
+	Assign     *string
 	Definition StepDefinition
 }
 
@@ -12,7 +12,7 @@ type StepDefinition interface {
 
 // lsp/completion
 type StepLspCompetion struct {
-	Resource string
+	Resource *string
 }
 
 func (s *StepLspCompetion) StepDefinitionKind() string {
@@ -21,7 +21,7 @@ func (s *StepLspCompetion) StepDefinitionKind() string {
 
 // json/dumps
 type StepJsonDumps struct {
-	Input string
+	Input *string
 }
 
 func (s *StepJsonDumps) StepDefinitionKind() string {
@@ -30,7 +30,7 @@ func (s *StepJsonDumps) StepDefinitionKind() string {
 
 // json/parse
 type StepJsonParse struct {
-	Input string
+	Input *string
 }
 
 func (s *StepJsonParse) StepDefinitionKind() string {
@@ -39,7 +39,7 @@ func (s *StepJsonParse) StepDefinitionKind() string {
 
 // json/parse/completion
 type StepJsonParseCompletion struct {
-	Input string
+	Input *string
 }
 
 func (s *StepJsonParseCompletion) StepDefinitionKind() string {
@@ -48,8 +48,8 @@ func (s *StepJsonParseCompletion) StepDefinitionKind() string {
 
 // model/simple
 type StepModelSimple struct {
-	Resource string
-	Prompt   string
+	Resource *string
+	Prompt   *string
 }
 
 func (s *StepModelSimple) StepDefinitionKind() string {
@@ -58,8 +58,8 @@ func (s *StepModelSimple) StepDefinitionKind() string {
 
 // model/template
 type StepModelTemplate struct {
-	Resource string
-	Prompt   string
+	Resource *string
+	Prompt   *string
 }
 
 func (s *StepModelTemplate) StepDefinitionKind() string {
@@ -68,7 +68,7 @@ func (s *StepModelTemplate) StepDefinitionKind() string {
 
 // return
 type StepReturn struct {
-	Input string
+	Input *string
 }
 
 func (s *StepReturn) StepDefinitionKind() string {
@@ -77,7 +77,7 @@ func (s *StepReturn) StepDefinitionKind() string {
 
 // if
 type StepIf struct {
-	Condition string
+	Condition *string
 	Then      []Step
 	Else      []Step
 }
@@ -88,7 +88,7 @@ func (s *StepIf) StepDefinitionKind() string {
 
 // while
 type StepWhile struct {
-	Condition string
+	Condition *string
 	Do        []Step
 	Max       *int
 }
