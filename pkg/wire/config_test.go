@@ -314,7 +314,7 @@ func TestConfigUnwire(t *testing.T) {
 						{
 							Name: "first",
 							Ipc: &config.ListenerIpcTcp{
-								Port: 0,
+								Port: nil,
 							},
 							Protocol: nil,
 						},
@@ -345,7 +345,7 @@ func TestConfigUnwire(t *testing.T) {
 						{
 							Name: "first",
 							Ipc: &config.ListenerIpcTcp{
-								Port: 8091,
+								Port: util.Ptr(int32(8091)),
 							},
 							Protocol: &config.ListenerProtocolApi{},
 						},
@@ -391,7 +391,7 @@ func TestConfigUnwire(t *testing.T) {
 						{
 							Name: "first",
 							Ipc: &config.ListenerIpcTcp{
-								Port: 8091,
+								Port: util.Ptr(int32(8091)),
 							},
 							Protocol: &config.ListenerProtocolLsp{
 								Handlers: []config.ListenerProtocolLspHandler{

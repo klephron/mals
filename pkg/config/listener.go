@@ -11,7 +11,7 @@ type ListenerIpc interface {
 }
 
 type ListenerIpcTcp struct {
-	Port int32
+	Port *int32
 }
 
 func (s *ListenerIpcTcp) ListenerIpcKind() string {

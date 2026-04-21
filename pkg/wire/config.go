@@ -300,7 +300,7 @@ func (o *Listener) Wire(c *config.Listener) error {
 	case *config.ListenerIpcTcp:
 		o.Ipc = &ListenerIpc{
 			Kind: ListenerIpcKindTcp,
-			Port: &i.Port,
+			Port: i.Port,
 		}
 	default:
 		return fmt.Errorf("unknown listener ipc")
@@ -340,9 +340,8 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 	if o.Ipc != nil {
 		switch o.Ipc.Kind {
 		case ListenerIpcKindTcp:
-			tcp := &config.ListenerIpcTcp{}
-			if o.Ipc.Port != nil {
-				tcp.Port = *o.Ipc.Port
+			tcp := &config.ListenerIpcTcp{
+				Port: o.Ipc.Port,
 			}
 			c.Ipc = tcp
 		default:
@@ -528,7 +527,7 @@ func (o *Handler) Unwire() (*config.Handler, error) {
 		}
 
 	default:
-		return nil, fmt.Errorf("unknown handler kind")
+		return nil, fmt.Errorf("unknown handler kind: %v", o.Kind)
 	}
 
 	return &c, nil
@@ -543,7 +542,7 @@ func (o *HandlerResource) Wire(c *config.HandlerLspResource) error {
 	case config.HandlerLspResourceScopeClient:
 		o.Scope = HandlerResourceScopeClient
 	default:
-		return fmt.Errorf("unknown lsp resource scope")
+		return fmt.Errorf("unknown lsp resource scope: %v", c.Scope)
 	}
 
 	switch cs := c.Spec.(type) {

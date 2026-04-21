@@ -147,9 +147,7 @@ func TestConfigStepUnwire(t *testing.T) {
 		{
 			name: "return",
 			input: &Step{
-				"return": map[string]any{
-					"input": "result",
-				},
+				"return": "result",
 			},
 			expected: testExpected{
 				output: &config.Step{
@@ -165,16 +163,16 @@ func TestConfigStepUnwire(t *testing.T) {
 			input: &Step{
 				"if": map[string]any{
 					"condition": "something",
-					"then": []map[string]any{
-						{
+					"then": []any{
+						map[string]any{
 							"name": "step1",
 						},
-						{
+						map[string]any{
 							"name": "step2",
 						},
 					},
-					"else": []map[string]any{
-						{
+					"else": []any{
+						map[string]any{
 							"name": "step3",
 						},
 					},
@@ -207,28 +205,28 @@ func TestConfigStepUnwire(t *testing.T) {
 			input: &Step{
 				"if": map[string]any{
 					"condition": "something",
-					"then": []map[string]any{
-						{
+					"then": []any{
+						map[string]any{
 							"if": map[string]any{
 								"condition": "something",
-								"then": []map[string]any{
-									{
+								"then": []any{
+									map[string]any{
 										"name": "step1",
 									},
-									{
+									map[string]any{
 										"name": "step2",
 									},
 								},
-								"else": []map[string]any{
-									{
+								"else": []any{
+									map[string]any{
 										"name": "step3",
 									},
 								},
 							},
 						},
 					},
-					"else": []map[string]any{
-						{
+					"else": []any{
+						map[string]any{
 							"name": "step3",
 						},
 					},
@@ -274,8 +272,8 @@ func TestConfigStepUnwire(t *testing.T) {
 				"while": map[string]any{
 					"condition": "something",
 					"max":       10,
-					"do": []map[string]any{
-						{
+					"do": []any{
+						map[string]any{
 							"name": "step3",
 						},
 					},

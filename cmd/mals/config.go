@@ -7,6 +7,7 @@ import (
 	"mals/pkg/wire"
 
 	"github.com/spf13/viper"
+	// "sigs.k8s.io/yaml"
 )
 
 func configLoad(options *options) (*config.Config, error) {
@@ -26,7 +27,7 @@ func configLoad(options *options) (*config.Config, error) {
 		return nil, err
 	}
 
-	config.DefaultConfig(cfg)
+	config.Default(cfg)
 
 	return cfg, nil
 }
@@ -92,10 +93,9 @@ func configInit(config *config.Config, plane plane.Plane) {
 }
 
 func configLog(config *config.Config, plane plane.Plane) {
-	bytes, err := json.Marshal(config)
+	data, err := json.Marshal(config)
 	if err != nil {
 		panic(err)
 	}
-
-	plane.Debugf("%v", string(bytes))
+	plane.Debugf("%v", string(data))
 }

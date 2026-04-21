@@ -138,7 +138,10 @@ func (s *ListenerController) Create(name string) error {
 		switch ipc := value.config.Ipc.(type) {
 
 		case *config.ListenerIpcTcp:
-			listener, err := api.NewHttp(name, ipc.Port, s.plane)
+			if ipc.Port == nil {
+				return fmt.Errorf("listener %v port is not set", value.config)
+			}
+			listener, err := api.NewHttp(name, int(*ipc.Port), s.plane)
 			if err != nil {
 				return err
 			}
@@ -152,7 +155,7 @@ func (s *ListenerController) Create(name string) error {
 		switch ipc := value.config.Ipc.(type) {
 
 		case *config.ListenerIpcTcp:
-			listener, err := lsp.NewTcp(name, ipc.Port, s.plane)
+			listener, err := lsp.NewTcp(name, int(*ipc.Port), s.plane)
 			if err != nil {
 				return err
 			}

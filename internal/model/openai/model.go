@@ -23,8 +23,16 @@ type ModelOpenai struct {
 
 func New(name string, api *config.ModelApiOpenai, plane plane.Plane) *ModelOpenai {
 	client := openai.NewClient(option.WithBaseURL(api.Url), option.WithAPIKey("sk-dummy"))
-	maxTokens := openai.Int(int64(api.MaxTokens))
-	temperature := openai.Float(float64(api.Temperature))
+
+	var maxTokens param.Opt[int64]
+	if api.MaxTokens != nil {
+		maxTokens = openai.Int(int64(*api.MaxTokens))
+	}
+
+	var temperature param.Opt[float64]
+	if api.Temperature != nil {
+		temperature = openai.Float(float64(*api.Temperature))
+	}
 
 	return &ModelOpenai{
 		name:        name,
