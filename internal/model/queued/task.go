@@ -1,4 +1,4 @@
-package model
+package queued
 
 import (
 	"context"
@@ -10,38 +10,38 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type TaskResult struct {
+type taskResult struct {
 	text  string
 	error error
 }
 
-type TaskRequest struct {
-	clientName string
-	task       *model.Task
-	result     chan TaskResult
-	ctx        context.Context
-	cancel     context.CancelFunc
+type taskRequest struct {
+	task   *model.Task
+	client string
+	result chan taskResult
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
-type TaskQueue struct {
+type taskQueue struct {
 	rw     sync.RWMutex
-	mapped *xsync.Map[uuid.UUID, *TaskRequest]
-	queued chan *TaskRequest
+	mapped *xsync.Map[uuid.UUID, *taskRequest]
+	queued chan *taskRequest
 	ctx    context.Context
 	model  model.Model
 }
 
-func newTaskQueue(model model.Model) *TaskQueue {
-	return &TaskQueue{
+func newTaskQueue(model model.Model) *taskQueue {
+	return &taskQueue{
 		rw:     sync.RWMutex{},
-		mapped: xsync.NewMap[uuid.UUID, *TaskRequest](),
+		mapped: xsync.NewMap[uuid.UUID, *taskRequest](),
 		queued: nil,
 		ctx:    nil,
 		model:  model,
 	}
 }
 
-func (s *TaskQueue) serve(ctx context.Context, workers int, onReady func()) error {
+func (s *taskQueue) serve(ctx context.Context, workers int, onReady func()) error {
 	var wg sync.WaitGroup
 
 	if workers <= 0 {
@@ -54,7 +54,7 @@ func (s *TaskQueue) serve(ctx context.Context, workers int, onReady func()) erro
 		return fmt.Errorf("%T %v queue is serving", s, s.model.Name())
 	}
 
-	s.queued = make(chan *TaskRequest)
+	s.queued = make(chan *taskRequest)
 	s.ctx = ctx
 	s.rw.Unlock()
 
@@ -79,7 +79,7 @@ func (s *TaskQueue) serve(ctx context.Context, workers int, onReady func()) erro
 	return nil
 }
 
-func (s *TaskQueue) worker() {
+func (s *taskQueue) worker() {
 	s.rw.RLock()
 	queued := s.queued
 	s.rw.RUnlock()
@@ -87,15 +87,15 @@ func (s *TaskQueue) worker() {
 	for request := range queued {
 		select {
 		case <-request.ctx.Done():
-			request.result <- TaskResult{error: fmt.Errorf("task %v cancelled", request.task.Id)}
+			request.result <- taskResult{error: fmt.Errorf("task %v cancelled", request.task.Id)}
 		default:
 			text, error := s.model.Execute(request.ctx, request.task)
-			request.result <- TaskResult{text: text, error: error}
+			request.result <- taskResult{text: text, error: error}
 		}
 	}
 }
 
-func (s *TaskQueue) taskExecClient(task *model.Task, clientName string) (string, error) {
+func (s *taskQueue) taskExecClient(task *model.Task, clientName string) (string, error) {
 	s.rw.RLock()
 
 	if s.ctx == nil {
@@ -105,12 +105,12 @@ func (s *TaskQueue) taskExecClient(task *model.Task, clientName string) (string,
 
 	taskCtx, taskCancel := context.WithCancel(s.ctx)
 
-	request := &TaskRequest{
-		clientName: clientName,
-		task:       task,
-		result:     make(chan TaskResult, 1),
-		ctx:        taskCtx,
-		cancel:     taskCancel,
+	request := &taskRequest{
+		client: clientName,
+		task:   task,
+		result: make(chan taskResult, 1),
+		ctx:    taskCtx,
+		cancel: taskCancel,
 	}
 
 	s.mapped.Store(task.Id, request)
@@ -122,19 +122,19 @@ func (s *TaskQueue) taskExecClient(task *model.Task, clientName string) (string,
 	return result.text, result.error
 }
 
-func (s *TaskQueue) taskCancelClient(id uuid.UUID, clientName string) (*model.Task, error) {
+func (s *taskQueue) taskCancelClient(id uuid.UUID, clientName string) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
-	if !ok || request.clientName != clientName {
+	if !ok || request.client != clientName {
 		return nil, fmt.Errorf("task %v not found", id)
 	}
 	request.cancel()
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskCancelAllClient(clientName string) ([]*model.Task, error) {
+func (s *taskQueue) taskCancelAllClient(clientName string) ([]*model.Task, error) {
 	ids := make([]*model.Task, 0)
-	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
-		if value.clientName != clientName {
+	s.mapped.Range(func(key uuid.UUID, value *taskRequest) bool {
+		if value.client != clientName {
 			return true
 		}
 		value.cancel()
@@ -144,15 +144,15 @@ func (s *TaskQueue) taskCancelAllClient(clientName string) ([]*model.Task, error
 	return ids, nil
 }
 
-func (s *TaskQueue) taskGetClient(id uuid.UUID, clientName string) (*model.Task, error) {
+func (s *taskQueue) taskGetClient(id uuid.UUID, clientName string) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
-	if !ok || request.clientName != clientName {
+	if !ok || request.client != clientName {
 		return nil, fmt.Errorf("task %v not found", id)
 	}
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskGet(id uuid.UUID) (*model.Task, error) {
+func (s *taskQueue) taskGet(id uuid.UUID) (*model.Task, error) {
 	request, ok := s.mapped.Load(id)
 	if !ok {
 		return nil, fmt.Errorf("task %v not found", id)
@@ -160,10 +160,10 @@ func (s *TaskQueue) taskGet(id uuid.UUID) (*model.Task, error) {
 	return request.task, nil
 }
 
-func (s *TaskQueue) taskGetAllClient(clientName string) []*model.Task {
+func (s *taskQueue) taskGetAllClient(clientName string) []*model.Task {
 	tasks := make([]*model.Task, 0)
-	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
-		if value.clientName != clientName {
+	s.mapped.Range(func(key uuid.UUID, value *taskRequest) bool {
+		if value.client != clientName {
 			return true
 		}
 		tasks = append(tasks, value.task)
@@ -172,9 +172,9 @@ func (s *TaskQueue) taskGetAllClient(clientName string) []*model.Task {
 	return tasks
 }
 
-func (s *TaskQueue) taskGetAll() []*model.Task {
+func (s *taskQueue) taskGetAll() []*model.Task {
 	tasks := make([]*model.Task, 0)
-	s.mapped.Range(func(key uuid.UUID, value *TaskRequest) bool {
+	s.mapped.Range(func(key uuid.UUID, value *taskRequest) bool {
 		tasks = append(tasks, value.task)
 		return true
 	})

@@ -6,6 +6,7 @@ import (
 	"mals/internal/model"
 	"mals/internal/model/metered"
 	"mals/internal/model/openai"
+	"mals/internal/model/queued"
 	"mals/internal/plane/controller"
 	"mals/pkg/config"
 	"sync"
@@ -77,7 +78,6 @@ func (s *ModelController) Register(name string, cfg *config.Model) error {
 			rw:         sync.RWMutex{},
 			config:     cfg,
 			model:      nil,
-			queue:      nil,
 			cancelFunc: nil,
 		})
 	default:
@@ -116,18 +116,18 @@ func (s *ModelController) Create(name string) error {
 		return statusErrorEq(name, status, controller.ModelRegistered)
 	}
 
-	switch settings := value.config.Api.(type) {
+	var model model.Model
+
+	switch api := value.config.Api.(type) {
 	case *config.ModelApiOpenai:
-		value.model = openai.New(name, settings, s.plane)
+		model = openai.New(name, api, s.plane)
 
 	default:
-		return fmt.Errorf("unhandled model %T %v", settings, settings)
+		return fmt.Errorf("unhandled model %T %v", api, api)
 	}
 
-	if value.model != nil {
-		value.model = metered.New(s.plane, value.model)
-		value.queue = newTaskQueue(value.model)
-	}
+	model = metered.New(model, s.plane)
+	value.model = queued.New(model, s.plane)
 
 	return nil
 }
@@ -145,7 +145,6 @@ func (s *ModelController) Delete(name string) error {
 	}
 
 	value.model = nil
-	value.queue = nil
 
 	return nil
 }
@@ -165,39 +164,17 @@ func (s *ModelController) Start(name string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	value.cancelFunc = cancel
-
 	model := value.model
-	queue := value.queue
 
-	var wgReady sync.WaitGroup
-
-	wgReady.Add(1)
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	go func() {
-		var wg sync.WaitGroup
-
-		wg.Go(func() {
-			err := model.Run(ctx)
-			if err != nil {
-				s.plane.Errorf("%v", err)
-			}
-			cancel()
-		})
-
-		wg.Go(func() {
-			err := queue.serve(ctx, 1, func() { wgReady.Done() })
-			if err != nil {
-				s.plane.Errorf("%v", err)
-			}
-			cancel()
-		})
-
-		wg.Wait()
-
+		model.Run(ctx, func() { wg.Done() })
 		s.Stop(model.Name())
 	}()
 
-	wgReady.Wait()
+	wg.Wait()
 
 	return nil
 }
@@ -279,7 +256,7 @@ func (s *ModelController) TaskExecClient(modelName string, task *model.Task, cli
 		return "", statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskExecClient(task, clientName)
+	return value.model.TaskExecClient(task, clientName)
 }
 
 func (s *ModelController) TaskGet(modelName string, id uuid.UUID) (*model.Task, error) {
@@ -294,7 +271,7 @@ func (s *ModelController) TaskGet(modelName string, id uuid.UUID) (*model.Task, 
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskGet(id)
+	return value.model.TaskGet(id)
 }
 
 func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error) {
@@ -309,7 +286,7 @@ func (s *ModelController) TaskGetClient(modelName string, id uuid.UUID, clientNa
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskGetClient(id, clientName)
+	return value.model.TaskGetClient(id, clientName)
 }
 
 func (s *ModelController) TaskGetAll(modelName string) ([]*model.Task, error) {
@@ -324,7 +301,7 @@ func (s *ModelController) TaskGetAll(modelName string) ([]*model.Task, error) {
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskGetAll(), nil
+	return value.model.TaskGetAll(), nil
 }
 
 func (s *ModelController) TaskGetAllClient(modelName string, clientName string) ([]*model.Task, error) {
@@ -339,7 +316,7 @@ func (s *ModelController) TaskGetAllClient(modelName string, clientName string) 
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskGetAllClient(clientName), nil
+	return value.model.TaskGetAllClient(clientName), nil
 }
 
 func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, clientName string) (*model.Task, error) {
@@ -354,7 +331,7 @@ func (s *ModelController) TaskCancelClient(modelName string, id uuid.UUID, clien
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskCancelClient(id, clientName)
+	return value.model.TaskCancelClient(id, clientName)
 }
 
 func (s *ModelController) TaskCancelAllClient(modelName string, clientName string) ([]*model.Task, error) {
@@ -369,5 +346,5 @@ func (s *ModelController) TaskCancelAllClient(modelName string, clientName strin
 		return nil, statusErrorFlag(modelName, status, controller.ModelCreated)
 	}
 
-	return value.queue.taskCancelAllClient(clientName)
+	return value.model.TaskCancelAllClient(clientName)
 }

@@ -30,34 +30,34 @@ var (
 )
 
 type ModelMetered struct {
-	parent model.Model
-	plane  plane.Plane
+	model model.Model
+	plane plane.Plane
 }
 
-func New(plane plane.Plane, model model.Model) *ModelMetered {
+func New(model model.Model, plane plane.Plane) *ModelMetered {
 	s := &ModelMetered{
-		parent: model,
-		plane:  plane,
+		model: model,
+		plane: plane,
 	}
 	return s
 }
 
 func (s *ModelMetered) Name() string {
-	return s.parent.Name()
+	return s.model.Name()
 }
 
 func (s *ModelMetered) Kind() string {
-	return s.parent.Kind()
+	return s.model.Kind()
 }
 
 func (s *ModelMetered) Run(ctx context.Context) error {
-	return s.parent.Run(ctx)
+	return s.model.Run(ctx)
 }
 
 func (s *ModelMetered) Execute(ctx context.Context, task *model.Task) (string, error) {
 	start := time.Now()
 
-	result, err := s.parent.Execute(ctx, task)
+	result, err := s.model.Execute(ctx, task)
 
 	duration := time.Since(start).Seconds()
 	labels := prometheus.Labels{"model_name": s.Name(), "model_kind": s.Kind()}

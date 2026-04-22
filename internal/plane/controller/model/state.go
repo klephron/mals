@@ -2,7 +2,7 @@ package model
 
 import (
 	"context"
-	"mals/internal/model"
+	"mals/internal/model/queued"
 	"mals/pkg/config"
 	"sync"
 
@@ -19,7 +19,6 @@ type State struct {
 type Model struct {
 	rw         sync.RWMutex
 	config     *config.Model
-	model      model.Model
-	queue      *TaskQueue
+	model      *queued.ModelQueued
 	cancelFunc context.CancelFunc
 }
