@@ -7,14 +7,8 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-type Workspace struct {
-	uri       string
-	name      string
-	documents *xsync.Map[string, *document.Document]
-}
-
-func newWorkspace(uri string, name string) *Workspace {
-	return &Workspace{
+func newWorkspace(uri string, name string) *workspace {
+	return &workspace{
 		uri:       uri,
 		name:      name,
 		documents: xsync.NewMap[string, *document.Document](),
@@ -37,10 +31,10 @@ func (s *Middleware) workspaceDelete(uri string) {
 	s.plane.Infof("%T %s: workspace %s deleted", s, s.Name(), workspace.name)
 }
 
-func (s *Middleware) workspaceFindAll() []*Workspace {
-	workspaces := make([]*Workspace, 0)
+func (s *Middleware) workspaceFindAll() []*workspace {
+	workspaces := make([]*workspace, 0)
 
-	s.workspaces.Range(func(key string, value *Workspace) bool {
+	s.workspaces.Range(func(key string, value *workspace) bool {
 		workspaces = append(workspaces, value)
 		return true
 	})
@@ -48,10 +42,10 @@ func (s *Middleware) workspaceFindAll() []*Workspace {
 	return workspaces
 }
 
-func (s *Middleware) workspaceFindAllByPrefix(uri string) []*Workspace {
-	workspaces := make([]*Workspace, 0)
+func (s *Middleware) workspaceFindAllByPrefix(uri string) []*workspace {
+	workspaces := make([]*workspace, 0)
 
-	s.workspaces.Range(func(key string, value *Workspace) bool {
+	s.workspaces.Range(func(key string, value *workspace) bool {
 		if strings.HasPrefix(uri, key) {
 			workspaces = append(workspaces, value)
 		}

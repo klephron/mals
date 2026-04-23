@@ -5,7 +5,7 @@ import (
 	"mals/internal/middleware/document"
 )
 
-func (s *Middleware) documentGet(workspace *Workspace, uri string) *document.Document {
+func (s *Middleware) documentGet(workspace *workspace, uri string) *document.Document {
 	document, ok := workspace.documents.Load(uri)
 	if !ok {
 		s.plane.Warnf("%T %v: workspace %s document %s is not present",
@@ -15,7 +15,7 @@ func (s *Middleware) documentGet(workspace *Workspace, uri string) *document.Doc
 	return document
 }
 
-func (s *Middleware) documentAdd(workspace *Workspace, uri string, text *string, version int32) {
+func (s *Middleware) documentAdd(workspace *workspace, uri string, text *string, version int32) {
 	document := document.New(uri, text, version)
 
 	workspace.documents.Store(uri, document)
@@ -24,7 +24,7 @@ func (s *Middleware) documentAdd(workspace *Workspace, uri string, text *string,
 		s, s.Name(), workspace.name, document.Uri())
 }
 
-func (s *Middleware) documentDelete(workspace *Workspace, uri string) {
+func (s *Middleware) documentDelete(workspace *workspace, uri string) {
 	document, ok := workspace.documents.LoadAndDelete(uri)
 
 	if ok {
@@ -36,7 +36,7 @@ func (s *Middleware) documentDelete(workspace *Workspace, uri string) {
 	}
 }
 
-func (s *Middleware) documentUpdate(workspace *Workspace, document *document.Document, version int32, changes []protocol.TextDocumentContentChangeEvent) {
+func (s *Middleware) documentUpdate(workspace *workspace, document *document.Document, version int32, changes []protocol.TextDocumentContentChangeEvent) {
 	ok := document.TextUpdate(version, changes)
 
 	if ok {
