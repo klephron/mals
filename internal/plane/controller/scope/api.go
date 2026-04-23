@@ -9,12 +9,12 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
-func scopeDescent(current *Space, scope *scope.Scope, create bool) *Space {
+func scopeDescent(current *stateSpace, scope *scope.Scope, create bool) *stateSpace {
 	for _, sc := range scope.Path() {
 		next, ok := current.children.Load(sc)
 		if !ok {
 			if create {
-				next = newSpace(sc)
+				next = newStateSpace(sc)
 				current.children.Store(sc, next)
 			} else {
 				return nil
@@ -49,10 +49,10 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 			return "", nil, fmt.Errorf("ScopeModelAcquire model %v does not exist", name)
 		}
 
-		r := &Model{
-			fullname:     mangleName(name, scope),
+		r := &stateModel{
+			fullname:     nameMangle(name, scope),
 			config:       config,
-			dependencies: xsync.NewMap[string, *ScopeToken](),
+			dependencies: xsync.NewMap[string, *scopeToken](),
 		}
 
 		resource = r
@@ -78,7 +78,7 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 		s.plane.Infof("%T: %v in scope %v started %v", s, resource.fullname, scope, resource.fullname)
 	}
 
-	token := newToken()
+	token := newScopeToken()
 	resource.dependencies.Store(token.Token(), token)
 
 	s.plane.Infof("%T: %v in scope %v token %v assigned", s, resource.fullname, scope, token)
@@ -87,7 +87,7 @@ func (s *ScopeController) ModelAcquire(name string, scope *scope.Scope) (string,
 }
 
 func (s *ScopeController) ModelRelease(fullname string, token controller.ScopeToken) error {
-	name, scope := unmangleName(fullname)
+	name, scope := nameUnmangle(fullname)
 
 	current := scopeDescent(s.state.root, scope, false)
 	if current == nil {
@@ -136,10 +136,10 @@ func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, c
 			return "", nil, fmt.Errorf("lsp %v does not exist", name)
 		}
 
-		r := &Lsp{
-			fullname:     mangleName(name, scope),
+		r := &stateLsp{
+			fullname:     nameMangle(name, scope),
 			config:       config,
-			dependencies: xsync.NewMap[string, *ScopeToken](),
+			dependencies: xsync.NewMap[string, *scopeToken](),
 		}
 
 		resource = r
@@ -165,7 +165,7 @@ func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, c
 		s.plane.Infof("%T: %v in scope %v started %v", s, resource.fullname, scope, resource.fullname)
 	}
 
-	token := newToken()
+	token := newScopeToken()
 	resource.dependencies.Store(token.Token(), token)
 
 	s.plane.Infof("%T: %v in scope %v token %v assigned", s, resource.fullname, scope, token)
@@ -174,7 +174,7 @@ func (s *ScopeController) LspAcquire(name string, scope *scope.Scope) (string, c
 }
 
 func (s *ScopeController) LspRelease(fullname string, token controller.ScopeToken) error {
-	name, scope := unmangleName(fullname)
+	name, scope := nameUnmangle(fullname)
 
 	current := scopeDescent(s.state.root, scope, false)
 	if current == nil {
@@ -200,8 +200,8 @@ func (s *ScopeController) LspRelease(fullname string, token controller.ScopeToke
 	return nil
 }
 
-func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
-	current.lsps.Range(func(name string, resource *Lsp) bool {
+func (s *ScopeController) scopeClose(errors *[]error, current *stateSpace) {
+	current.lsps.Range(func(name string, resource *stateLsp) bool {
 		resource.rw.Lock()
 		defer resource.rw.Unlock()
 
@@ -234,7 +234,7 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 		return true
 	})
 
-	current.models.Range(func(name string, resource *Model) bool {
+	current.models.Range(func(name string, resource *stateModel) bool {
 		resource.rw.Lock()
 		defer resource.rw.Unlock()
 
@@ -268,8 +268,8 @@ func (s *ScopeController) scopeClose(errors *[]error, current *Space) {
 	})
 }
 
-func (s *ScopeController) scopeCloseDFS(errors *[]error, current *Space) {
-	current.children.Range(func(key scope.Space, value *Space) bool {
+func (s *ScopeController) scopeCloseDFS(errors *[]error, current *stateSpace) {
+	current.children.Range(func(key scope.Space, value *stateSpace) bool {
 		s.scopeCloseDFS(errors, value)
 		return true
 	})
@@ -300,7 +300,7 @@ func (s *ScopeController) TreeRoot() *controller.Space {
 	return s.scopeTree(s.state.root)
 }
 
-func (s *ScopeController) scopeTree(src *Space) *controller.Space {
+func (s *ScopeController) scopeTree(src *stateSpace) *controller.Space {
 	if src == nil {
 		return nil
 	}
@@ -312,15 +312,15 @@ func (s *ScopeController) scopeTree(src *Space) *controller.Space {
 		Models:   make(map[string]controller.ResourceModel),
 	}
 
-	src.children.Range(func(key scope.Space, val *Space) bool {
+	src.children.Range(func(key scope.Space, val *stateSpace) bool {
 		dst.Children[key] = s.scopeTree(val)
 		return true
 	})
 
-	src.lsps.Range(func(key string, val *Lsp) bool {
+	src.lsps.Range(func(key string, val *stateLsp) bool {
 		val.rw.RLock()
 		deps := make(map[string]controller.ScopeToken)
-		val.dependencies.Range(func(key string, value *ScopeToken) bool {
+		val.dependencies.Range(func(key string, value *scopeToken) bool {
 			deps[key] = value
 			return true
 		})
@@ -333,10 +333,10 @@ func (s *ScopeController) scopeTree(src *Space) *controller.Space {
 		return true
 	})
 
-	src.models.Range(func(key string, val *Model) bool {
+	src.models.Range(func(key string, val *stateModel) bool {
 		val.rw.RLock()
 		deps := make(map[string]controller.ScopeToken)
-		val.dependencies.Range(func(key string, value *ScopeToken) bool {
+		val.dependencies.Range(func(key string, value *scopeToken) bool {
 			deps[key] = value
 			return true
 		})

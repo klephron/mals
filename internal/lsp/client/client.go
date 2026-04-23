@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/jsonrpc"
+	"mals/internal/lsp/protocol"
 	"mals/internal/middleware"
 	"mals/internal/plane"
 	"mals/internal/scope"
@@ -17,6 +18,21 @@ type LspClient struct {
 	scanner      *bufio.Scanner
 	writer       *bufio.Writer
 	middleware   *middleware.Middleware
+}
+
+func errorParseUnexpectedType[T jsonrpc.Message](s *LspClient) {
+	var dummy T
+
+	resp := jsonrpc.Response{
+		Error: &jsonrpc.Error{
+			Code:    int32(protocol.ParseError),
+			Message: fmt.Sprintf("message is not of type %T", dummy),
+		},
+	}
+
+	s.plane.Warnf("%T %v: %v", s, s.Name(), resp.Error.Message)
+
+	s.send(&resp)
 }
 
 func New(listenerName string, clientName string, plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *LspClient {

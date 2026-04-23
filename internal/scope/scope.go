@@ -27,3 +27,11 @@ func NewScope(spaces ...Space) *Scope {
 func (s *Scope) Path() []Space {
 	return s.path
 }
+
+func NewScopeGlobal() *Scope {
+	return NewScope()
+}
+
+func NewScopeClient(listener string, client string) *Scope {
+	return NewScope(NewSpace(listener), NewSpace(client))
+}

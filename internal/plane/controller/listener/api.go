@@ -21,7 +21,7 @@ func statusErrorFlag(name string, actual controller.ListenerStatus, expected con
 	return fmt.Errorf("listener %v expected flag %v, got %v", name, expected, actual)
 }
 
-func (s *ListenerController) status(value *Listener) controller.ListenerStatus {
+func (s *ListenerController) status(value *stateListener) controller.ListenerStatus {
 	status := controller.ListenerAbsent
 
 	if value != nil {
@@ -38,7 +38,7 @@ func (s *ListenerController) status(value *Listener) controller.ListenerStatus {
 	return status
 }
 
-func (s *ListenerController) statusRW(value *Listener) controller.ListenerStatus {
+func (s *ListenerController) statusRW(value *stateListener) controller.ListenerStatus {
 	status := controller.ListenerAbsent
 
 	if value != nil {
@@ -67,7 +67,7 @@ func clientStatusErrorFlag(name string, clientName string, actual controller.Cli
 	return fmt.Errorf("listener %v client %v expected flag %v, got %v", name, clientName, expected, actual)
 }
 
-func (s *ListenerController) lspClientStatus(value *ListenerLspClient) controller.ClientStatus {
+func (s *ListenerController) lspClientStatus(value *stateListenerLspClient) controller.ClientStatus {
 	status := controller.ClientAbsent
 
 	if value != nil {
@@ -94,7 +94,7 @@ func (s *ListenerController) Register(name string, cfg *config.Listener) error {
 		return statusErrorEq(name, status, controller.ListenerAbsent)
 	}
 
-	s.state.listeners.Store(name, &Listener{
+	s.state.listeners.Store(name, &stateListener{
 		rw:         sync.RWMutex{},
 		config:     cfg,
 		cancelFunc: nil,
@@ -145,7 +145,7 @@ func (s *ListenerController) Create(name string) error {
 			if err != nil {
 				return err
 			}
-			value.mixin = &ListenerMixinApi{
+			value.mixin = &stateListenerMApi{
 				listener: listener,
 			}
 			return nil
@@ -159,9 +159,9 @@ func (s *ListenerController) Create(name string) error {
 			if err != nil {
 				return err
 			}
-			value.mixin = &ListenerMixinLsp{
+			value.mixin = &stateListenerMLsp{
 				listener: listener,
-				clients:  xsync.NewMap[string, *ListenerLspClient](),
+				clients:  xsync.NewMap[string, *stateListenerLspClient](),
 			}
 			return nil
 		}
@@ -232,9 +232,9 @@ func (s *ListenerController) Stop(name string) error {
 
 	switch value.config.Protocol.(type) {
 	case *config.ListenerProtocolLsp:
-		mixinLsp := value.mixin.(*ListenerMixinLsp)
+		mixinLsp := value.mixin.(*stateListenerMLsp)
 
-		mixinLsp.clients.Range(func(key string, value *ListenerLspClient) bool {
+		mixinLsp.clients.Range(func(key string, value *stateListenerLspClient) bool {
 			s.lspClientShutdown(mixinLsp, key)
 			return true
 		})
@@ -273,14 +273,14 @@ func (s *ListenerController) LspClientOwn(name string, client listener.ListenerL
 		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
 	}
 
-	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	mixinLsp := value.mixin.(*stateListenerMLsp)
 	clientValue, _ := mixinLsp.clients.Load(client.Name())
 
 	if status := s.lspClientStatus(clientValue); status != controller.ClientAbsent {
 		return clientStatusErrorEq(name, client.Name(), status, controller.ClientAbsent)
 	}
 
-	mixinLsp.clients.Store(client.Name(), &ListenerLspClient{
+	mixinLsp.clients.Store(client.Name(), &stateListenerLspClient{
 		client:     client,
 		cancelFunc: nil,
 	})
@@ -306,7 +306,7 @@ func (s *ListenerController) LspClientStatus(name string, clientName string) con
 		return controller.ClientAbsent
 	}
 
-	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	mixinLsp := value.mixin.(*stateListenerMLsp)
 	clientValue, _ := mixinLsp.clients.Load(clientName)
 
 	return s.lspClientStatus(clientValue)
@@ -330,7 +330,7 @@ func (s *ListenerController) LspClientServe(name string, clientName string) erro
 		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
 	}
 
-	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	mixinLsp := value.mixin.(*stateListenerMLsp)
 	clientValue, _ := mixinLsp.clients.Load(clientName)
 
 	if status := s.lspClientStatus(clientValue); status != controller.ClientCreated {
@@ -349,7 +349,7 @@ func (s *ListenerController) LspClientServe(name string, clientName string) erro
 	return nil
 }
 
-func (s *ListenerController) lspClientShutdown(mixinLsp *ListenerMixinLsp, clientName string) error {
+func (s *ListenerController) lspClientShutdown(mixinLsp *stateListenerMLsp, clientName string) error {
 	name := mixinLsp.listener.Name()
 	value, _ := mixinLsp.clients.Load(clientName)
 
@@ -394,7 +394,7 @@ func (s *ListenerController) LspClientShutdown(name string, clientName string) e
 		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
 	}
 
-	mixinLsp := value.mixin.(*ListenerMixinLsp)
+	mixinLsp := value.mixin.(*stateListenerMLsp)
 
 	defer value.rw.Unlock()
 
@@ -442,7 +442,7 @@ func (s *ListenerController) Get(name string) (*controller.ListenerData, error) 
 func (s *ListenerController) GetAll() []*controller.ListenerData {
 	datas := make([]*controller.ListenerData, 0)
 
-	s.state.listeners.Range(func(key string, value *Listener) bool {
+	s.state.listeners.Range(func(key string, value *stateListener) bool {
 		data, err := s.Get(key)
 
 		if err == nil {

@@ -2,63 +2,28 @@ package scope
 
 import (
 	"mals/internal/plane/controller"
-	"mals/internal/scope"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type ScopeToken struct {
+type scopeToken struct {
 	controller.ScopeToken
 	id   string
 	from time.Time
 }
 
-func (s *ScopeToken) Token() string {
+func (s *scopeToken) Token() string {
 	return s.id
 }
 
-func (s *ScopeToken) From() time.Time {
+func (s *scopeToken) From() time.Time {
 	return s.from
 }
 
-func newToken() *ScopeToken {
-	return &ScopeToken{
+func newScopeToken() *scopeToken {
+	return &scopeToken{
 		id:   uuid.New().String(),
 		from: time.Now(),
 	}
-}
-
-func mangleName(name string, scope *scope.Scope) string {
-	fullname := ""
-
-	for _, sp := range scope.Path() {
-		fullname += sp.Name()
-		fullname += "#"
-	}
-
-	fullname += name
-
-	return fullname
-}
-
-func unmangleName(name string) (string, *scope.Scope) {
-	parts := strings.Split(name, "#")
-	if len(parts) == 0 {
-		return "", nil
-	}
-
-	baseName := parts[len(parts)-1]
-
-	if len(parts) == 1 {
-		return baseName, scope.NewScope()
-	}
-
-	scopePath := make([]scope.Space, len(parts)-1)
-	for i := 0; i < len(parts)-1; i++ {
-		scopePath[i] = scope.NewSpace(parts[i])
-	}
-
-	return baseName, scope.NewScope(scopePath...)
 }

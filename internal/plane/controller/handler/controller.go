@@ -10,14 +10,21 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type state struct {
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+
+	handlers *xsync.Map[string, *config.Handler]
+}
+
 type HandlerController struct {
-	state State
+	state state
 	plane plane.Plane
 }
 
 func New(plane plane.Plane) *HandlerController {
 	return &HandlerController{
-		state: State{
+		state: state{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
 			handlers:     xsync.NewMap[string, *config.Handler](),

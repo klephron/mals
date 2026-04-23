@@ -3,23 +3,39 @@ package model
 import (
 	"context"
 	"fmt"
+	"mals/internal/model/queued"
 	"mals/internal/plane"
+	"mals/pkg/config"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type state struct {
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+
+	models *xsync.Map[string, *stateModel]
+}
+
+type stateModel struct {
+	rw         sync.RWMutex
+	config     *config.Model
+	model      *queued.ModelQueued
+	cancelFunc context.CancelFunc
+}
+
 type ModelController struct {
-	state State
+	state state
 	plane plane.Plane
 }
 
 func New(plane plane.Plane) *ModelController {
 	return &ModelController{
-		state: State{
+		state: state{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			models:       xsync.NewMap[string, *Model](),
+			models:       xsync.NewMap[string, *stateModel](),
 		},
 		plane: plane,
 	}
@@ -51,7 +67,7 @@ func (s *ModelController) ControllerRun(onReady func()) error {
 }
 
 func (s *ModelController) ControllerShutdown() error {
-	s.state.models.Range(func(key string, value *Model) bool {
+	s.state.models.Range(func(key string, value *stateModel) bool {
 		s.Stop(key)
 		s.Delete(key)
 		return true

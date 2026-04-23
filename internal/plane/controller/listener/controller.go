@@ -3,23 +3,66 @@ package listener
 import (
 	"context"
 	"fmt"
+	"mals/internal/listener"
+	"mals/internal/listener/api"
+	"mals/internal/listener/lsp"
 	"mals/internal/plane"
+	"mals/pkg/config"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type state struct {
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+	listeners    *xsync.Map[string, *stateListener]
+}
+
+type stateListener struct {
+	rw         sync.RWMutex
+	config     *config.Listener
+	cancelFunc context.CancelFunc
+	mixin      stateListenerM
+}
+
+type stateListenerM interface {
+	Listener() listener.Listener
+}
+
+type stateListenerMApi struct {
+	listener *api.ListenerApi
+}
+
+func (s *stateListenerMApi) Listener() listener.Listener {
+	return s.listener
+}
+
+type stateListenerMLsp struct {
+	listener *lsp.ListenerLsp
+	clients  *xsync.Map[string, *stateListenerLspClient]
+}
+
+func (s *stateListenerMLsp) Listener() listener.Listener {
+	return s.listener
+}
+
+type stateListenerLspClient struct {
+	client     listener.ListenerLspClient
+	cancelFunc context.CancelFunc
+}
+
 type ListenerController struct {
-	state State
+	state state
 	plane plane.Plane
 }
 
 func New(plane plane.Plane) *ListenerController {
 	return &ListenerController{
-		state: State{
+		state: state{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			listeners:    xsync.NewMap[string, *Listener](),
+			listeners:    xsync.NewMap[string, *stateListener](),
 		},
 		plane: plane,
 	}
@@ -51,7 +94,7 @@ func (s *ListenerController) ControllerRun(onReady func()) error {
 }
 
 func (s *ListenerController) ControllerShutdown() error {
-	s.state.listeners.Range(func(key string, value *Listener) bool {
+	s.state.listeners.Range(func(key string, value *stateListener) bool {
 		s.Stop(key)
 		s.Delete(key)
 		return true

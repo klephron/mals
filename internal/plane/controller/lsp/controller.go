@@ -3,23 +3,39 @@ package lsp
 import (
 	"context"
 	"fmt"
+	"mals/internal/lsp/server"
 	"mals/internal/plane"
+	"mals/pkg/config"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type state struct {
+	statusRW     sync.RWMutex
+	statusCancel context.CancelFunc
+
+	lsps *xsync.Map[string, *stateLsp]
+}
+
+type stateLsp struct {
+	rw         sync.RWMutex
+	config     *config.Lsp
+	lsp        server.LspServer
+	cancelFunc context.CancelFunc
+}
+
 type LspController struct {
-	state State
+	state state
 	plane plane.Plane
 }
 
 func New(plane plane.Plane) *LspController {
 	return &LspController{
-		state: State{
+		state: state{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			lsps:         xsync.NewMap[string, *Lsp](),
+			lsps:         xsync.NewMap[string, *stateLsp](),
 		},
 		plane: plane,
 	}
@@ -51,7 +67,7 @@ func (s *LspController) ControllerRun(onReady func()) error {
 }
 
 func (s *LspController) ControllerShutdown() error {
-	s.state.lsps.Range(func(key string, value *Lsp) bool {
+	s.state.lsps.Range(func(key string, value *stateLsp) bool {
 		s.Stop(key)
 		s.Delete(key)
 		return true

@@ -22,7 +22,7 @@ func statusErrorFlag(name string, actual controller.ModelStatus, expected contro
 	return fmt.Errorf("model %v expected flag %v, got %v", name, expected, actual)
 }
 
-func (s *ModelController) status(value *Model) controller.ModelStatus {
+func (s *ModelController) status(value *stateModel) controller.ModelStatus {
 	status := controller.ModelAbsent
 
 	if value != nil {
@@ -39,7 +39,7 @@ func (s *ModelController) status(value *Model) controller.ModelStatus {
 	return status
 }
 
-func (s *ModelController) statusRW(value *Model) controller.ModelStatus {
+func (s *ModelController) statusRW(value *stateModel) controller.ModelStatus {
 	status := controller.ModelAbsent
 
 	if value != nil {
@@ -74,7 +74,7 @@ func (s *ModelController) Register(name string, cfg *config.Model) error {
 
 	switch settings := cfg.Api.(type) {
 	case *config.ModelApiOpenai:
-		s.state.models.Store(name, &Model{
+		s.state.models.Store(name, &stateModel{
 			rw:         sync.RWMutex{},
 			config:     cfg,
 			model:      nil,
@@ -231,7 +231,7 @@ func (s *ModelController) Get(name string) (*controller.ModelData, error) {
 func (s *ModelController) GetAll() []*controller.ModelData {
 	datas := make([]*controller.ModelData, 0)
 
-	s.state.models.Range(func(key string, value *Model) bool {
+	s.state.models.Range(func(key string, value *stateModel) bool {
 		data, err := s.Get(key)
 
 		if err == nil {

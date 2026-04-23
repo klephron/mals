@@ -37,6 +37,21 @@ type LspServerStdio struct {
 	taskc atomic.Int32
 }
 
+func newLspTask(request *jsonrpc.Request) *lspTask {
+	return &lspTask{
+		request:  request,
+		response: make(chan *jsonrpc.Response, 1),
+	}
+}
+
+func (s *LspServerStdio) errorNotRunning() error {
+	return fmt.Errorf("%v: not running", s.Name())
+}
+
+func (s *LspServerStdio) errorRunning() error {
+	return fmt.Errorf("%v: running", s.Name())
+}
+
 func New(name string, api *config.LspApiStdio, plane plane.Plane) *LspServerStdio {
 	cmd := api.Cmd
 
@@ -147,13 +162,6 @@ func (s *LspServerStdio) Run(ctx context.Context, onReady func()) error {
 	s.plane.Infof("%T %v: done", s, s.Name())
 
 	return nil
-}
-
-func newLspTask(request *jsonrpc.Request) *lspTask {
-	return &lspTask{
-		request:  request,
-		response: make(chan *jsonrpc.Response, 1),
-	}
 }
 
 func (s *LspServerStdio) send(msg jsonrpc.Message) error {

@@ -3,23 +3,39 @@ package log
 import (
 	"context"
 	"fmt"
+	"mals/internal/log"
 	"mals/internal/plane"
+	"mals/pkg/config"
 	"sync"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+type state struct {
+	statusCancel context.CancelFunc
+	statusRW     sync.RWMutex
+
+	logs *xsync.Map[string, *stateLog]
+}
+
+type stateLog struct {
+	rw      sync.RWMutex
+	config  *config.Log
+	log     log.Log
+	enabled bool
+}
+
 type LogController struct {
-	state State
+	state state
 	plane plane.Plane
 }
 
 func New(plane plane.Plane) *LogController {
 	return &LogController{
-		state: State{
+		state: state{
 			statusRW:     sync.RWMutex{},
 			statusCancel: nil,
-			logs:         xsync.NewMap[string, *Log](),
+			logs:         xsync.NewMap[string, *stateLog](),
 		},
 		plane: plane,
 	}
@@ -51,7 +67,7 @@ func (s *LogController) ControllerRun(onReady func()) error {
 }
 
 func (s *LogController) ControllerShutdown() error {
-	s.state.logs.Range(func(key string, value *Log) bool {
+	s.state.logs.Range(func(key string, value *stateLog) bool {
 		s.Stop(key)
 		s.Delete(key)
 		return true
