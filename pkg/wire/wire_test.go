@@ -290,15 +290,6 @@ listeners:
       kind: lsp
       handlers:
         - name: first_h
-          condition:
-            filetypes:
-              - a
-              - b
-              - c
-            paths:
-              - d
-              - e
-              - f
 `),
 			expected: testExpected{
 				output: &Config{
@@ -311,10 +302,6 @@ listeners:
 								Handlers: []ListenerProtocolHandler{
 									{
 										Name: "first_h",
-										Condition: &ListenerProtocolHandlerCondition{
-											Filetypes: []string{"a", "b", "c"},
-											Paths:     []string{"d", "e", "f"},
-										},
 									},
 								},
 							},
@@ -334,11 +321,7 @@ listeners:
       kind: lsp
       handlers:
         - name: first_1
-          condition:
-            paths: []
         - name: first_2
-          condition:
-            paths: []
 `),
 			expected: testExpected{
 				output: &Config{
@@ -351,15 +334,9 @@ listeners:
 								Handlers: []ListenerProtocolHandler{
 									{
 										Name: "first_1",
-										Condition: &ListenerProtocolHandlerCondition{
-											Paths: []string{},
-										},
 									},
 									{
 										Name: "first_2",
-										Condition: &ListenerProtocolHandlerCondition{
-											Paths: []string{},
-										},
 									},
 								},
 							},

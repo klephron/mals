@@ -146,12 +146,6 @@ const (
 )
 
 type ListenerProtocolHandler struct {
-	Name      string                            `mapstructure:"name"`
-	Condition *ListenerProtocolHandlerCondition `mapstructure:"condition"`
-	Handler   string                            `mapstructure:"handler"`
-}
-
-type ListenerProtocolHandlerCondition struct {
-	Filetypes []string `mapstructure:"filetypes"`
-	Paths     []string `mapstructure:"paths"`
+	Name    string `mapstructure:"name"`
+	Handler string `mapstructure:"handler"`
 }

@@ -1,11 +1,11 @@
-package middleware
+package handler
 
 import (
-	"fmt"
-	"mals/internal/lsp/protocol"
-	// "mals/internal/scope"
-	// "mals/internal/util"
-	// "mals/pkg/config"
+// "fmt"
+// "mals/internal/lsp/protocol"
+// "mals/internal/scope"
+// "mals/internal/util"
+// "mals/pkg/config"
 )
 
 // func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Workspace, step *config.Step) error {
@@ -69,18 +69,18 @@ import (
 // 	return nil
 // }
 
-func (s *Middleware) Initialized(params *protocol.InitializedParams) error {
-	if s.initialized {
-		return fmt.Errorf("%v: already initialized", s.Name())
-	}
+// func (s *Middleware) Initialized(params *protocol.InitializedParams) error {
+// 	if s.initialized {
+// 		return fmt.Errorf("%v: already initialized", s.Name())
+// 	}
 
-	s.initialized = true
+// 	s.initialized = true
 
-	// workspaces := s.workspaceFindAll()
+// 	// workspaces := s.workspaceFindAll()
 
-	// s.eventInitialized(params, workspaces)
+// 	// s.eventInitialized(params, workspaces)
 
-	s.plane.Infof("%T %v: Initialized event done", s, s.Name())
+// 	s.plane.Infof("%T %v: Initialized event done", s, s.Name())
 
-	return nil
-}
+// 	return nil
+// }

@@ -40,12 +40,15 @@ type ListenerController interface {
 	Start(name string) error
 	Stop(name string) error
 
+	GetConfig(name string) (*config.Listener, error)
+	Get(name string) (*ListenerData, error)
+	GetAll() []*ListenerData
+
 	LspClientOwn(name string, client listener.ListenerLspClient) error
 	LspClientStatus(name string, clientName string) ClientStatus
 	LspClientServe(name string, clientName string) error
 	LspClientShutdown(name string, clientName string) error
 
-	GetConfig(name string) (*config.Listener, error)
-	Get(name string) (*ListenerData, error)
-	GetAll() []*ListenerData
+	LspHandlerGet(name string, handlerName string) (*config.ListenerProtocolLspHandler, error)
+	LspHandlerGetAll(name string) ([]*config.ListenerProtocolLspHandler, error)
 }

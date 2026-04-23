@@ -8,16 +8,13 @@ import (
 	"mals/internal/lsp/protocol"
 	"mals/internal/middleware"
 	"mals/internal/plane"
-	"mals/internal/scope"
 )
 
 type LspClient struct {
-	listenerName string
-	clientName   string
-	plane        plane.Plane
-	scanner      *bufio.Scanner
-	writer       *bufio.Writer
-	middleware   *middleware.Middleware
+	plane      plane.Plane
+	scanner    *bufio.Scanner
+	writer     *bufio.Writer
+	middleware *middleware.Middleware
 }
 
 func errorParseUnexpectedType[T jsonrpc.Message](s *LspClient) {
@@ -37,12 +34,10 @@ func errorParseUnexpectedType[T jsonrpc.Message](s *LspClient) {
 
 func New(listenerName string, clientName string, plane plane.Plane, scanner *bufio.Scanner, writer *bufio.Writer) *LspClient {
 	s := &LspClient{
-		listenerName: listenerName,
-		clientName:   clientName,
-		plane:        plane,
-		scanner:      scanner,
-		writer:       writer,
-		middleware:   middleware.New(plane),
+		plane:      plane,
+		scanner:    scanner,
+		writer:     writer,
+		middleware: middleware.New(listenerName, clientName, plane),
 	}
 
 	s.scanner.Split(jsonrpc.ScannerSplit)
@@ -51,7 +46,7 @@ func New(listenerName string, clientName string, plane plane.Plane, scanner *buf
 }
 
 func (s *LspClient) Name() string {
-	return fmt.Sprintf("%v:%v", s.listenerName, s.clientName)
+	return s.middleware.Name()
 }
 
 func (s *LspClient) Serve(ctx context.Context) error {
@@ -79,11 +74,6 @@ func (s *LspClient) Serve(ctx context.Context) error {
 	}()
 
 	<-scanCtx.Done()
-
-	errs := s.plane.Scope().Close(scope.NewScopeClient(s.listenerName, s.clientName))
-	for _, err := range errs {
-		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
-	}
 
 	s.plane.Infof("%T %v: done", s, s.Name())
 

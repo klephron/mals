@@ -1,14 +1,14 @@
-package middleware
+package handler
 
-import (
-	// "fmt"
-	"mals/internal/lsp/protocol"
-	// "mals/internal/scope"
-	// "mals/internal/util"
-	// "mals/pkg/config"
-	"mals/pkg/info"
-	// "os"
-)
+import "mals/internal/lsp/protocol"
+
+// "fmt"
+// "mals/internal/lsp/protocol"
+// "mals/internal/scope"
+// "mals/internal/util"
+// "mals/pkg/config"
+// "mals/pkg/info"
+// "os"
 
 // func (s *Middleware) eventInitializeLsp(params *protocol.InitializeParams, workspace *Workspace, step *config.Step) error {
 // 	if step.Scope != "client" {
@@ -105,10 +105,7 @@ import (
 // 	return nil
 // }
 
-func (s *Middleware) Initialize(params *protocol.InitializeParams, listenerName string, clientName string) (*protocol.InitializeResult, error) {
-	s.listenerName = listenerName
-	s.clientName = clientName
-
+func (s *Handler) Initialize(params *protocol.InitializeParams) error {
 	for _, workspace := range params.WorkspaceFolders {
 		s.workspaceAdd(workspace.URI, workspace.Name)
 	}
@@ -117,21 +114,7 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams, listenerName 
 
 	// s.eventInitialize(params, workspaces)
 
-	s.plane.Infof("%T %v: Initialize event done", s, s.Name())
+	s.plane.Infof("%T %v: Initialize done", s, s.Name())
 
-	result := &protocol.InitializeResult{
-		Capabilities: protocol.ServerCapabilities{
-			TextDocumentSync: protocol.TextDocumentSyncOptions{
-				OpenClose: true,
-				Change:    s.textDocumentSyncKind,
-			},
-			CompletionProvider: &protocol.CompletionOptions{},
-		},
-		ServerInfo: &protocol.ServerInfo{
-			Name:    info.MiddlewareServerName,
-			Version: info.MiddlewareVersion,
-		},
-	}
-
-	return result, nil
+	return nil
 }

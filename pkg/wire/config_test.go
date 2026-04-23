@@ -368,16 +368,11 @@ func TestConfigUnwire(t *testing.T) {
 							Kind: ListenerProtocolKindLsp,
 							Handlers: []ListenerProtocolHandler{
 								{
-									Name:      "1",
-									Condition: nil,
-									Handler:   "1_h",
+									Name:    "1",
+									Handler: "1_h",
 								},
 								{
-									Name: "2",
-									Condition: &ListenerProtocolHandlerCondition{
-										Filetypes: []string{"a", "c", "e"},
-										Paths:     []string{"ab", "cd", "ef"},
-									},
+									Name:    "2",
 									Handler: "2_h",
 								},
 							},
@@ -394,18 +389,13 @@ func TestConfigUnwire(t *testing.T) {
 								Port: util.Ptr(int32(8091)),
 							},
 							Protocol: &config.ListenerProtocolLsp{
-								Handlers: []config.ListenerProtocolLspHandler{
+								Handlers: []*config.ListenerProtocolLspHandler{
 									{
-										Name:      "1",
-										Condition: nil,
-										Handler:   "1_h",
+										Name:    "1",
+										Handler: "1_h",
 									},
 									{
-										Name: "2",
-										Condition: &config.ListenerProtocolLspHandlerCondition{
-											Filetypes: []string{"a", "c", "e"},
-											Paths:     []string{"ab", "cd", "ef"},
-										},
+										Name:    "2",
 										Handler: "2_h",
 									},
 								},

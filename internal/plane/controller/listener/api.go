@@ -255,6 +255,60 @@ func (s *ListenerController) Stop(name string) error {
 	return nil
 }
 
+func (s *ListenerController) GetConfig(name string) (*config.Listener, error) {
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	if status := s.status(value); status&controller.ListenerRegistered == 0 {
+		return nil, statusErrorFlag(name, status, controller.ListenerRegistered)
+	}
+
+	return value.config, nil
+}
+
+func (s *ListenerController) Get(name string) (*controller.ListenerData, error) {
+	value, _ := s.state.listeners.Load(name)
+
+	if value != nil {
+		value.rw.RLock()
+		defer value.rw.RUnlock()
+	}
+
+	status := s.status(value)
+
+	if status&controller.ListenerRegistered == 0 {
+		return nil, statusErrorFlag(name, status, controller.ListenerRegistered)
+	}
+
+	config := value.config
+
+	return &controller.ListenerData{
+		Name:   name,
+		Status: status,
+		Config: config,
+	}, nil
+}
+
+func (s *ListenerController) GetAll() []*controller.ListenerData {
+	datas := make([]*controller.ListenerData, 0)
+
+	s.state.listeners.Range(func(key string, value *stateListener) bool {
+		data, err := s.Get(key)
+
+		if err == nil {
+			datas = append(datas, data)
+		}
+
+		return true
+	})
+
+	return datas
+}
+
 func (s *ListenerController) LspClientOwn(name string, client listener.ListenerLspClient) error {
 	value, _ := s.state.listeners.Load(name)
 
@@ -378,30 +432,24 @@ func (s *ListenerController) LspClientShutdown(name string, clientName string) e
 
 	if value != nil {
 		value.rw.Lock()
+		defer value.rw.Unlock()
 	}
 
 	if status := s.status(value); status&controller.ListenerStarted == 0 {
-		if value != nil {
-			value.rw.Unlock()
-		}
 		return statusErrorFlag(name, status, controller.ListenerStarted)
 	}
 
-	switch kind := value.config.Protocol.(type) {
-	case *config.ListenerProtocolLsp:
-	default:
-		value.rw.Unlock()
-		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), kind)
+	_, ok := value.config.Protocol.(*config.ListenerProtocolLsp)
+	if !ok {
+		return fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), value.config.Protocol)
 	}
 
 	mixinLsp := value.mixin.(*stateListenerMLsp)
 
-	defer value.rw.Unlock()
-
 	return s.lspClientShutdown(mixinLsp, clientName)
 }
 
-func (s *ListenerController) GetConfig(name string) (*config.Listener, error) {
+func (s *ListenerController) LspHandlerGet(name string, handlerName string) (*config.ListenerProtocolLspHandler, error) {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -413,10 +461,21 @@ func (s *ListenerController) GetConfig(name string) (*config.Listener, error) {
 		return nil, statusErrorFlag(name, status, controller.ListenerRegistered)
 	}
 
-	return value.config, nil
+	lsp, ok := value.config.Protocol.(*config.ListenerProtocolLsp)
+	if !ok {
+		return nil, fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), value.config.Protocol)
+	}
+
+	for _, handler := range lsp.Handlers {
+		if handler.Name == handlerName {
+			return handler, nil
+		}
+	}
+
+	return nil, fmt.Errorf("listener %v handler %v not found", name, handlerName)
 }
 
-func (s *ListenerController) Get(name string) (*controller.ListenerData, error) {
+func (s *ListenerController) LspHandlerGetAll(name string) ([]*config.ListenerProtocolLspHandler, error) {
 	value, _ := s.state.listeners.Load(name)
 
 	if value != nil {
@@ -424,33 +483,14 @@ func (s *ListenerController) Get(name string) (*controller.ListenerData, error) 
 		defer value.rw.RUnlock()
 	}
 
-	status := s.status(value)
-
-	if status&controller.ListenerRegistered == 0 {
+	if status := s.status(value); status&controller.ListenerRegistered == 0 {
 		return nil, statusErrorFlag(name, status, controller.ListenerRegistered)
 	}
 
-	config := value.config
+	lsp, ok := value.config.Protocol.(*config.ListenerProtocolLsp)
+	if !ok {
+		return nil, fmt.Errorf("listener %v expected type %T, got %T", name, (*config.ListenerProtocolLsp)(nil), value.config.Protocol)
+	}
 
-	return &controller.ListenerData{
-		Name:   name,
-		Status: status,
-		Config: config,
-	}, nil
-}
-
-func (s *ListenerController) GetAll() []*controller.ListenerData {
-	datas := make([]*controller.ListenerData, 0)
-
-	s.state.listeners.Range(func(key string, value *stateListener) bool {
-		data, err := s.Get(key)
-
-		if err == nil {
-			datas = append(datas, data)
-		}
-
-		return true
-	})
-
-	return datas
+	return lsp.Handlers, nil
 }

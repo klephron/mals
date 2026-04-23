@@ -134,7 +134,7 @@ func DefaultListener(c *Listener) {
 	switch cp := c.Protocol.(type) {
 	case *ListenerProtocolLsp:
 		if cp.Handlers == nil {
-			cp.Handlers = make([]ListenerProtocolLspHandler, 0)
+			cp.Handlers = make([]*ListenerProtocolLspHandler, 0)
 		}
 	case *ListenerProtocolApi:
 	}

@@ -30,7 +30,7 @@ func (s *ListenerProtocolApi) ListenerProtocolKind() string {
 }
 
 type ListenerProtocolLsp struct {
-	Handlers []ListenerProtocolLspHandler
+	Handlers []*ListenerProtocolLspHandler
 }
 
 func (s *ListenerProtocolLsp) ListenerProtocolKind() string {
@@ -38,12 +38,6 @@ func (s *ListenerProtocolLsp) ListenerProtocolKind() string {
 }
 
 type ListenerProtocolLspHandler struct {
-	Name      string
-	Condition *ListenerProtocolLspHandlerCondition
-	Handler   string
-}
-
-type ListenerProtocolLspHandlerCondition struct {
-	Filetypes []string
-	Paths     []string
+	Name    string
+	Handler string
 }

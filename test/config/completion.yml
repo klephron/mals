@@ -106,7 +106,7 @@ listeners:
     protocol:
       kind: lsp
       handlers:
-        - name:
+        - name: completion
           condition:
             filetypes: null
             path: null

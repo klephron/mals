@@ -32,7 +32,7 @@ func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
 		return
 	}
 
-	result, err := s.middleware.Initialize(&params, s.listenerName, s.clientName)
+	result, err := s.middleware.Initialize(&params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return

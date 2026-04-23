@@ -282,7 +282,7 @@ func (o *Listener) Wire(c *config.Listener) error {
 		handlers := make([]ListenerProtocolHandler, 0, len(cp.Handlers))
 		for _, handler := range cp.Handlers {
 			wire := ListenerProtocolHandler{}
-			if err := wire.Wire(&handler); err != nil {
+			if err := wire.Wire(handler); err != nil {
 				return err
 			}
 			handlers = append(handlers, wire)
@@ -319,14 +319,14 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 		case ListenerProtocolKindApi:
 			c.Protocol = &config.ListenerProtocolApi{}
 		case ListenerProtocolKindLsp:
-			handlers := make([]config.ListenerProtocolLspHandler, 0, len(o.Protocol.Handlers))
+			handlers := make([]*config.ListenerProtocolLspHandler, 0, len(o.Protocol.Handlers))
 
 			for _, handler := range o.Protocol.Handlers {
 				unwired, err := handler.Unwire()
 				if err != nil {
 					return nil, err
 				}
-				handlers = append(handlers, *unwired)
+				handlers = append(handlers, unwired)
 			}
 
 			c.Protocol = &config.ListenerProtocolLsp{
@@ -354,14 +354,6 @@ func (o *Listener) Unwire() (*config.Listener, error) {
 
 func (o *ListenerProtocolHandler) Wire(c *config.ListenerProtocolLspHandler) error {
 	o.Name = c.Name
-
-	if c.Condition != nil {
-		o.Condition = &ListenerProtocolHandlerCondition{
-			Filetypes: c.Condition.Filetypes,
-			Paths:     c.Condition.Paths,
-		}
-	}
-
 	o.Handler = c.Handler
 
 	return nil
@@ -371,13 +363,6 @@ func (o *ListenerProtocolHandler) Unwire() (*config.ListenerProtocolLspHandler, 
 	c := config.ListenerProtocolLspHandler{
 		Name:    o.Name,
 		Handler: o.Handler,
-	}
-
-	if o.Condition != nil {
-		c.Condition = &config.ListenerProtocolLspHandlerCondition{
-			Filetypes: o.Condition.Filetypes,
-			Paths:     o.Condition.Paths,
-		}
 	}
 
 	return &c, nil

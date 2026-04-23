@@ -1,17 +1,17 @@
-package middleware
+package handler
 
 import (
-	// "encoding/json"
-	// "fmt"
-	"mals/internal/lsp/protocol"
-	// "mals/internal/model"
-	// "mals/internal/scope"
-	// "mals/internal/util"
-	// "mals/pkg/config"
-	// "mals/pkg/info"
-	// "strings"
-	// "sync"
-	// "github.com/invopop/jsonschema"
+// "encoding/json"
+// "fmt"
+// "mals/internal/lsp/protocol"
+// "mals/internal/model"
+// "mals/internal/scope"
+// "mals/internal/util"
+// "mals/pkg/config"
+// "mals/pkg/info"
+// "strings"
+// "sync"
+// "github.com/invopop/jsonschema"
 )
 
 // const (
@@ -255,13 +255,13 @@ import (
 // 	return &result, nil
 // }
 
-func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	workspaces := s.workspaceFindAllByPrefix(params.TextDocument.URI)
+// func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+// 	workspaces := s.workspaceFindAllByPrefix(params.TextDocument.URI)
 
-	if len(workspaces) == 0 {
-		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), params.TextDocument.URI)
-	}
+// 	if len(workspaces) == 0 {
+// 		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), params.TextDocument.URI)
+// 	}
 
-	// s.eventCompletion(params, workspaces)
-	return &protocol.CompletionList{}, nil
-}
+// 	// s.eventCompletion(params, workspaces)
+// 	return &protocol.CompletionList{}, nil
+// }

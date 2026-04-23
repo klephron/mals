@@ -63,6 +63,21 @@ func newStateSpaceRoot() *stateSpace {
 	return newStateSpace(scope.NewSpace(""))
 }
 
+func New(plane plane.Plane) *ScopeController {
+	return &ScopeController{
+		state: state{
+			statusRW:     sync.RWMutex{},
+			statusCancel: nil,
+
+			lsps:   xsync.NewMap[string, *config.Lsp](),
+			models: xsync.NewMap[string, *config.Model](),
+
+			root: newStateSpaceRoot(),
+		},
+		plane: plane,
+	}
+}
+
 func nameMangle(name string, scope *scope.Scope) string {
 	fullname := ""
 
@@ -94,21 +109,6 @@ func nameUnmangle(name string) (string, *scope.Scope) {
 	}
 
 	return baseName, scope.NewScope(scopePath...)
-}
-
-func New(plane plane.Plane) *ScopeController {
-	return &ScopeController{
-		state: state{
-			statusRW:     sync.RWMutex{},
-			statusCancel: nil,
-
-			lsps:   xsync.NewMap[string, *config.Lsp](),
-			models: xsync.NewMap[string, *config.Model](),
-
-			root: newStateSpaceRoot(),
-		},
-		plane: plane,
-	}
 }
 
 func (s *ScopeController) ControllerRun(onReady func()) error {
