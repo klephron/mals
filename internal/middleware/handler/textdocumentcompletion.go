@@ -1,6 +1,7 @@
 package handler
 
-import (
+import "mals/internal/lsp/protocol"
+
 // "encoding/json"
 // "fmt"
 // "mals/internal/lsp/protocol"
@@ -12,7 +13,6 @@ import (
 // "strings"
 // "sync"
 // "github.com/invopop/jsonschema"
-)
 
 // const (
 // 	eventCompletionModelTemplate = `
@@ -255,13 +255,13 @@ import (
 // 	return &result, nil
 // }
 
-// func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-// 	workspaces := s.workspaceFindAllByPrefix(params.TextDocument.URI)
+func (s *Handler) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+	// workspaces := s.workspaceFindAllByPrefix(params.TextDocument.URI)
 
-// 	if len(workspaces) == 0 {
-// 		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), params.TextDocument.URI)
-// 	}
+	// if len(workspaces) == 0 {
+	// 	s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), params.TextDocument.URI)
+	// }
 
-// 	// s.eventCompletion(params, workspaces)
-// 	return &protocol.CompletionList{}, nil
-// }
+	// s.eventCompletion(params, workspaces)
+	return &protocol.CompletionList{}, nil
+}

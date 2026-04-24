@@ -37,9 +37,12 @@ func newWorkspace(uri string, name string) *workspace {
 
 func New(listenerName string, clientName string, resources []*config.HandlerLspResource, endpoints *config.HandlerLspEndpoints, plane plane.Plane) *Handler {
 	s := Handler{
-		resources: xsync.NewMap[string, *config.HandlerLspResource](),
-		endpoints: endpoints,
-		plane:     plane,
+		endpoints:    endpoints,
+		resources:    xsync.NewMap[string, *config.HandlerLspResource](),
+		plane:        plane,
+		listenerName: listenerName,
+		clientName:   clientName,
+		workspaces:   xsync.NewMap[string, *workspace](),
 	}
 
 	for _, resource := range resources {

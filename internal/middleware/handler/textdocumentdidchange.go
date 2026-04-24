@@ -1,12 +1,12 @@
 package handler
 
-import (
+import "mals/internal/lsp/protocol"
+
 // "fmt"
 // "mals/internal/lsp/protocol"
 // "mals/internal/scope"
 // "mals/internal/util"
 // "mals/pkg/config"
-)
 
 // func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTextDocumentParams, workspace *Workspace, step *config.Step) error {
 // 	if step.Scope != "client" {
@@ -140,24 +140,24 @@ import (
 // 	return nil
 // }
 
-// func (s *Middleware) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
-// 	uri := params.TextDocument.URI
-// 	workspaces := s.workspaceFindAllByPrefix(uri)
+func (s *Handler) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
+	// uri := params.TextDocument.URI
+	// workspaces := s.workspaceFindAllByPrefix(uri)
 
-// 	if len(workspaces) == 0 {
-// 		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
-// 	}
+	// if len(workspaces) == 0 {
+	// 	s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
+	// }
 
-// 	for _, workspace := range workspaces {
-// 		document := s.documentGet(workspace, uri)
-// 		if document == nil {
-// 			continue
-// 		}
+	// for _, workspace := range workspaces {
+	// 	document := s.documentGet(workspace, uri)
+	// 	if document == nil {
+	// 		continue
+	// 	}
 
-// 		s.documentUpdate(workspace, document, params.TextDocument.Version, params.ContentChanges)
-// 	}
+	// 	s.documentUpdate(workspace, document, params.TextDocument.Version, params.ContentChanges)
+	// }
 
-// 	// s.eventTextDocumentDidChange(params, workspaces)
+	// s.eventTextDocumentDidChange(params, workspaces)
 
-// 	return nil
-// }
+	return nil
+}

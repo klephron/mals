@@ -1,12 +1,12 @@
 package handler
 
-import (
+import "mals/internal/lsp/protocol"
+
 // "fmt"
 // "mals/internal/lsp/protocol"
 // "mals/internal/scope"
 // "mals/internal/util"
 // "mals/pkg/config"
-)
 
 // func (s *Middleware) eventTextDocumentDidOpenLsp(params *protocol.DidOpenTextDocumentParams, _ *Workspace, step *config.Step) error {
 // 	if step.Scope != "client" {
@@ -77,20 +77,20 @@ import (
 // 	return nil
 // }
 
-// func (s *Middleware) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error {
-// 	uri := params.TextDocument.URI
+func (s *Handler) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error {
+	// uri := params.TextDocument.URI
 
-// 	workspaces := s.workspaceFindAllByPrefix(uri)
+	// workspaces := s.workspaceFindAllByPrefix(uri)
 
-// 	if len(workspaces) == 0 {
-// 		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
-// 	}
+	// if len(workspaces) == 0 {
+	// 	s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
+	// }
 
-// 	for _, workspace := range workspaces {
-// 		s.documentAdd(workspace, params.TextDocument.URI, &params.TextDocument.Text, params.TextDocument.Version)
-// 	}
+	// for _, workspace := range workspaces {
+	// 	s.documentAdd(workspace, params.TextDocument.URI, &params.TextDocument.Text, params.TextDocument.Version)
+	// }
 
-// 	// s.eventTextDocumentDidOpen(params, workspaces)
+	// s.eventTextDocumentDidOpen(params, workspaces)
 
-// 	return nil
-// }
+	return nil
+}

@@ -180,12 +180,15 @@ func (s *LspClient) handle(bytes []byte) {
 
 	switch msg := msg.(type) {
 	case *jsonrpc.Request:
+		method = msg.Method
 	case *jsonrpc.Notification:
 		method = msg.Method
 	default:
 		s.plane.Warnf("%T %v: unhandled type %T", s, s.Name(), msg)
 		return
 	}
+
+	s.plane.Infof("%T %v: received method %T %v", s, s.Name(), msg, method)
 
 	switch method {
 	case "initialize":

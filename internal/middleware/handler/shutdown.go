@@ -68,17 +68,17 @@ import (
 // 	return nil
 // }
 
-// func (s *Middleware) Shutdown() error {
-// 	// workspaces := s.workspaceFindAll()
+func (s *Handler) Shutdown() error {
+	// workspaces := s.workspaceFindAll()
 
-// 	// s.eventShutdown(workspaces)
+	// s.eventShutdown(workspaces)
 
-// 	s.workspaces.Range(func(key string, value *workspace) bool {
-// 		s.workspaceDelete(key)
-// 		return true
-// 	})
+	// s.workspaces.Range(func(key string, value *workspace) bool {
+	// 	s.workspaceDelete(key)
+	// 	return true
+	// })
 
-// 	s.initialized = false
+	// s.initialized = false
 
-// 	return nil
-// }
+	return nil
+}

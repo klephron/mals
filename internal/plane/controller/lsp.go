@@ -39,11 +39,11 @@ type LspController interface {
 	Get(name string) (*LspData, error)
 	GetAll() []*LspData
 
-	EventInitialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
-	EventInitialized(name string, params *protocol.InitializedParams) error
-	EventTextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error
-	EventTextDocumentDidChange(name string, params *protocol.DidChangeTextDocumentParams) error
-	EventTextDocumentDidClose(name string, params *protocol.DidCloseTextDocumentParams) error
-	EventTextDocumentCompletion(name string, params *protocol.CompletionParams) (*protocol.CompletionList, error)
-	EventShutdown(name string) error
+	Initialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
+	Initialized(name string, params *protocol.InitializedParams) error
+	TextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error
+	TextDocumentDidChange(name string, params *protocol.DidChangeTextDocumentParams) error
+	TextDocumentDidClose(name string, params *protocol.DidCloseTextDocumentParams) error
+	TextDocumentCompletion(name string, params *protocol.CompletionParams) (*protocol.CompletionList, error)
+	Shutdown(name string) error
 }

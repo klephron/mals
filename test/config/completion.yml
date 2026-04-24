@@ -93,16 +93,16 @@ handlers:
           - return: "{{ completion_json.out }}"
 
 listeners:
-  - name: api-tcp:9651
+  - name: api-tcp:9650
+    ipc:
+      kind: tcp
+      port: 9650
+    protocol:
+      kind: api
+  - name: lsp-tcp:9651
     ipc:
       kind: tcp
       port: 9651
-    protocol:
-      kind: api
-  - name: lsp-tcp:9652
-    ipc:
-      kind: tcp
-      port: 9652
     protocol:
       kind: lsp
       handlers:

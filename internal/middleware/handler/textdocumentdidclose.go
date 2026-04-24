@@ -1,12 +1,12 @@
 package handler
 
-import (
+import "mals/internal/lsp/protocol"
+
 // "fmt"
 // "mals/internal/lsp/protocol"
 // "mals/internal/scope"
 // "mals/internal/util"
 // "mals/pkg/config"
-)
 
 // func (s *Middleware) eventTextDocumentDidCloseLsp(params *protocol.DidCloseTextDocumentParams, _ *Workspace, step *config.Step) error {
 // 	if step.Scope != "client" {
@@ -74,25 +74,25 @@ import (
 // 	return nil
 // }
 
-// func (s *Middleware) TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error {
-// 	uri := params.TextDocument.URI
+func (s *Handler) TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error {
+	// uri := params.TextDocument.URI
 
-// 	workspaces := s.workspaceFindAllByPrefix(uri)
+	// workspaces := s.workspaceFindAllByPrefix(uri)
 
-// 	if len(workspaces) == 0 {
-// 		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
-// 	}
+	// if len(workspaces) == 0 {
+	// 	s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
+	// }
 
-// 	for _, workspace := range workspaces {
-// 		document := s.documentGet(workspace, params.TextDocument.URI)
-// 		if document == nil {
-// 			continue
-// 		}
+	// for _, workspace := range workspaces {
+	// 	document := s.documentGet(workspace, params.TextDocument.URI)
+	// 	if document == nil {
+	// 		continue
+	// 	}
 
-// 		s.documentDelete(workspace, params.TextDocument.URI)
-// 	}
+	// 	s.documentDelete(workspace, params.TextDocument.URI)
+	// }
 
-// 	// s.eventTextDocumentDidClose(params, workspaces)
+	// s.eventTextDocumentDidClose(params, workspaces)
 
-// 	return nil
-// }
+	return nil
+}

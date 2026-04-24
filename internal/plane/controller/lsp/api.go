@@ -274,7 +274,7 @@ func (s *LspController) GetAll() []*controller.LspData {
 	return datas
 }
 
-func (s *LspController) EventInitialize(lspName string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+func (s *LspController) Initialize(lspName string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -289,7 +289,7 @@ func (s *LspController) EventInitialize(lspName string, params *protocol.Initial
 	return value.lsp.Initialize(params)
 }
 
-func (s *LspController) EventInitialized(lspName string, params *protocol.InitializedParams) error {
+func (s *LspController) Initialized(lspName string, params *protocol.InitializedParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -304,7 +304,7 @@ func (s *LspController) EventInitialized(lspName string, params *protocol.Initia
 	return value.lsp.Initialized(params)
 }
 
-func (s *LspController) EventTextDocumentDidOpen(lspName string, params *protocol.DidOpenTextDocumentParams) error {
+func (s *LspController) TextDocumentDidOpen(lspName string, params *protocol.DidOpenTextDocumentParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -319,7 +319,7 @@ func (s *LspController) EventTextDocumentDidOpen(lspName string, params *protoco
 	return value.lsp.TextDocumentDidOpen(params)
 }
 
-func (s *LspController) EventTextDocumentDidChange(lspName string, params *protocol.DidChangeTextDocumentParams) error {
+func (s *LspController) TextDocumentDidChange(lspName string, params *protocol.DidChangeTextDocumentParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -334,7 +334,7 @@ func (s *LspController) EventTextDocumentDidChange(lspName string, params *proto
 	return value.lsp.TextDocumentDidChange(params)
 }
 
-func (s *LspController) EventTextDocumentDidClose(lspName string, params *protocol.DidCloseTextDocumentParams) error {
+func (s *LspController) TextDocumentDidClose(lspName string, params *protocol.DidCloseTextDocumentParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -349,7 +349,7 @@ func (s *LspController) EventTextDocumentDidClose(lspName string, params *protoc
 	return value.lsp.TextDocumentDidClose(params)
 }
 
-func (s *LspController) EventTextDocumentCompletion(lspName string, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+func (s *LspController) TextDocumentCompletion(lspName string, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -364,7 +364,7 @@ func (s *LspController) EventTextDocumentCompletion(lspName string, params *prot
 	return value.lsp.TextDocumentCompletion(params)
 }
 
-func (s *LspController) EventShutdown(lspName string) error {
+func (s *LspController) Shutdown(lspName string) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {

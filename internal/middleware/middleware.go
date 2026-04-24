@@ -17,7 +17,8 @@ type Middleware struct {
 
 	textDocumentSyncKind protocol.TextDocumentSyncKind
 
-	handlers []*handler.Handler
+	handlers    []*handler.Handler
+	initialized bool
 }
 
 func New(listenerName string, clientName string, plane plane.Plane) *Middleware {
@@ -27,6 +28,7 @@ func New(listenerName string, clientName string, plane plane.Plane) *Middleware 
 		plane:                plane,
 		textDocumentSyncKind: protocol.Incremental,
 		handlers:             make([]*handler.Handler, 0),
+		initialized:          false,
 	}
 }
 
@@ -35,7 +37,7 @@ func (s *Middleware) Name() string {
 }
 
 func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
-	if len(s.handlers) > 0 {
+	if s.initialized {
 		err := fmt.Errorf("middleware is already initialized")
 		s.plane.Errorf("%T: %v", s, err)
 		return nil, err
@@ -89,31 +91,82 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.In
 }
 
 func (s *Middleware) Initialized(params *protocol.InitializedParams) error {
-	// TODO
+	for _, handler := range s.handlers {
+		if err := handler.Initialized(params); err != nil {
+			return err
+		}
+	}
+
+	s.initialized = true
+
 	return nil
 }
 
 func (s *Middleware) Shutdown() error {
-	// TODO
-	return nil
+	var error error
+
+	for _, handler := range s.handlers {
+		if err := handler.Shutdown(); err != nil {
+			error = err
+		}
+	}
+
+	s.handlers = s.handlers[:0]
+	s.initialized = false
+
+	return error
 }
 
 func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	// TODO
-	return nil, nil
+	completionList := protocol.CompletionList{}
+	var error error
+
+	for _, handler := range s.handlers {
+		list, err := handler.TextDocumentCompletion(params)
+		if err != nil {
+			error = err
+			continue
+		}
+		if list.Items != nil {
+			completionList.Items = append(completionList.Items, list.Items...)
+		}
+	}
+
+	return &completionList, error
 }
 
 func (s *Middleware) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
-	// TODO
-	return nil
+	var error error
+
+	for _, handler := range s.handlers {
+		if err := handler.TextDocumentDidChange(params); err != nil {
+			error = err
+		}
+	}
+
+	return error
 }
 
 func (s *Middleware) TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error {
-	// TODO
-	return nil
+	var error error
+
+	for _, handler := range s.handlers {
+		if err := handler.TextDocumentDidClose(params); err != nil {
+			error = err
+		}
+	}
+
+	return error
 }
 
 func (s *Middleware) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error {
-	// TODO
-	return nil
+	var error error
+
+	for _, handler := range s.handlers {
+		if err := handler.TextDocumentDidOpen(params); err != nil {
+			error = err
+		}
+	}
+
+	return error
 }
