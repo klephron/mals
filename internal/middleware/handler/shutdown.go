@@ -51,13 +51,7 @@ func (s *Handler) Shutdown() error {
 		}
 	}
 
-	scope, err := s.getResourceScope(config.HandlerLspResourceScopeHandler)
-	if err != nil {
-		s.plane.Errorf("%T %v: Shutdown %v", s, s.Name(), err)
-		return err
-	}
-
-	s.plane.Scope().Close(scope)
+	s.plane.Scope().Close(s.getScope())
 
 	s.plane.Infof("%T %v: Shutdown done", s, s.Name())
 

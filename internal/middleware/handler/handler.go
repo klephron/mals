@@ -59,6 +59,10 @@ func (s *Handler) Name() string {
 	return fmt.Sprintf("%v:%v", s.listenerName, s.clientName)
 }
 
+func (s *Handler) getScope() *scope.Scope {
+	return scope.NewScopeHandler(s.listenerName, s.clientName, s.handlerName)
+}
+
 func (s *Handler) getResourceScope(resourceScope config.HandlerLspResourceScope) (*scope.Scope, error) {
 	switch resourceScope {
 	case config.HandlerLspResourceScopeGlobal:

@@ -5,6 +5,7 @@ import (
 	"mals/internal/lsp/protocol"
 	"mals/internal/middleware/handler"
 	"mals/internal/plane"
+	"mals/internal/scope"
 	"mals/pkg/config"
 	"mals/pkg/info"
 )
@@ -30,6 +31,10 @@ func New(listenerName string, clientName string, plane plane.Plane) *Middleware 
 		handlers:             make([]*handler.Handler, 0),
 		initialized:          false,
 	}
+}
+
+func (s *Middleware) getScope() *scope.Scope {
+	return scope.NewScopeClient(s.listenerName, s.clientName)
 }
 
 func (s *Middleware) Name() string {
@@ -113,6 +118,10 @@ func (s *Middleware) Shutdown() error {
 
 	s.handlers = s.handlers[:0]
 	s.initialized = false
+
+	s.plane.Scope().Close(s.getScope())
+
+	s.plane.Infof("%T %v: Shutdown done", s, s.Name())
 
 	return error
 }
