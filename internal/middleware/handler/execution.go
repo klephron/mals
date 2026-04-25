@@ -14,18 +14,23 @@ type executionNode struct {
 	Else *executionNode
 }
 
-type executionContext struct {
+type executionEnvironment struct {
 	plane plane.Plane
 
-	cfg       *executionNode
-	resources *xsync.Map[string, *config.HandlerLspResource]
+	cfg *executionNode
+
+	resources  *xsync.Map[string, *config.HandlerLspResource]
+	workspaces []*workspace
+	memory     map[string]any
 }
 
-func newExecutionContext(plane plane.Plane) *executionContext {
-	return &executionContext{
-		cfg:       nil,
-		resources: nil,
-		plane:     plane,
+func newExecutionContext(plane plane.Plane) *executionEnvironment {
+	return &executionEnvironment{
+		plane:      plane,
+		cfg:        nil,
+		resources:  nil,
+		workspaces: nil,
+		memory:     make(map[string]any),
 	}
 }
 
@@ -36,7 +41,7 @@ func newExecutionContext(plane plane.Plane) *executionContext {
 // * while: Then - do, Else - <statement_after>
 // * return: Then - nil, Else - nil
 // * simple: Then - <statement_after>
-func (s *executionContext) buildRecursive(steps []*config.Step, i int) (*executionNode, *executionNode, error) {
+func (s *executionEnvironment) buildRecursive(steps []*config.Step, i int) (*executionNode, *executionNode, error) {
 	if i >= len(steps) {
 		return nil, nil, nil
 	}
@@ -154,7 +159,7 @@ func (s *executionContext) buildRecursive(steps []*config.Step, i int) (*executi
 	return execCurrStart, execCurrEnd, nil
 }
 
-func (s *executionContext) build(steps []*config.Step) error {
+func (s *executionEnvironment) build(steps []*config.Step) error {
 	if len(steps) == 0 {
 		return fmt.Errorf("execution is nil or empty")
 	}
@@ -169,9 +174,32 @@ func (s *executionContext) build(steps []*config.Step) error {
 	return nil
 }
 
-func (s *executionContext) setResources(resources *xsync.Map[string, *config.HandlerLspResource]) {
+func (s *executionEnvironment) setResources(resources *xsync.Map[string, *config.HandlerLspResource]) {
+	s.resources = resources
 }
 
-func (s *executionContext) execute() (any, error) {
+func (s *executionEnvironment) setWorkspaces(workspaces []*workspace) {
+	s.workspaces = workspaces
+}
+
+func (s *executionEnvironment) resetResources() {
+	s.resources = nil
+}
+
+func (s *executionEnvironment) resetWorkspace() {
+	s.workspaces = nil
+}
+
+func (s *executionEnvironment) resetMemory() {
+	clear(s.memory)
+}
+
+func (s *executionEnvironment) resetContext() {
+	s.resetMemory()
+	s.resetWorkspace()
+	s.resetResources()
+}
+
+func (s *executionEnvironment) execute() (any, error) {
 	return nil, nil
 }

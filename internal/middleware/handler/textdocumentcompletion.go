@@ -69,6 +69,12 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 
 	exec.setResources(s.resources)
 
+	uri := params.TextDocument.URI
+	workspaces := s.workspaceFindAllByPrefix(uri)
+	exec.setWorkspaces(workspaces)
+
+	defer exec.resetContext()
+
 	if err := exec.build(s.endpoints.TextDocumentCompletion.Execution); err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return nil, err
