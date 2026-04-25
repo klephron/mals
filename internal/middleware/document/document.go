@@ -135,3 +135,21 @@ func (d *Document) TextUpdate(version int32, changes []protocol.TextDocumentCont
 
 	return true
 }
+
+func (d *Document) TextBefore(line, char uint32) string {
+	pos := d.position(line, char)
+	content := d.Text()
+	if pos > uint64(len(content)) {
+		pos = uint64(len(content))
+	}
+	return content[:pos]
+}
+
+func (d *Document) TextAfter(line, char uint32) string {
+	pos := d.position(line, char)
+	content := d.Text()
+	if pos >= uint64(len(content)) {
+		return ""
+	}
+	return content[pos:]
+}
