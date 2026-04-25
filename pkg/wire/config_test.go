@@ -586,7 +586,7 @@ func TestConfigUnwire(t *testing.T) {
 											{
 												Name:   nil,
 												Assign: util.Ptr("clangd"),
-												Definition: &config.StepLspCompetion{
+												Definition: &config.StepLspCompletion{
 													Resource: util.Ptr("clangd"),
 												},
 											},

@@ -53,7 +53,7 @@ func TestConfigStepUnwire(t *testing.T) {
 			},
 			expected: testExpected{
 				output: &config.Step{
-					Definition: &config.StepLspCompetion{
+					Definition: &config.StepLspCompletion{
 						Resource: util.Ptr("clangd"),
 					},
 				},

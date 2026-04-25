@@ -23,8 +23,8 @@ func (o *Step) Unwire() (*config.Step, error) {
 			}
 		default:
 			switch k {
-			case (&config.StepLspCompetion{}).StepDefinitionKind():
-				d := config.StepLspCompetion{}
+			case (&config.StepLspCompletion{}).StepDefinitionKind():
+				d := config.StepLspCompletion{}
 				vm, ok := v.(map[string]any)
 				if !ok {
 					continue

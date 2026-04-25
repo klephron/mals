@@ -11,11 +11,11 @@ type StepDefinition interface {
 }
 
 // lsp/completion
-type StepLspCompetion struct {
+type StepLspCompletion struct {
 	Resource *string
 }
 
-func (s *StepLspCompetion) StepDefinitionKind() string {
+func (s *StepLspCompletion) StepDefinitionKind() string {
 	return "lsp/completion"
 }
 
