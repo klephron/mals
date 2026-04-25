@@ -2,7 +2,6 @@ package handler
 
 import (
 	"mals/internal/lsp/protocol"
-	"mals/internal/scope"
 	"mals/pkg/config"
 	"mals/pkg/info"
 	"os"
@@ -14,24 +13,25 @@ func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
 	}
 
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
-		var resourceScope *scope.Scope
-		switch value.Scope {
-		case config.HandlerLspResourceScopeGlobal:
-			resourceScope = scope.NewScopeGlobal()
-		case config.HandlerLspResourceScopeClient:
-			resourceScope = scope.NewScopeClient(s.listenerName, s.clientName)
-		default:
-			s.plane.Errorf("%T %v: Initialize unknown scope kind", s, s.Name())
+		scope, err := s.getResourceScope(value.Scope)
+		if err != nil {
+			s.plane.Errorf("%T %v: Initialize %v", s, s.Name(), err)
 			return true
 		}
 
 		switch vs := value.Spec.(type) {
 		case *config.HandlerLspResourceSpecLsp:
-			lspName, token, err := s.plane.Scope().LspAcquire(vs.Name, resourceScope)
+			lspName, token, err := s.plane.Scope().LspAcquire(vs.Name, scope)
 			if err != nil {
-				s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), err)
+				s.plane.Errorf("%T %v: Initialize %v", s, s.Name(), err)
 				return true
 			}
+
+			defer func() {
+				if err := s.plane.Scope().LspRelease(lspName, token); err != nil {
+					s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), err)
+				}
+			}()
 
 			workspaces := s.workspaceFindAll()
 			workspaceFolders := make([]protocol.WorkspaceFolder, len(workspaces))
@@ -75,22 +75,19 @@ func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
 				s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), err)
 			}
 
-			if err := s.plane.Scope().LspRelease(lspName, token); err != nil {
-				s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), err)
-				return true
-			}
-
 		case *config.HandlerLspResourceSpecModel:
 			// trigger acquisition of resource
-			modelName, token, err := s.plane.Scope().ModelAcquire(vs.Name, resourceScope)
+			modelName, token, err := s.plane.Scope().ModelAcquire(vs.Name, scope)
 			if err != nil {
 				s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), err)
 				return true
 			}
 			if err := s.plane.Scope().ModelRelease(modelName, token); err != nil {
-				s.plane.Errorf("%T %v: Initialize %T %v: %v", s, s.Name(), err)
+				s.plane.Errorf("%T %v: Initialize %v", s, s.Name(), err)
 				return true
 			}
+		default:
+			s.plane.Errorf("%T %v: Initialize unexpected spec %T", s, s.Name(), vs)
 		}
 
 		return true

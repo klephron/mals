@@ -27,8 +27,9 @@ type HandlerLspResource struct {
 type HandlerLspResourceScope string
 
 const (
-	HandlerLspResourceScopeGlobal HandlerLspResourceScope = "global"
-	HandlerLspResourceScopeClient HandlerLspResourceScope = "client"
+	HandlerLspResourceScopeGlobal  HandlerLspResourceScope = "global"
+	HandlerLspResourceScopeClient  HandlerLspResourceScope = "client"
+	HandlerLspResourceScopeHandler HandlerLspResourceScope = "handler"
 )
 
 type HandlerLspResourceSpec interface {

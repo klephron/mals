@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mals/internal/middleware/document"
 	"mals/internal/plane"
+	"mals/internal/scope"
 	"mals/pkg/config"
 
 	"github.com/puzpuzpuz/xsync/v4"
@@ -23,6 +24,7 @@ type Handler struct {
 
 	listenerName string
 	clientName   string
+	handlerName  string
 
 	workspaces *xsync.Map[string, *workspace]
 }
@@ -35,13 +37,14 @@ func newWorkspace(uri string, name string) *workspace {
 	}
 }
 
-func New(listenerName string, clientName string, resources []*config.HandlerLspResource, endpoints *config.HandlerLspEndpoints, plane plane.Plane) *Handler {
+func New(listenerName string, clientName string, handlerName string, resources []*config.HandlerLspResource, endpoints *config.HandlerLspEndpoints, plane plane.Plane) *Handler {
 	s := Handler{
 		endpoints:    endpoints,
 		resources:    xsync.NewMap[string, *config.HandlerLspResource](),
 		plane:        plane,
 		listenerName: listenerName,
 		clientName:   clientName,
+		handlerName:  handlerName,
 		workspaces:   xsync.NewMap[string, *workspace](),
 	}
 
@@ -54,4 +57,17 @@ func New(listenerName string, clientName string, resources []*config.HandlerLspR
 
 func (s *Handler) Name() string {
 	return fmt.Sprintf("%v:%v", s.listenerName, s.clientName)
+}
+
+func (s *Handler) getResourceScope(resourceScope config.HandlerLspResourceScope) (*scope.Scope, error) {
+	switch resourceScope {
+	case config.HandlerLspResourceScopeGlobal:
+		return scope.NewScopeGlobal(), nil
+	case config.HandlerLspResourceScopeClient:
+		return scope.NewScopeClient(s.listenerName, s.clientName), nil
+	case config.HandlerLspResourceScopeHandler:
+		return scope.NewScopeHandler(s.listenerName, s.clientName, s.handlerName), nil
+	default:
+		return nil, fmt.Errorf("unknown scope kind")
+	}
 }

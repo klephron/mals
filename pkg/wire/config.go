@@ -526,6 +526,8 @@ func (o *HandlerResource) Wire(c *config.HandlerLspResource) error {
 		o.Scope = HandlerResourceScopeGlobal
 	case config.HandlerLspResourceScopeClient:
 		o.Scope = HandlerResourceScopeClient
+	case config.HandlerLspResourceScopeHandler:
+		o.Scope = HandlerResourceScopeHandler
 	default:
 		return fmt.Errorf("unknown lsp resource scope: %v", c.Scope)
 	}
@@ -551,6 +553,8 @@ func (o *HandlerResource) Unwire() (*config.HandlerLspResource, error) {
 		c.Scope = config.HandlerLspResourceScopeGlobal
 	case HandlerResourceScopeClient:
 		c.Scope = config.HandlerLspResourceScopeClient
+	case HandlerResourceScopeHandler:
+		c.Scope = config.HandlerLspResourceScopeHandler
 	default:
 		return nil, fmt.Errorf("unknown lsp resource scope")
 	}

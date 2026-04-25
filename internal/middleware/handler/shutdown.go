@@ -1,84 +1,65 @@
 package handler
 
-import (
-// "fmt"
-// "mals/internal/scope"
-// "mals/internal/util"
-// "mals/pkg/config"
-)
+import "mals/pkg/config"
 
-// func (s *Middleware) eventShutdownLsp(_ *Workspace, step *config.Step) error {
-// 	if step.Scope != "client" {
-// 		s.plane.Warnf("%T %v: Shutdown %T %v scope %v unsupported, set to client",
-// 			s, s.Name(), step, step, step.Scope)
-// 	}
-// 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
+func (s *Handler) ShutdownDefault() error {
+	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
+		scope, err := s.getResourceScope(value.Scope)
+		if err != nil {
+			s.plane.Errorf("%T %v: Shutdown %v", s, s.Name(), err)
+			return true
+		}
 
-// 	lspName := step.Kind.(*config.StepKindLsp).Name
+		switch vs := value.Spec.(type) {
+		case *config.HandlerLspResourceSpecLsp:
+			lspName, token, err := s.plane.Scope().LspAcquire(vs.Name, scope)
+			if err != nil {
+				s.plane.Errorf("%T %v: Shutdown %v", s, s.Name(), err)
+				return true
+			}
 
-// 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: Shutdown %T %v: %v", s, s.Name(), step, step, err)
-// 		return err
-// 	}
-// 	defer s.plane.Scope().LspRelease(lspKey, token)
+			defer func() {
+				if err := s.plane.Scope().LspRelease(lspName, token); err != nil {
+					s.plane.Errorf("%T %v: Shutdown %v", s, s.Name(), err)
+				}
+			}()
 
-// 	err = s.plane.Lsp().EventShutdown(lspKey)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: Shutdown %T %v: %v", s, s.Name(), step, step, err)
-// 		return nil
-// 	}
+			err = s.plane.Lsp().Shutdown(lspName)
+			if err != nil {
+				s.plane.Errorf("%T %v: Shutdown %v", s, s.Name(), err)
+				return true
+			}
 
-// 	s.plane.Debugf("%T %v: Shutdown %T %v", s, s.Name(), step, step)
+			s.plane.Debugf("%T %v: Shutdown %T", s, s.Name(), vs)
 
-// 	return nil
-// }
+		case *config.HandlerLspResourceSpecModel:
+		default:
+			s.plane.Errorf("%T %v: Shutdown unexpected spec %T", s, s.Name(), vs)
+		}
 
-// func (s *Middleware) eventShutdownWorkflow(workspace *Workspace, workflow *config.Workflow) error {
-// 	for _, step := range workflow.Steps {
-// 		switch step.Kind.(type) {
-// 		case *config.StepKindLsp:
-// 			if err := s.eventShutdownLsp(workspace, step); err != nil {
-// 				return err
-// 			}
-// 		default:
-// 			err := fmt.Errorf("Shutdown unhandled %T %v", step, step)
-// 			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
-// 			return err
-// 		}
-// 	}
+		return true
+	})
 
-// 	return nil
-// }
-
-// func (s *Middleware) eventShutdown(workspaces []*Workspace) error {
-// 	for _, workspace := range workspaces {
-// 		usages := s.plane.Usage().GetFilteredClient(
-// 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-// 			usage.EventFilter{Event: util.Ptr(config.EventShutdown)}, s.listenerName, s.clientName)
-
-// 		for _, usage := range usages {
-// 			if err := s.eventShutdownWorkflow(workspace, usage.Workflow); err != nil {
-// 				continue
-// 			}
-// 			s.plane.Infof("%T %v: Shutdown usage %v ok", s, s.Name(), usage.Name)
-// 		}
-// 	}
-
-// 	return nil
-// }
+	return nil
+}
 
 func (s *Handler) Shutdown() error {
-	// workspaces := s.workspaceFindAll()
+	if *s.endpoints.Shutdown.Default {
+		err := s.ShutdownDefault()
+		if err != nil {
+			return err
+		}
+	}
 
-	// s.eventShutdown(workspaces)
+	s.plane.Infof("%T %v: Shutdown done", s, s.Name())
 
-	// s.workspaces.Range(func(key string, value *workspace) bool {
-	// 	s.workspaceDelete(key)
-	// 	return true
-	// })
+	scope, err := s.getResourceScope(config.HandlerLspResourceScopeHandler)
+	if err != nil {
+		s.plane.Errorf("%T %v: Shutdown %v", s, s.Name(), err)
+		return err
+	}
 
-	// s.initialized = false
+	s.plane.Scope().Close(scope)
 
 	return nil
 }

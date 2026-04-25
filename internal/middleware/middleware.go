@@ -62,7 +62,7 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.In
 			return nil, err
 		}
 
-		handler := handler.New(s.listenerName, s.clientName,
+		handler := handler.New(s.listenerName, s.clientName, handlerC.Name,
 			handlerCLsp.Resources, &handlerCLsp.Endpoints, s.plane)
 
 		if err := handler.Initialize(params); err != nil {

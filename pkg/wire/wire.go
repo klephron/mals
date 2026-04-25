@@ -91,8 +91,9 @@ type HandlerResource struct {
 type HandlerResourceScope string
 
 const (
-	HandlerResourceScopeGlobal HandlerResourceScope = "global"
-	HandlerResourceScopeClient HandlerResourceScope = "client"
+	HandlerResourceScopeGlobal  HandlerResourceScope = "global"
+	HandlerResourceScopeClient  HandlerResourceScope = "client"
+	HandlerResourceScopeHandler HandlerResourceScope = "handler"
 )
 
 type HandlerEndpoints struct {

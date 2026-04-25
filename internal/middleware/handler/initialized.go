@@ -1,86 +1,61 @@
 package handler
 
-import "mals/internal/lsp/protocol"
+import (
+	"mals/internal/lsp/protocol"
+	"mals/pkg/config"
+)
 
-// "fmt"
-// "mals/internal/lsp/protocol"
-// "mals/internal/scope"
-// "mals/internal/util"
-// "mals/pkg/config"
+func (s *Handler) InitializedDefault(params *protocol.InitializedParams) error {
+	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
+		scope, err := s.getResourceScope(value.Scope)
+		if err != nil {
+			s.plane.Errorf("%T %v: Initialized %v", s, s.Name(), err)
+			return true
+		}
 
-// func (s *Middleware) eventInitializedLsp(_ *protocol.InitializedParams, _ *Workspace, step *config.Step) error {
-// 	if step.Scope != "client" {
-// 		s.plane.Warnf("%T %v: Initialized %T %v scope %v unsupported, set to client", s, s.Name(), step, step, step.Scope)
-// 	}
-// 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
+		switch vs := value.Spec.(type) {
+		case *config.HandlerLspResourceSpecLsp:
+			lspName, token, err := s.plane.Scope().LspAcquire(vs.Name, scope)
+			if err != nil {
+				s.plane.Errorf("%T %v: Initialized %v", s, s.Name(), err)
+				return true
+			}
 
-// 	lspName := step.Kind.(*config.StepKindLsp).Name
+			defer func() {
+				if err := s.plane.Scope().LspRelease(lspName, token); err != nil {
+					s.plane.Errorf("%T %v: Initialized %v", s, s.Name(), err)
+				}
+			}()
 
-// 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: Initialized %T %v: %v", s, s.Name(), step, step, err)
-// 		return err
-// 	}
-// 	defer s.plane.Scope().LspRelease(lspKey, token)
+			lspParams := &protocol.InitializedParams{}
 
-// 	lspParams := &protocol.InitializedParams{}
+			err = s.plane.Lsp().Initialized(lspName, lspParams)
+			if err != nil {
+				s.plane.Errorf("%T %v: Initialized %v", s, s.Name(), err)
+				return true
+			}
 
-// 	err = s.plane.Lsp().EventInitialized(lspKey, lspParams)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: Initialized %T %v: %v", s, s.Name(), step, step, err)
-// 		return nil
-// 	}
+			s.plane.Debugf("%T %v: Initialized %T", s, s.Name(), vs)
 
-// 	s.plane.Debugf("%T %v: Initialized %T %v", s, s.Name(), step, step)
+		case *config.HandlerLspResourceSpecModel:
+		default:
+			s.plane.Errorf("%T %v: Initialized unexpected spec %T", s, s.Name(), vs)
+		}
+		return true
+	})
 
-// 	return nil
-// }
-
-// func (s *Middleware) eventInitializedWorkflow(params *protocol.InitializedParams, workspace *Workspace, workflow *config.Workflow) error {
-// 	for _, step := range workflow.Steps {
-// 		switch step.Kind.(type) {
-// 		case *config.StepKindLsp:
-// 			if err := s.eventInitializedLsp(params, workspace, step); err != nil {
-// 				return err
-// 			}
-// 		default:
-// 			err := fmt.Errorf("Initialized unhandled %T %v", step, step)
-// 			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// func (s *Middleware) eventInitialized(params *protocol.InitializedParams, workspaces []*Workspace) error {
-// 	for _, workspace := range workspaces {
-// 		usages := s.plane.Usage().GetFilteredClient(
-// 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-// 			usage.EventFilter{Event: util.Ptr(config.EventInitialized)}, s.listenerName, s.clientName)
-
-// 		for _, usage := range usages {
-// 			if err := s.eventInitializedWorkflow(params, workspace, usage.Workflow); err != nil {
-// 				continue
-// 			}
-// 			s.plane.Infof("%T %v: Initialized usage %v ok", s, s.Name(), usage.Name)
-// 		}
-// 	}
-// 	return nil
-// }
+	return nil
+}
 
 func (s *Handler) Initialized(params *protocol.InitializedParams) error {
-	// if s.initialized {
-	// 	return fmt.Errorf("%v: already initialized", s.Name())
-	// }
+	if *s.endpoints.Initialized.Default {
+		err := s.InitializedDefault(params)
+		if err != nil {
+			return err
+		}
+	}
 
-	// s.initialized = true
-
-	// workspaces := s.workspaceFindAll()
-
-	// s.eventInitialized(params, workspaces)
-
-	// s.plane.Infof("%T %v: Initialized event done", s, s.Name())
+	s.plane.Infof("%T %v: Initialized done", s, s.Name())
 
 	return nil
 }

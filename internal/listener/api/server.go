@@ -1,7 +1,7 @@
 package api
 
 import (
-	"mals/internal/listener/api/handlers"
+	"mals/internal/listener/api/handler"
 	"mals/pkg/info"
 	"net/http"
 
@@ -13,7 +13,7 @@ import (
 func (s *ListenerApi) newServer() *http.Server {
 	router := gin.New()
 
-	router.GET("/metrics", handlers.Metrics())
+	router.GET("/metrics", handler.Metrics())
 
 	// api
 	config := huma.DefaultConfig("MALS API", info.MiddlewareVersion)
@@ -22,22 +22,22 @@ func (s *ListenerApi) newServer() *http.Server {
 
 	api := humagin.New(router, config)
 
-	huma.Register(api, handlers.LspGetAllOperation(), handlers.LspGetAll(s.plane))
-	huma.Register(api, handlers.LspGetOperation(), handlers.LspGet(s.plane))
+	huma.Register(api, handler.LspGetAllOperation(), handler.LspGetAll(s.plane))
+	huma.Register(api, handler.LspGetOperation(), handler.LspGet(s.plane))
 
-	huma.Register(api, handlers.ListenerGetAllOperation(), handlers.ListenerGetAll(s.plane))
-	huma.Register(api, handlers.ListenerGetOperation(), handlers.ListenerGet(s.plane))
+	huma.Register(api, handler.ListenerGetAllOperation(), handler.ListenerGetAll(s.plane))
+	huma.Register(api, handler.ListenerGetOperation(), handler.ListenerGet(s.plane))
 
-	huma.Register(api, handlers.LogGetAllOperation(), handlers.LogGetAll(s.plane))
-	huma.Register(api, handlers.LogGetOperation(), handlers.LogGet(s.plane))
+	huma.Register(api, handler.LogGetAllOperation(), handler.LogGetAll(s.plane))
+	huma.Register(api, handler.LogGetOperation(), handler.LogGet(s.plane))
 
-	huma.Register(api, handlers.ModelGetAllOperation(), handlers.ModelGetAll(s.plane))
-	huma.Register(api, handlers.ModelGetOperation(), handlers.ModelGet(s.plane))
+	huma.Register(api, handler.ModelGetAllOperation(), handler.ModelGetAll(s.plane))
+	huma.Register(api, handler.ModelGetOperation(), handler.ModelGet(s.plane))
 
-	huma.Register(api, handlers.HandlerGetAllOperation(), handlers.HandlerGetAll(s.plane))
-	huma.Register(api, handlers.HandlerGetOperation(), handlers.HandlerGet(s.plane))
+	huma.Register(api, handler.HandlerGetAllOperation(), handler.HandlerGetAll(s.plane))
+	huma.Register(api, handler.HandlerGetOperation(), handler.HandlerGet(s.plane))
 
-	huma.Register(api, handlers.ScopeTreeRootOperation(), handlers.ScopeTreeRoot(s.plane))
+	huma.Register(api, handler.ScopeTreeRootOperation(), handler.ScopeTreeRoot(s.plane))
 
 	srv := &http.Server{
 		Addr:    s.addr,

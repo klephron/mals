@@ -35,3 +35,7 @@ func NewScopeGlobal() *Scope {
 func NewScopeClient(listener string, client string) *Scope {
 	return NewScope(NewSpace(listener), NewSpace(client))
 }
+
+func NewScopeHandler(listener string, client string, handler string) *Scope {
+	return NewScope(NewSpace(listener), NewSpace(client), NewSpace(handler))
+}
