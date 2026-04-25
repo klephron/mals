@@ -1,163 +1,156 @@
 package handler
 
-import "mals/internal/lsp/protocol"
+import (
+	"fmt"
+	"mals/internal/lsp/protocol"
+	"mals/internal/middleware/document"
+	"mals/internal/util"
+	"mals/pkg/config"
+)
 
-// "fmt"
-// "mals/internal/lsp/protocol"
-// "mals/internal/scope"
-// "mals/internal/util"
-// "mals/pkg/config"
+func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDocumentParams) error {
+	uri := params.TextDocument.URI
+	workspaces := s.workspaceFindAllByPrefix(uri)
 
-// func (s *Middleware) eventTextDocumentDidChangeLsp(params *protocol.DidChangeTextDocumentParams, workspace *Workspace, step *config.Step) error {
-// 	if step.Scope != "client" {
-// 		s.plane.Warnf("%T %v: TextDocumentDidChange %T %v scope %v unsupported, set to client",
-// 			s, s.Name(), step, step, step.Scope)
-// 	}
-// 	scope := scope.NewScopeClient(s.listenerName, s.clientName)
+	if len(workspaces) == 0 {
+		s.plane.Warnf("%T %v: TextDocumentDidChange file %v not bound to workspace", s, s.Name(), uri)
+	}
 
-// 	lspName := step.Kind.(*config.StepKindLsp).Name
+	for _, workspace := range workspaces {
+		document := s.documentGet(workspace, uri)
+		if document == nil {
+			continue
+		}
 
-// 	lspKey, token, err := s.plane.Scope().LspAcquire(lspName, scope)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 		return err
-// 	}
-// 	defer s.plane.Scope().LspRelease(lspKey, token)
+		s.documentUpdate(workspace, document, params.TextDocument.Version, params.ContentChanges)
+	}
 
-// 	capabilities, err := s.plane.Lsp().GetCapabilities(lspKey)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 		return err
-// 	}
+	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
+		scope, err := s.getResourceScope(value.Scope)
+		if err != nil {
+			s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+			return true
+		}
 
-// 	var syncKind protocol.TextDocumentSyncKind
+		switch vs := value.Spec.(type) {
+		case *config.HandlerLspResourceSpecLsp:
+			lspName, token, err := s.plane.Scope().LspAcquire(vs.Name, scope)
+			if err != nil {
+				s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+				return true
+			}
 
-// 	switch v := capabilities.TextDocumentSync.(type) {
-// 	case protocol.TextDocumentSyncOptions:
-// 		syncKind = v.Change
-// 	case protocol.TextDocumentSyncKind:
-// 		syncKind = v
-// 	case float64:
-// 		syncKind = protocol.TextDocumentSyncKind(v)
-// 	case map[string]any:
-// 		data, err := util.JsonMarshal(&v)
-// 		if err != nil {
-// 			s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 			return err
-// 		}
-// 		if syncOptions, err := util.JsonUnmarshal[protocol.TextDocumentSyncOptions](data); err != nil {
-// 			s.plane.Warnf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 			syncKind = syncOptions.Change
-// 		} else {
-// 			syncKind = syncOptions.Change
-// 		}
-// 	default:
-// 		err := fmt.Errorf("%v: capabilities.TextDocumentSync has unexpected type %T", lspKey, v)
-// 		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 		return err
-// 	}
+			defer func() {
+				if err := s.plane.Scope().LspRelease(lspName, token); err != nil {
+					s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+				}
+			}()
 
-// 	s.plane.Debugf("%T %v: TextDocumentDidChange %T %v: sync kind %d", s, s.Name(), step, step, syncKind)
+			capabilities, err := s.plane.Lsp().GetCapabilities(lspName)
+			if err != nil {
+				s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+				return true
+			}
 
-// 	// works for middleware in incremental mode:
-// 	// s.textDocumentSyncKind == protocol.Incremental
+			var syncKind protocol.TextDocumentSyncKind
 
-// 	var lspParams *protocol.DidChangeTextDocumentParams
+			switch v := capabilities.TextDocumentSync.(type) {
+			case protocol.TextDocumentSyncOptions:
+				syncKind = v.Change
+			case protocol.TextDocumentSyncKind:
+				syncKind = v
+			case float64:
+				syncKind = protocol.TextDocumentSyncKind(v)
+			case map[string]any:
+				data, err := util.JsonMarshal(&v)
+				if err != nil {
+					s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+					return true
+				}
+				if syncOptions, err := util.JsonUnmarshal[protocol.TextDocumentSyncOptions](data); err != nil {
+					s.plane.Warnf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+					syncKind = syncOptions.Change
+				} else {
+					syncKind = syncOptions.Change
+				}
+			default:
+				s.plane.Errorf("%T %v: TextDocumentDidChange capabilities.TextDocumentSync has unexpected type %T", s, s.Name(), v)
+				return true
+			}
 
-// 	switch syncKind {
-// 	case protocol.Full:
-// 		uri := params.TextDocument.TextDocumentIdentifier.URI
+			s.plane.Debugf("%T %v: TextDocumentDidChange sync kind %d", s, s.Name(), syncKind)
 
-// 		document := s.documentGet(workspace, uri)
-// 		if document == nil {
-// 			return nil
-// 		}
+			var lspParams *protocol.DidChangeTextDocumentParams
 
-// 		lspParams = &protocol.DidChangeTextDocumentParams{
-// 			TextDocument: protocol.VersionedTextDocumentIdentifier{
-// 				TextDocumentIdentifier: protocol.TextDocumentIdentifier{
-// 					URI: uri,
-// 				},
-// 				Version: params.TextDocument.Version,
-// 			},
-// 			ContentChanges: []protocol.TextDocumentContentChangeEvent{
-// 				{
-// 					Text: document.Text(),
-// 				},
-// 			},
-// 		}
+			switch syncKind {
+			case protocol.Full:
+				uri := params.TextDocument.TextDocumentIdentifier.URI
 
-// 	case protocol.Incremental:
-// 		lspParams = params
+				var document *document.Document
 
-// 	default:
-// 		err := fmt.Errorf("%v: unhandled sync kind %d", lspKey, syncKind)
-// 		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 		return err
-// 	}
+				for _, workspace := range s.workspaceFindAllByPrefix(params.TextDocument.URI) {
+					document = s.documentGet(workspace, uri)
+					if document != nil {
+						break
+					}
+				}
 
-// 	err = s.plane.Lsp().EventTextDocumentDidChange(lspKey, lspParams)
-// 	if err != nil {
-// 		s.plane.Errorf("%T %v: TextDocumentDidChange %T %v: %v", s, s.Name(), step, step, err)
-// 		return nil
-// 	}
+				if document == nil {
+					s.plane.Errorf("%T %v: TextDocumentDidChange document %v not found", uri)
+					return true
+				}
 
-// 	s.plane.Debugf("%T %v: TextDocumentDidChange %T %v", s, s.Name(), step, step)
+				lspParams = &protocol.DidChangeTextDocumentParams{
+					TextDocument: protocol.VersionedTextDocumentIdentifier{
+						TextDocumentIdentifier: protocol.TextDocumentIdentifier{
+							URI: uri,
+						},
+						Version: params.TextDocument.Version,
+					},
+					ContentChanges: []protocol.TextDocumentContentChangeEvent{
+						{
+							Text: document.Text(),
+						},
+					},
+				}
 
-// 	return nil
-// }
+			case protocol.Incremental:
+				lspParams = params
 
-// func (s *Middleware) eventTextDocumentDidChangeWorkflow(params *protocol.DidChangeTextDocumentParams, workspace *Workspace, workflow *config.Workflow) error {
-// 	for _, step := range workflow.Steps {
-// 		switch step.Kind.(type) {
-// 		case *config.StepKindLsp:
-// 			if err := s.eventTextDocumentDidChangeLsp(params, workspace, step); err != nil {
-// 				return err
-// 			}
-// 		default:
-// 			err := fmt.Errorf("TextDocumentDidChange unhandled %T %v", step, step)
-// 			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
-// 			return err
-// 		}
-// 	}
+			default:
+				err := fmt.Errorf("%v: unhandled sync kind %d", lspName, syncKind)
+				s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+				return true
+			}
 
-// 	return nil
-// }
+			err = s.plane.Lsp().TextDocumentDidChange(lspName, lspParams)
+			if err != nil {
+				s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
+				return true
+			}
 
-// func (s *Middleware) eventTextDocumentDidChange(params *protocol.DidChangeTextDocumentParams, workspaces []*Workspace) error {
-// 	for _, workspace := range workspaces {
-// 		usages := s.plane.Usage().GetFilteredClient(
-// 			usage.ConditionFilter{Filetype: nil, Path: &workspace.uri},
-// 			usage.EventFilter{Event: util.Ptr(config.EventTextDocumentDidOpen)}, s.listenerName, s.clientName)
+			s.plane.Debugf("%T %v: TextDocumentDidChange", s, s.Name())
 
-// 		for _, usage := range usages {
-// 			if err := s.eventTextDocumentDidChangeWorkflow(params, workspace, usage.Workflow); err != nil {
-// 				continue
-// 			}
-// 			s.plane.Infof("%T %v: TextDocumentDidChange usage %v ok", s, s.Name(), usage.Name)
-// 		}
-// 	}
-// 	return nil
-// }
+		case *config.HandlerLspResourceSpecModel:
+		default:
+			s.plane.Errorf("%T %v: TextDocumentDidChange unexpected spec %T", s, s.Name(), vs)
+		}
+
+		return true
+	})
+
+	return nil
+}
 
 func (s *Handler) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
-	// uri := params.TextDocument.URI
-	// workspaces := s.workspaceFindAllByPrefix(uri)
+	if *s.endpoints.TextDocumentDidChange.Default {
+		err := s.TextDocumentDidChangeDefault(params)
+		if err != nil {
+			return err
+		}
+	}
 
-	// if len(workspaces) == 0 {
-	// 	s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
-	// }
-
-	// for _, workspace := range workspaces {
-	// 	document := s.documentGet(workspace, uri)
-	// 	if document == nil {
-	// 		continue
-	// 	}
-
-	// 	s.documentUpdate(workspace, document, params.TextDocument.Version, params.ContentChanges)
-	// }
-
-	// s.eventTextDocumentDidChange(params, workspaces)
+	s.plane.Infof("%T %v: TextDocumentDidChange done", s, s.Name())
 
 	return nil
 }

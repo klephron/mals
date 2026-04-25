@@ -203,7 +203,7 @@ func (s *LspClient) handle(bytes []byte) {
 		s.handleTextDocumentDidClose(msg)
 	case "textDocument/completion":
 		s.handleTextDocumentCompletion(msg)
-	case "textDocument/shutdown":
+	case "shutdown":
 		s.handleShutdown(msg)
 	default:
 		s.plane.Warnf("%T %v: unhandled method %v", s, s.Name(), method)
