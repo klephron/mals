@@ -5,8 +5,20 @@ logs:
       kind: file
       file: /dev/stderr
 
-models: []
-lsps: []
+models:
+  - name: Llama-3.2-1B-Instruct-Q6_K
+    api:
+      kind: openai
+      url: http://localhost:9652
+      max_tokens: 250
+      temperature: 0.5
+
+lsps:
+  - name: clangd
+    api:
+      kind: stdio
+      cmd:
+        - clangd
 
 handlers:
   - name: completion
@@ -19,39 +31,37 @@ handlers:
         lsp: clangd
         scope: client
     endpoints:
+      initialize:
+        default: true
+      initialized:
+        default: true
+      textDocument/didOpen:
+        default: true
+      textDocument/didChange:
+        default: true
+      textDocument/didClose:
+        default: true
+      shutdown:
+        default: true
       textDocument/completion:
-        default: false
-        execution:
-          - while:
-              condition: "{{ llm_result }}"
-              max: 5
-              do:
-                - model/template:
-                    resource: llama
-                    prompt: |
-                      {{ llm_system.out }}
+        default: true
 
-                      Document info:
-                        - path: {{ file.path }}
-
-                      Text:
-                      {{ file.text }}
-
-                      Text before:
-                      {{ file.text_before }}
-                  assign: llm_result
-
-          - if:
-              condition: "{{ llm_result }}"
-              then:
-                - json/parse/completion:
-                    input: "{{ llm_result.out }}"
-                  assign: completion_json
-              else:
-                - json/parse/completion:
-                    input: "[]"
-                  assign: completion_json
-
-          - return: "{{ completion_json.out }}"
-
-listeners: []
+listeners:
+  - name: api-tcp:9650
+    ipc:
+      kind: tcp
+      port: 9650
+    protocol:
+      kind: api
+  - name: lsp-tcp:9651
+    ipc:
+      kind: tcp
+      port: 9651
+    protocol:
+      kind: lsp
+      handlers:
+        - name: completion
+          condition:
+            filetypes: null
+            path: null
+          handler: completion
