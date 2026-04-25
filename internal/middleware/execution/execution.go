@@ -1,7 +1,8 @@
-package handler
+package execution
 
 import (
 	"fmt"
+	"mals/internal/middleware/workspace"
 	"mals/internal/plane"
 	"mals/pkg/config"
 
@@ -14,22 +15,24 @@ type executionNode struct {
 	Else *executionNode
 }
 
-type executionEnvironment struct {
+type ExecutionEnvironment struct {
 	plane plane.Plane
 
 	cfg *executionNode
 
 	resources  *xsync.Map[string, *config.HandlerLspResource]
-	workspaces []*workspace
+	workspaces []*workspace.Workspace
+	fileUri    *string
 	memory     map[string]any
 }
 
-func newExecutionContext(plane plane.Plane) *executionEnvironment {
-	return &executionEnvironment{
+func New(plane plane.Plane) *ExecutionEnvironment {
+	return &ExecutionEnvironment{
 		plane:      plane,
 		cfg:        nil,
 		resources:  nil,
 		workspaces: nil,
+		fileUri:    nil,
 		memory:     make(map[string]any),
 	}
 }
@@ -41,7 +44,7 @@ func newExecutionContext(plane plane.Plane) *executionEnvironment {
 // * while: Then - do, Else - <statement_after>
 // * return: Then - nil, Else - nil
 // * simple: Then - <statement_after>
-func (s *executionEnvironment) buildRecursive(steps []*config.Step, i int) (*executionNode, *executionNode, error) {
+func (s *ExecutionEnvironment) buildRecursive(steps []*config.Step, i int) (*executionNode, *executionNode, error) {
 	if i >= len(steps) {
 		return nil, nil, nil
 	}
@@ -159,7 +162,7 @@ func (s *executionEnvironment) buildRecursive(steps []*config.Step, i int) (*exe
 	return execCurrStart, execCurrEnd, nil
 }
 
-func (s *executionEnvironment) build(steps []*config.Step) error {
+func (s *ExecutionEnvironment) Build(steps []*config.Step) error {
 	if len(steps) == 0 {
 		return fmt.Errorf("execution is nil or empty")
 	}
@@ -174,32 +177,45 @@ func (s *executionEnvironment) build(steps []*config.Step) error {
 	return nil
 }
 
-func (s *executionEnvironment) setResources(resources *xsync.Map[string, *config.HandlerLspResource]) {
+func (s *ExecutionEnvironment) SetResources(resources *xsync.Map[string, *config.HandlerLspResource]) {
 	s.resources = resources
 }
 
-func (s *executionEnvironment) setWorkspaces(workspaces []*workspace) {
+func (s *ExecutionEnvironment) SetWorkspaces(workspaces []*workspace.Workspace) {
 	s.workspaces = workspaces
 }
 
-func (s *executionEnvironment) resetResources() {
+func (s *ExecutionEnvironment) SetFileUri(uri string) {
+	s.fileUri = &uri
+}
+
+func (s *ExecutionEnvironment) ResetResources() {
 	s.resources = nil
 }
 
-func (s *executionEnvironment) resetWorkspace() {
+func (s *ExecutionEnvironment) ResetWorkspace() {
 	s.workspaces = nil
 }
 
-func (s *executionEnvironment) resetMemory() {
+func (s *ExecutionEnvironment) ResetFileUri() {
+	s.fileUri = nil
+}
+
+func (s *ExecutionEnvironment) ResetMemory() {
 	clear(s.memory)
 }
 
-func (s *executionEnvironment) resetContext() {
-	s.resetMemory()
-	s.resetWorkspace()
-	s.resetResources()
+func (s *ExecutionEnvironment) ResetContext() {
+	s.ResetMemory()
+	s.ResetFileUri()
+	s.ResetWorkspace()
+	s.ResetResources()
 }
 
-func (s *executionEnvironment) execute() (any, error) {
+func (s *ExecutionEnvironment) get(path ...string) {
+	//
+}
+
+func (s *ExecutionEnvironment) Execute() (any, error) {
 	return nil, nil
 }

@@ -13,7 +13,7 @@ func (s *Handler) TextDocumentDidOpenDefault(params *protocol.DidOpenTextDocumen
 		s.plane.Warnf("%T %v: file %v is not bound to any workspace", s, s.Name(), uri)
 	}
 	for _, workspace := range workspaces {
-		s.documentAdd(workspace, params.TextDocument.URI, &params.TextDocument.Text, params.TextDocument.Version)
+		workspace.DocumentAdd(params.TextDocument.URI, &params.TextDocument.Text, params.TextDocument.Version)
 	}
 
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {

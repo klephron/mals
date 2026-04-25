@@ -2,19 +2,14 @@ package handler
 
 import (
 	"fmt"
-	"mals/internal/middleware/document"
+	"mals/internal/middleware/workspace"
 	"mals/internal/plane"
 	"mals/internal/scope"
 	"mals/pkg/config"
+	"strings"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
-
-type workspace struct {
-	uri       string
-	name      string
-	documents *xsync.Map[string, *document.Document]
-}
 
 type Handler struct {
 	endpoints *config.HandlerLspEndpoints
@@ -26,15 +21,7 @@ type Handler struct {
 	clientName   string
 	handlerName  string
 
-	workspaces *xsync.Map[string, *workspace]
-}
-
-func newWorkspace(uri string, name string) *workspace {
-	return &workspace{
-		uri:       uri,
-		name:      name,
-		documents: xsync.NewMap[string, *document.Document](),
-	}
+	workspaces *xsync.Map[string, *workspace.Workspace]
 }
 
 func New(listenerName string, clientName string, handlerName string, resources []*config.HandlerLspResource, endpoints *config.HandlerLspEndpoints, plane plane.Plane) *Handler {
@@ -45,7 +32,7 @@ func New(listenerName string, clientName string, handlerName string, resources [
 		listenerName: listenerName,
 		clientName:   clientName,
 		handlerName:  handlerName,
-		workspaces:   xsync.NewMap[string, *workspace](),
+		workspaces:   xsync.NewMap[string, *workspace.Workspace](),
 	}
 
 	for _, resource := range resources {
@@ -74,4 +61,44 @@ func (s *Handler) getResourceScope(resourceScope config.HandlerLspResourceScope)
 	default:
 		return nil, fmt.Errorf("unknown scope kind")
 	}
+}
+
+func (s *Handler) workspaceAdd(uri string, name string) {
+	workspace := workspace.New(uri, name)
+	s.workspaces.Store(uri, workspace)
+
+	s.plane.Infof("%T %s: workspace %s added", s, s.Name(), workspace.Name())
+}
+
+func (s *Handler) workspaceDelete(uri string) {
+	workspace, ok := s.workspaces.LoadAndDelete(uri)
+
+	if !ok {
+		s.plane.Warnf("%T %s: workspace by uri %s is not present", s, s.Name(), uri)
+	}
+	s.plane.Infof("%T %s: workspace %s deleted", s, s.Name(), workspace.Name())
+}
+
+func (s *Handler) workspaceFindAll() []*workspace.Workspace {
+	workspaces := make([]*workspace.Workspace, 0)
+
+	s.workspaces.Range(func(key string, value *workspace.Workspace) bool {
+		workspaces = append(workspaces, value)
+		return true
+	})
+
+	return workspaces
+}
+
+func (s *Handler) workspaceFindAllByPrefix(uri string) []*workspace.Workspace {
+	workspaces := make([]*workspace.Workspace, 0)
+
+	s.workspaces.Range(func(key string, value *workspace.Workspace) bool {
+		if strings.HasPrefix(uri, key) {
+			workspaces = append(workspaces, value)
+		}
+		return true
+	})
+
+	return workspaces
 }

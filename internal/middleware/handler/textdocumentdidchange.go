@@ -17,12 +17,17 @@ func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDoc
 	}
 
 	for _, workspace := range workspaces {
-		document := s.documentGet(workspace, uri)
-		if document == nil {
+		document, err := workspace.DocumentGet(uri)
+		if err != nil {
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 			continue
 		}
 
-		s.documentUpdate(workspace, document, params.TextDocument.Version, params.ContentChanges)
+		err = workspace.DocumentUpdate(document, params.TextDocument.Version, params.ContentChanges)
+		if err != nil {
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
+			continue
+		}
 	}
 
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
@@ -89,7 +94,7 @@ func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDoc
 				var document *document.Document
 
 				for _, workspace := range s.workspaceFindAllByPrefix(params.TextDocument.URI) {
-					document = s.documentGet(workspace, uri)
+					document, _ = workspace.DocumentGet(uri)
 					if document != nil {
 						break
 					}

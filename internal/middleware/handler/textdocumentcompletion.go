@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"mals/internal/lsp/protocol"
+	"mals/internal/middleware/execution"
 	"mals/pkg/config"
 	"mals/pkg/info"
 	"strings"
@@ -65,22 +66,24 @@ func (s *Handler) TextDocumentCompletionDefault(params *protocol.CompletionParam
 
 func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
 
-	exec := newExecutionContext(s.plane)
+	exec := execution.New(s.plane)
 
-	exec.setResources(s.resources)
+	exec.SetResources(s.resources)
 
 	uri := params.TextDocument.URI
+	exec.SetFileUri(uri)
+
 	workspaces := s.workspaceFindAllByPrefix(uri)
-	exec.setWorkspaces(workspaces)
+	exec.SetWorkspaces(workspaces)
 
-	defer exec.resetContext()
+	defer exec.ResetContext()
 
-	if err := exec.build(s.endpoints.TextDocumentCompletion.Execution); err != nil {
+	if err := exec.Build(s.endpoints.TextDocumentCompletion.Execution); err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return nil, err
 	}
 
-	completionItemsAny, err := exec.execute()
+	completionItemsAny, err := exec.Execute()
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return nil, err

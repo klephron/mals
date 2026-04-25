@@ -14,12 +14,14 @@ func (s *Handler) TextDocumentDidCloseDefault(params *protocol.DidCloseTextDocum
 	}
 
 	for _, workspace := range workspaces {
-		document := s.documentGet(workspace, params.TextDocument.URI)
+		document, _ := workspace.DocumentGet(params.TextDocument.URI)
 		if document == nil {
 			continue
 		}
 
-		s.documentDelete(workspace, params.TextDocument.URI)
+		if err := workspace.DocumentDelete(params.TextDocument.URI); err != nil {
+			s.plane.Warnf("%T %v: %v", s, s.Name(), err)
+		}
 	}
 
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {

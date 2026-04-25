@@ -37,8 +37,8 @@ func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
 			workspaceFolders := make([]protocol.WorkspaceFolder, len(workspaces))
 			for i, workspace := range workspaces {
 				workspaceFolders[i] = protocol.WorkspaceFolder{
-					URI:  workspace.uri,
-					Name: workspace.name,
+					URI:  workspace.Uri(),
+					Name: workspace.Name(),
 				}
 			}
 
