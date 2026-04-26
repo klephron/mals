@@ -86,13 +86,12 @@ func (s *StepIf) StepDefinitionKind() string {
 	return "if"
 }
 
-// while
-type StepWhile struct {
+// for
+type StepFor struct {
 	Condition *string
 	Do        []*Step
-	Max       *int
 }
 
-func (s *StepWhile) StepDefinitionKind() string {
-	return "while"
+func (s *StepFor) StepDefinitionKind() string {
+	return "for"
 }

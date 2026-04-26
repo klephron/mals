@@ -267,11 +267,10 @@ func TestConfigStepUnwire(t *testing.T) {
 			},
 		},
 		{
-			name: "while",
+			name: "for",
 			input: &Step{
-				"while": map[string]any{
+				"for": map[string]any{
 					"condition": "something",
-					"max":       10,
 					"do": []any{
 						map[string]any{
 							"name": "step3",
@@ -281,9 +280,8 @@ func TestConfigStepUnwire(t *testing.T) {
 			},
 			expected: testExpected{
 				output: &config.Step{
-					Definition: &config.StepWhile{
+					Definition: &config.StepFor{
 						Condition: util.Ptr("something"),
-						Max:       util.Ptr(10),
 						Do: []*config.Step{
 							{
 								Name: util.Ptr("step3"),

@@ -141,17 +141,14 @@ func (o *Step) Unwire() (*config.Step, error) {
 				}
 				c.Definition = &d
 
-			case (&config.StepWhile{}).StepDefinitionKind():
-				d := config.StepWhile{}
+			case (&config.StepFor{}).StepDefinitionKind():
+				d := config.StepFor{}
 				vm, ok := v.(map[string]any)
 				if !ok {
 					continue
 				}
 				if condition, ok := vm["condition"].(string); ok {
 					d.Condition = &condition
-				}
-				if max, ok := vm["max"].(int); ok {
-					d.Max = &max
 				}
 				if doRaw, ok := vm["do"].([]any); ok {
 					doSteps := make([]*config.Step, len(doRaw))

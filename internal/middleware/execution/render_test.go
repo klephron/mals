@@ -320,3 +320,177 @@ func TestRenderString_UnclosedAction(t *testing.T) {
 		t.Fatal("expected parse error")
 	}
 }
+
+func TestRenderValue_String(t *testing.T) {
+	got, err := env().renderValue(`{{.name}}`, map[string]any{"name": "alice"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "alice" {
+		t.Fatalf("want alice, got %v", got)
+	}
+}
+
+func TestRenderValue_Int(t *testing.T) {
+	got, err := env().renderValue(`{{.count}}`, map[string]any{"count": 42})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != 42 {
+		t.Fatalf("want 42, got %v", got)
+	}
+}
+
+func TestRenderValue_Bool(t *testing.T) {
+	got, err := env().renderValue(`{{.flag}}`, map[string]any{"flag": true})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != true {
+		t.Fatalf("want true, got %v", got)
+	}
+}
+
+func TestRenderValue_Map(t *testing.T) {
+	inner := map[string]any{"x": 1}
+	got, err := env().renderValue(`{{.obj}}`, map[string]any{"obj": inner})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	m, ok := got.(map[string]any)
+	if !ok {
+		t.Fatalf("want map[string]any, got %T", got)
+	}
+	if m["x"] != 1 {
+		t.Fatalf("want x=1, got %v", m["x"])
+	}
+}
+
+func TestRenderValue_Slice(t *testing.T) {
+	slice := []any{"a", "b"}
+	got, err := env().renderValue(`{{.items}}`, map[string]any{"items": slice})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	s, ok := got.([]any)
+	if !ok {
+		t.Fatalf("want []any, got %T", got)
+	}
+	if len(s) != 2 || s[0] != "a" {
+		t.Fatalf("unexpected slice value: %v", s)
+	}
+}
+
+func TestRenderValue_Nil(t *testing.T) {
+	got, err := env().renderValue(`{{.val}}`, map[string]any{"val": nil})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("want nil, got %v", got)
+	}
+}
+
+func TestRenderValue_NestedMap(t *testing.T) {
+	mem := map[string]any{"user": map[string]any{"age": 30}}
+	got, err := env().renderValue(`{{.user.age}}`, mem)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != 30 {
+		t.Fatalf("want 30, got %v", got)
+	}
+}
+
+func TestRenderValue_MissingKey(t *testing.T) {
+	_, err := env().renderValue(`{{.missing}}`, map[string]any{})
+	if err == nil {
+		t.Fatal("expected error for missing key")
+	}
+}
+
+func TestRenderValue_IndexPreservesType(t *testing.T) {
+	mem := map[string]any{"items": []any{10, 20, 30}}
+	got, err := env().renderValue(`{{index .items 1}}`, mem)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != 20 {
+		t.Fatalf("want 20 (int), got %v (%T)", got, got)
+	}
+}
+
+func TestRenderValue_IndexNestedField(t *testing.T) {
+	mem := map[string]any{
+		"data": map[string]any{
+			"items": []any{"x", "y"},
+		},
+	}
+	got, err := env().renderValue(`{{index .data.items 0}}`, mem)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "x" {
+		t.Fatalf("want x, got %v", got)
+	}
+}
+
+func TestRenderValue_IndexOutOfRange(t *testing.T) {
+	mem := map[string]any{"items": []any{"a"}}
+	_, err := env().renderValue(`{{index .items 5}}`, mem)
+	if err == nil {
+		t.Fatal("expected error for out-of-range index")
+	}
+}
+
+func TestRenderValue_SlowPath_LiteralText(t *testing.T) {
+	got, err := env().renderValue(`hello`, map[string]any{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "hello" {
+		t.Fatalf("want hello, got %v", got)
+	}
+}
+
+func TestRenderValue_SlowPath_Concatenation(t *testing.T) {
+	mem := map[string]any{"first": "foo", "last": "bar"}
+	got, err := env().renderValue(`{{.first}}-{{.last}}`, mem)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// slow path: two actions, result is string
+	if got != "foo-bar" {
+		t.Fatalf("want foo-bar, got %v", got)
+	}
+}
+
+func TestRenderValue_SlowPath_If(t *testing.T) {
+	mem := map[string]any{"flag": true}
+	got, err := env().renderValue(`{{if .flag}}yes{{else}}no{{end}}`, mem)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "yes" {
+		t.Fatalf("want yes, got %v", got)
+	}
+}
+
+func TestRenderValue_SlowPath_ResultIsString(t *testing.T) {
+	// Verifies that the slow path always returns string, not the original type.
+	mem := map[string]any{"flag": true}
+	got, err := env().renderValue(`{{if .flag}}yes{{end}}`, mem)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, ok := got.(string); !ok {
+		t.Fatalf("slow path should return string, got %T", got)
+	}
+}
+
+func TestRenderValue_ParseError(t *testing.T) {
+	_, err := env().renderValue(`{{.unclosed`, map[string]any{})
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+}

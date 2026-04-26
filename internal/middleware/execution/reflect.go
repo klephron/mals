@@ -23,6 +23,9 @@ func traverseGet(current any, key string) (any, error) {
 		// Unwrap interface so callers receive the concrete value.
 		if mv.Kind() == reflect.Interface {
 			mv = mv.Elem()
+			if !mv.IsValid() {
+				return nil, nil
+			}
 		}
 		return mv.Interface(), nil
 
@@ -46,7 +49,7 @@ func traverseGet(current any, key string) (any, error) {
 }
 
 func traverseSet(v reflect.Value, segments []string, value any) error {
-	// Unwrap pointers and interfaces, but do not chase nil pointers.
+	// unwrap pointers and interfaces, but do not chase nil pointers.
 	for v.Kind() == reflect.Interface || v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			return fmt.Errorf("nil %s", v.Kind())
@@ -72,7 +75,7 @@ func traverseSet(v reflect.Value, segments []string, value any) error {
 			return setMapValue(v, mapKey, value)
 		}
 
-		// Get the existing child, make it mutable, recurse, write back.
+		// get the existing child, make it mutable, recurse, write back.
 		mv := v.MapIndex(mapKey)
 		if !mv.IsValid() {
 			return fmt.Errorf("key %q not found", key)
@@ -87,8 +90,8 @@ func traverseSet(v reflect.Value, segments []string, value any) error {
 			return err
 		}
 
-		// Write the modified child back. Map elements are not addressable
-		// so we must re-set the map index.
+		// write the modified child back.
+		// map elements are not addressable so we must re-set the map index
 		v.SetMapIndex(mapKey, child)
 		return nil
 

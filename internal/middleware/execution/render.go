@@ -108,13 +108,62 @@ func rewriteCmd(cmd *parse.CommandNode) {
 	cmd.Args = newArgs
 }
 
-func (s *ExecutionEnvironment) renderString(tmpl string, memory map[string]any) (*string, error) {
-	funcs := template.FuncMap{
+func extractSingleFieldAccess(tree *parse.Tree) ([]string, bool) {
+	if tree == nil || tree.Root == nil {
+		return nil, false
+	}
+	nodes := tree.Root.Nodes
+	if len(nodes) != 1 {
+		return nil, false
+	}
+	action, ok := nodes[0].(*parse.ActionNode)
+	if !ok {
+		return nil, false
+	}
+	if action.Pipe == nil || len(action.Pipe.Cmds) != 1 {
+		return nil, false
+	}
+	cmd := action.Pipe.Cmds[0]
+
+	// {{.foo.bar}}
+	if len(cmd.Args) == 1 {
+		field, ok := cmd.Args[0].(*parse.FieldNode)
+		if ok && len(field.Ident) > 0 {
+			return field.Ident, true
+		}
+	}
+
+	// {{index .foo 2}} -> segments ["foo", "2"]
+	if len(cmd.Args) == 3 {
+		ident, ok := cmd.Args[0].(*parse.IdentifierNode)
+		if !ok || ident.Ident != "index" {
+			return nil, false
+		}
+		field, ok := cmd.Args[1].(*parse.FieldNode)
+		if !ok || len(field.Ident) == 0 {
+			return nil, false
+		}
+		num, ok := cmd.Args[2].(*parse.NumberNode)
+		if !ok {
+			return nil, false
+		}
+		return append(field.Ident, num.Text), true
+	}
+
+	return nil, false
+}
+
+func (s *ExecutionEnvironment) getRenderFuncMap(memory map[string]any) template.FuncMap {
+	return template.FuncMap{
 		"get": func(segments ...string) (any, error) {
 			return s.get(memory, segments...)
 		},
 		"index": func(a any, i any) (any, error) { return nil, nil },
 	}
+}
+
+func (s *ExecutionEnvironment) renderString(tmpl string, memory map[string]any) (*string, error) {
+	funcs := s.getRenderFuncMap(memory)
 
 	trees, err := parse.Parse("root", tmpl, "", "", funcs)
 	if err != nil {
@@ -170,4 +219,39 @@ func (s *ExecutionEnvironment) renderInt(tmpl string, data map[string]any) (*int
 		return nil, fmt.Errorf("cannot convert '%v' to int", *str)
 	}
 	return util.Ptr(i), nil
+}
+
+func (s *ExecutionEnvironment) renderValue(tmpl string, data map[string]any) (any, error) {
+	funcs := s.getRenderFuncMap(data)
+
+	trees, err := parse.Parse("root", tmpl, "", "", funcs)
+	if err != nil {
+		return nil, err
+	}
+
+	if segments, ok := extractSingleFieldAccess(trees["root"]); ok {
+		val, err := s.get(data, segments...)
+		if err != nil {
+			return nil, err
+		}
+		return val, nil
+	}
+
+	t := template.New("root").Funcs(funcs)
+	for name, tree := range trees {
+		rewriteNode(tree.Root)
+		if name == "root" {
+			t.Tree = tree
+		} else {
+			nt, _ := t.New(name).Parse("")
+			nt.Tree = tree
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, nil); err != nil {
+		return nil, err
+	}
+
+	return any(buf.String()), nil
 }

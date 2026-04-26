@@ -58,7 +58,7 @@ func (s *ExecutionEnvironment) buildRecursive(steps []*config.Step, i int) (*exe
 		}
 		return execCurrStart, execCurrEnd, nil
 
-	case *config.StepWhile:
+	case *config.StepFor:
 		execDoStart, execDoEnd, execDoErr := s.buildRecursive(cd.Do, 0)
 
 		if execDoErr != nil {

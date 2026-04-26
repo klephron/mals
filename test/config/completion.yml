@@ -60,9 +60,8 @@ handlers:
                 Write system prompt for model to generate LSP completion list. Model must generate a valid JSON with the type of []string.
             assign: llm_result
 
-          - while:
+          - for:
               condition: "{{ .llm_result.out }}"
-              max: 5
               do:
                 - model/template:
                     resource: llama
