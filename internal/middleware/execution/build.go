@@ -140,7 +140,7 @@ func (s *ExecutionEnvironment) Build(steps []*config.Step) error {
 		return err
 	}
 
-	s.cfg = start
+	s.graph = start
 
 	return nil
 }

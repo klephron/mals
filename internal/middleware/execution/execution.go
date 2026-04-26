@@ -21,7 +21,7 @@ type executionNode struct {
 type ExecutionEnvironment struct {
 	plane plane.Plane
 
-	cfg *executionNode
+	graph *executionNode
 
 	resources  *xsync.Map[string, *config.HandlerLspResource]
 	workspaces []*workspace.Workspace
@@ -34,7 +34,7 @@ type ExecutionEnvironment struct {
 func New(plane plane.Plane) *ExecutionEnvironment {
 	return &ExecutionEnvironment{
 		plane:      plane,
-		cfg:        nil,
+		graph:      nil,
 		resources:  nil,
 		workspaces: nil,
 		fileUri:    nil,

@@ -51,7 +51,7 @@ handlers:
             assign: clangd
 
           - json/dumps:
-              input: "{{ clangd.out }}"
+              input: "{{ .clangd.out }}"
             assign: clangd_str
 
           - model/simple:
@@ -61,36 +61,36 @@ handlers:
             assign: llm_result
 
           - while:
-              condition: "{{ llm_result }}"
+              condition: "{{ .llm_result.out }}"
               max: 5
               do:
                 - model/template:
                     resource: llama
                     prompt: |
-                      {{ llm_system.out }}
+                      {{ .llm_system.out }}
 
                       Document info:
-                        - path: {{ file.path }}
+                        - path: {{ .file.path }}
 
                       Text:
-                      {{ file.text }}
+                      {{ .file.text }}
 
                       Text before:
-                      {{ file.text_before }}
+                      {{ .file.text_before }}
                   assign: llm_result
 
           - if:
-              condition: "{{ llm_result }}"
+              condition: "{{ .llm_result }}"
               then:
                 - json/parse/completion:
-                    input: "{{ llm_result.out }}"
+                    input: "{{ .llm_result.out }}"
                   assign: completion_json
               else:
                 - json/parse/completion:
                     input: "[]"
                   assign: completion_json
 
-          - return: "{{ completion_json.out }}"
+          - return: "{{ .completion_json.out }}"
 
 listeners:
   - name: api-tcp:9650
