@@ -46,29 +46,16 @@ handlers:
       textDocument/completion:
         default: false
         execution:
-          - lsp/completion:
-              resource: clangd
-            assign: clangd
+          - for:
+              condition: true
+              max: 10
+              do:
+                - lsp/completion:
+                    resource: clangd
+                  assign: clangd
+            assign: for
 
-          - json/dumps:
-              input: "{{ .clangd }}"
-            assign: clangd_str
-
-          - json/parse:
-              input: "{{ .clangd_str }}"
-            assign: clangd2
-
-          - json/parse/completion:
-              input: "{{ .clangd_str }}"
-            assign: clangd3
-
-          # - model/raw:
-          #     resource: llama
-          #     prompt: |
-          #       Write sample completion list for LSP.
-          #   assign: llama_result
-
-          - return: "{{ .clangd3 }}"
+          - return: "{{ .clangd }}"
 
 listeners:
   - name: api-tcp:9650

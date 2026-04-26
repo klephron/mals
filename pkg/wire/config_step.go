@@ -150,6 +150,9 @@ func (o *Step) Unwire() (*config.Step, error) {
 				if condition, ok := vm["condition"].(string); ok {
 					d.Condition = &condition
 				}
+				if max, ok := vm["max"].(int); ok {
+					d.Max = &max
+				}
 				if doRaw, ok := vm["do"].([]any); ok {
 					doSteps := make([]*config.Step, len(doRaw))
 					for i, item := range doRaw {

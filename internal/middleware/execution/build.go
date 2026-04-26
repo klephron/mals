@@ -9,7 +9,7 @@ import (
 // returns (start, end pair execution)
 //
 // * if: Then - then, Else - else
-// * while: Then - do, Else - <statement_after>
+// * for: Then - do, Else - <statement_after>
 // * return: Then - nil, Else - nil
 // * simple: Then - <statement_after>
 func (s *ExecutionEnvironment) buildRecursive(steps []*config.Step, i int) (*executionNode, *executionNode, error) {
@@ -108,7 +108,7 @@ func (s *ExecutionEnvironment) buildRecursive(steps []*config.Step, i int) (*exe
 	case *config.StepModel:
 		// simple sequential steps: fall through to linear node construction below
 	default:
-		return nil, nil, fmt.Errorf("unexpected config.StepDefinition: %#v", cd)
+		return nil, nil, fmt.Errorf("unexpected build config.StepDefinition: %#v", cd)
 	}
 
 	execNextStart, execNextEnd, execNextErr := s.buildRecursive(steps, i+1)

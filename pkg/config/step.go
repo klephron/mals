@@ -90,6 +90,7 @@ func (s *StepIf) StepDefinitionKind() string {
 type StepFor struct {
 	Condition *string
 	Do        []*Step
+	Max       *int
 }
 
 func (s *StepFor) StepDefinitionKind() string {

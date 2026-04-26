@@ -51,9 +51,6 @@ func (s *ExecutionEnvironment) executeStep(current *executionNode, memory map[st
 	step := current.Step
 
 	switch definition := step.Definition.(type) {
-	case nil:
-		return nil, nil, fmt.Errorf("step definition is nil")
-
 	case *config.StepIf:
 		return s.executeStepIf(current, definition, memory)
 
@@ -111,8 +108,33 @@ func (s *ExecutionEnvironment) executeStepIf(current *executionNode, def *config
 }
 
 func (s *ExecutionEnvironment) executeStepFor(current *executionNode, def *config.StepFor, memory map[string]any) (*executionNode, any, error) {
+	var value any
+	value = nil
+
+	if def.Max != nil {
+		if current.Step.Assign == nil {
+			return nil, nil, fmt.Errorf("assign remaining is not explicitly present")
+		}
+
+		max, err := s.get(memory, *current.Step.Assign)
+		if err != nil {
+			max = *def.Max
+		}
+		maxInt, ok := max.(int)
+		if !ok {
+			return nil, nil, fmt.Errorf("max is not of type int")
+		}
+
+		maxInt -= 1
+		value = maxInt
+
+		if maxInt < 0 {
+			return current.Else, value, nil
+		}
+	}
+
 	if def.Condition == nil {
-		return current.Then, nil, nil
+		return current.Then, value, nil
 	}
 	condition, err := s.renderBool(*def.Condition, memory)
 	if err != nil {
@@ -121,10 +143,11 @@ func (s *ExecutionEnvironment) executeStepFor(current *executionNode, def *confi
 	if condition == nil {
 		return nil, nil, fmt.Errorf("condition is nil")
 	}
+
 	if *condition {
-		return current.Then, nil, nil
+		return current.Then, value, nil
 	}
-	return current.Else, nil, nil
+	return current.Else, value, nil
 }
 
 func (s *ExecutionEnvironment) executeStepReturn(def *config.StepReturn, memory map[string]any) (any, error) {
