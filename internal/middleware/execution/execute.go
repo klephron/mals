@@ -287,7 +287,7 @@ func (s *ExecutionEnvironment) executeStepModelRaw(def *config.StepModelRaw) (an
 	}
 	defer s.plane.Scope().ModelRelease(modelName, token)
 
-	task := model.NewTask(*def.Prompt, nil, nil, nil)
+	task := model.NewTask(*def.Prompt, def.Schema)
 
 	return s.plane.Model().TaskExecClient(modelName, task, s.clientName)
 }
@@ -324,7 +324,7 @@ func (s *ExecutionEnvironment) executeStepModel(def *config.StepModel, memory ma
 	}
 	defer s.plane.Scope().ModelRelease(modelName, token)
 
-	task := model.NewTask(*prompt, nil, nil, nil)
+	task := model.NewTask(*prompt, def.Schema)
 
 	return s.plane.Model().TaskExecClient(modelName, task, s.clientName)
 }

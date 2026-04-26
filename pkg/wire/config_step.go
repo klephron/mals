@@ -79,6 +79,15 @@ func (o *Step) Unwire() (*config.Step, error) {
 				if prompt, ok := vm["prompt"].(string); ok {
 					d.Prompt = &prompt
 				}
+				if raw, ok := vm["schema"].(string); ok {
+					schema := config.StepModelSchema(raw)
+					switch schema {
+					case config.StepModelSchemaJsonCompletionItems:
+						d.Schema = config.StepModelSchemaJsonCompletionItems
+					default:
+						d.Schema = ""
+					}
+				}
 				c.Definition = &d
 
 			case (&config.StepModel{}).StepDefinitionKind():
@@ -92,6 +101,15 @@ func (o *Step) Unwire() (*config.Step, error) {
 				}
 				if prompt, ok := vm["prompt"].(string); ok {
 					d.Prompt = &prompt
+				}
+				if raw, ok := vm["schema"].(string); ok {
+					schema := config.StepModelSchema(raw)
+					switch schema {
+					case config.StepModelSchemaJsonCompletionItems:
+						d.Schema = config.StepModelSchemaJsonCompletionItems
+					default:
+						d.Schema = ""
+					}
 				}
 				c.Definition = &d
 

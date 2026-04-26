@@ -46,24 +46,32 @@ func (s *StepJsonParseCompletion) StepDefinitionKind() string {
 	return "json/parse/completion"
 }
 
-// model/raw
-type StepModelRaw struct {
-	Resource *string
-	Prompt   *string
-}
-
-func (s *StepModelRaw) StepDefinitionKind() string {
-	return "model/raw"
-}
-
 // model
+type StepModelSchema string
+
+const (
+	StepModelSchemaJsonCompletionItems StepModelSchema = "json/completionItems"
+)
+
 type StepModel struct {
 	Resource *string
 	Prompt   *string
+	Schema   StepModelSchema
 }
 
 func (s *StepModel) StepDefinitionKind() string {
 	return "model"
+}
+
+// model/raw
+type StepModelRaw struct {
+	Resource *string
+	Prompt   *string
+	Schema   StepModelSchema
+}
+
+func (s *StepModelRaw) StepDefinitionKind() string {
+	return "model/raw"
 }
 
 // return

@@ -66,12 +66,44 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 
 	s.plane.Infof("%T %v task %v: received", s, s.Name(), task)
 
+	var responseFormat openai.ChatCompletionNewParamsResponseFormatUnion
+
+	switch task.Schema {
+	case config.StepModelSchemaJsonCompletionItems:
+		completionItemsSchema := map[string]any{
+			"type": "array",
+			"items": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"label": map[string]any{
+						"type": "string",
+					},
+				},
+				"required":             []string{"label"},
+				"additionalProperties": false,
+			},
+		}
+		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
+				JSONSchema: openai.ResponseFormatJSONSchemaJSONSchemaParam{
+					Name:   string(config.StepModelSchemaJsonCompletionItems),
+					Strict: openai.Bool(true),
+					Schema: completionItemsSchema,
+				},
+			},
+		}
+	default:
+		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{}
+	}
+
 	resp, err := s.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(task.Text),
 		},
-		MaxTokens:   s.maxTokens,
-		Temperature: s.temperature,
+		MaxCompletionTokens: s.maxTokens,
+		Temperature:         s.temperature,
+		N:                   openai.Int(1),
+		ResponseFormat:      responseFormat,
 	})
 
 	s.plane.Infof("%T %v task %v: processed", s, s.Name(), task)

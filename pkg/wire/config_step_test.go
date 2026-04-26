@@ -132,6 +132,7 @@ func TestConfigStepUnwire(t *testing.T) {
 				"model": map[string]any{
 					"resource": "r1",
 					"prompt":   "p1",
+					"schema":   "json/completionItems",
 				},
 			},
 			expected: testExpected{
@@ -139,6 +140,7 @@ func TestConfigStepUnwire(t *testing.T) {
 					Definition: &config.StepModel{
 						Resource: util.Ptr("r1"),
 						Prompt:   util.Ptr("p1"),
+						Schema:   config.StepModelSchemaJsonCompletionItems,
 					},
 				},
 				error: false,

@@ -63,10 +63,11 @@ handlers:
           - assign: do
             for:
               condition: "true"
-              max: 5
+              max: 1
               do:
                 - model:
                     resource: llama
+                    schema: json/completionItems
                     prompt: |
                       {{ .llm_system }}
 

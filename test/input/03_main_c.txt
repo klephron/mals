@@ -3,6 +3,4 @@ int first() {
 }
 
 int main() {
-  main
-
 }
