@@ -9,7 +9,7 @@ models:
   - name: Llama-3.2-1B-Instruct-Q6_K
     api:
       kind: openai
-      url: http://localhost:9652
+      url: http://127.0.0.1:9652
       max_tokens: 250
       temperature: 0.5
 
@@ -46,16 +46,52 @@ handlers:
       textDocument/completion:
         default: false
         execution:
-          - for:
-              condition: true
-              max: 10
-              do:
-                - lsp/completion:
-                    resource: clangd
-                  assign: clangd
-            assign: for
+          - lsp/completion:
+              resource: clangd
+            assign: clangd
 
-          - return: "{{ .clangd }}"
+          - json/dumps:
+              input: "{{ .clangd }}"
+            assign: clangd_str
+
+          - model/raw:
+              resource: llama
+              prompt: |
+                Write system prompt for model to generate LSP completion list. Model must generate a valid JSON with the type of []string.
+            assign: llm_system
+
+          - assign: do
+            for:
+              condition: "true"
+              max: 5
+              do:
+                - model:
+                    resource: llama
+                    prompt: |
+                      {{ .llm_system }}
+
+                      Document info:
+                        - path: {{ .file.path }}
+
+                      Text:
+                      {{ .file.text }}
+
+                      Text before:
+                      {{ .file.text_before }}
+                  assign: llm_result
+
+          - if:
+              condition: "true"
+              then:
+                - json/parse/completion:
+                    input: "{{ .llm_result }}"
+                  assign: completion_json
+              else:
+                - json/parse/completion:
+                    input: "[]"
+                  assign: completion_json
+
+          - return: "{{ .completion_json }}"
 
 listeners:
   - name: api-tcp:9650
