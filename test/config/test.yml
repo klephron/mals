@@ -50,7 +50,19 @@ handlers:
               resource: clangd
             assign: clangd
 
-          - return: "{{ .clangd }}"
+          - json/dumps:
+              input: "{{ .clangd }}"
+            assign: clangd_str
+
+          - json/parse:
+              input: "{{ .clangd_str }}"
+            assign: clangd2
+
+          - json/parse/completion:
+              input: "{{ .clangd_str }}"
+            assign: clangd3
+
+          - return: "{{ .clangd3 }}"
 
 listeners:
   - name: api-tcp:9650

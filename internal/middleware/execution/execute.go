@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"encoding/json"
 	"fmt"
 	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
@@ -141,8 +142,68 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 			assignValue = lspItems
 
 		case *config.StepJsonDumps:
+			var input string
+			if definition.Input == nil {
+				return nil, fmt.Errorf("no input")
+			}
+			input = *definition.Input
+
+			value, err := s.renderValue(input, memory)
+			if err != nil {
+				return nil, err
+			}
+
+			outputBytes, err := json.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
+
+			assignValue = string(outputBytes)
+
 		case *config.StepJsonParse:
+			var input string
+			if definition.Input == nil {
+				return nil, fmt.Errorf("no input")
+			}
+			input = *definition.Input
+
+			value, err := s.renderString(input, memory)
+			if err != nil {
+				return nil, err
+			}
+
+			if value != nil {
+				var output any
+				if err := json.Unmarshal([]byte(*value), &output); err != nil {
+					return nil, err
+				}
+				assignValue = output
+			} else {
+				assignValue = nil
+			}
+
 		case *config.StepJsonParseCompletion:
+			var input string
+			if definition.Input == nil {
+				return nil, fmt.Errorf("no input")
+			}
+			input = *definition.Input
+
+			value, err := s.renderString(input, memory)
+			if err != nil {
+				return nil, err
+			}
+
+			if value != nil {
+				var output []protocol.CompletionItem
+				if err := json.Unmarshal([]byte(*value), &output); err != nil {
+					return nil, err
+				}
+				assignValue = output
+			} else {
+				assignValue = nil
+			}
+
 		case *config.StepModelSimple:
 		case *config.StepModelTemplate:
 			// TODO

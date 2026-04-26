@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"mals/internal/lsp/protocol"
 	"mals/internal/middleware/execution"
@@ -103,9 +104,13 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 		return nil, err
 	}
 
+	bytes, err := json.Marshal(completionItemsAny)
+	s.plane.Infof("%T %v: got %v", s, s.Name(), string(bytes))
+
 	completionItems, ok := completionItemsAny.([]protocol.CompletionItem)
+
 	if !ok {
-		err := fmt.Errorf("output type is not of type []protocol.CompletionItem")
+		err := fmt.Errorf("output type %T is not of type []protocol.CompletionItem", completionItemsAny)
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
 		return nil, err
 	}
