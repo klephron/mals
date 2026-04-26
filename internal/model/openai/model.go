@@ -66,23 +66,12 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 
 	s.plane.Infof("%T %v task %v: received", s, s.Name(), task)
 
-	schema := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:   task.SchemaName,
-		Schema: task.Schema,
-		Strict: openai.Bool(task.SchemaStrict),
-	}
-
 	resp, err := s.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(task.Text),
 		},
 		MaxTokens:   s.maxTokens,
 		Temperature: s.temperature,
-		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
-			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
-				JSONSchema: schema,
-			},
-		},
 	})
 
 	s.plane.Infof("%T %v task %v: processed", s, s.Name(), task)

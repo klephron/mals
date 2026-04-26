@@ -67,7 +67,7 @@ func (s *Handler) TextDocumentCompletionDefault(params *protocol.CompletionParam
 
 func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
 
-	exec := execution.New(s.plane)
+	exec := execution.New(s.plane, s.clientName)
 
 	resources := make([]execution.ExecutionSetResource, 0)
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {

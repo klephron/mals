@@ -31,7 +31,8 @@ type ExecutionSetResource struct {
 }
 
 type ExecutionEnvironment struct {
-	plane plane.Plane
+	plane      plane.Plane
+	clientName string
 
 	graph *executionNode
 
@@ -42,9 +43,10 @@ type ExecutionEnvironment struct {
 	fileChar   *uint32
 }
 
-func New(plane plane.Plane) *ExecutionEnvironment {
+func New(plane plane.Plane, clientName string) *ExecutionEnvironment {
 	return &ExecutionEnvironment{
 		plane:      plane,
+		clientName: clientName,
 		graph:      nil,
 		resources:  nil,
 		workspaces: nil,

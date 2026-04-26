@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"mals/internal/lsp/protocol"
+	"mals/internal/model"
+	"mals/internal/util"
 	"mals/pkg/config"
 	"mals/pkg/info"
 	"strings"
@@ -205,8 +207,82 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 			}
 
 		case *config.StepModelRaw:
+			if definition.Resource == nil {
+				return nil, fmt.Errorf("model resource not defined")
+			}
+			name := *definition.Resource
+
+			if definition.Prompt == nil {
+				return nil, fmt.Errorf("model prompt not defined")
+			}
+			prompt := *definition.Prompt
+
+			resource, ok := s.resources.Load(name)
+			if !ok {
+				return nil, fmt.Errorf("model resource %v not found", name)
+			}
+
+			_, ok = resource.spec.(*config.HandlerLspResourceSpecModel)
+			if !ok {
+				return nil, fmt.Errorf("model resource %v is not of type %T", name, (*config.HandlerLspResourceSpecModel)(nil))
+			}
+
+			modelName, token, err := s.plane.Scope().ModelAcquire(name, resource.scope)
+			if err != nil {
+				return nil, err
+			}
+			defer s.plane.Scope().ModelRelease(modelName, token)
+
+			task := model.NewTask(prompt, nil, nil, nil)
+
+			output, err := s.plane.Model().TaskExecClient(modelName, task, s.clientName)
+			if err != nil {
+				return nil, err
+			}
+
+			assignValue = output
+
 		case *config.StepModel:
-			// TODO
+			if definition.Resource == nil {
+				return nil, fmt.Errorf("model resource not defined")
+			}
+			name := *definition.Resource
+
+			if definition.Prompt == nil {
+				return nil, fmt.Errorf("model prompt not defined")
+			}
+			prompt, err := s.renderString(*definition.Prompt, memory)
+			if err != nil {
+				return nil, err
+			}
+			if prompt == nil {
+				prompt = util.Ptr("")
+			}
+
+			resource, ok := s.resources.Load(name)
+			if !ok {
+				return nil, fmt.Errorf("model resource %v not found", name)
+			}
+
+			_, ok = resource.spec.(*config.HandlerLspResourceSpecModel)
+			if !ok {
+				return nil, fmt.Errorf("model resource %v is not of type %T", name, (*config.HandlerLspResourceSpecModel)(nil))
+			}
+
+			modelName, token, err := s.plane.Scope().ModelAcquire(name, resource.scope)
+			if err != nil {
+				return nil, err
+			}
+			defer s.plane.Scope().ModelRelease(modelName, token)
+
+			task := model.NewTask(*prompt, nil, nil, nil)
+
+			output, err := s.plane.Model().TaskExecClient(modelName, task, s.clientName)
+			if err != nil {
+				return nil, err
+			}
+
+			assignValue = output
 
 		default:
 			return nil, fmt.Errorf("unexpected config.StepDefinition: %#v", definition)

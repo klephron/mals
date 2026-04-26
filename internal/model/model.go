@@ -10,12 +10,12 @@ type Task struct {
 	Id                uuid.UUID `json:"id"`
 	Text              string    `json:"text"`
 	Schema            any       `json:"schema"`
-	SchemaName        string    `json:"schema_name"`
-	SchemaDescription string    `json:"schema_description"`
+	SchemaName        *string   `json:"schema_name"`
+	SchemaDescription *string   `json:"schema_description"`
 	SchemaStrict      bool      `json:"schema_strict"`
 }
 
-func NewTask(text string, schema any, schemaName string, schemaDescription string) *Task {
+func NewTask(text string, schema any, schemaName *string, schemaDescription *string) *Task {
 	return &Task{
 		Id:                uuid.New(),
 		Text:              text,
