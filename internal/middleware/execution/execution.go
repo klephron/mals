@@ -25,7 +25,7 @@ type executionResource struct {
 }
 
 type ExecutionSetResource struct {
-	Name  string
+	Var   string // name of the variable to reference
 	Scope *scope.Scope
 	Spec  config.HandlerLspResourceSpec
 }
@@ -61,7 +61,7 @@ func (s *ExecutionEnvironment) SetResources(resources []ExecutionSetResource) {
 		s.resources = xsync.NewMap[string, *executionResource]()
 	}
 	for _, resource := range resources {
-		s.resources.Store(resource.Name, &executionResource{
+		s.resources.Store(resource.Var, &executionResource{
 			scope: resource.Scope,
 			spec:  resource.Spec,
 		})

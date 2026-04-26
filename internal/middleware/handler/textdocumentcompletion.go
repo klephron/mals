@@ -75,11 +75,14 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 		if err != nil {
 			s.plane.Errorf("%T %v: when getting resource scope %v", s, s.Name(), err)
 		}
-		resources = append(resources, execution.ExecutionSetResource{
-			Name:  value.Name,
+
+		res := execution.ExecutionSetResource{
+			Var:   value.Name,
 			Scope: scope,
 			Spec:  value.Spec,
-		})
+		}
+		resources = append(resources, res)
+
 		return true
 	})
 	exec.SetResources(resources)

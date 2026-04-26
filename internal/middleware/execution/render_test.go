@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func env() *ExecutionEnvironment { return New(nil) }
+func env() *ExecutionEnvironment { return New(nil, "client") }
 
 func assertRender(t *testing.T, got *string, err error, want string) {
 	t.Helper()

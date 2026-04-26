@@ -94,18 +94,18 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 				return nil, fmt.Errorf("lsp resource not defined")
 			}
 
-			name := *definition.Resource
-			resource, ok := s.resources.Load(name)
+			variable := *definition.Resource
+			resource, ok := s.resources.Load(variable)
 			if !ok {
-				return nil, fmt.Errorf("lsp resource %v not found", name)
+				return nil, fmt.Errorf("lsp resource %v not found", variable)
 			}
 
-			_, ok = resource.spec.(*config.HandlerLspResourceSpecLsp)
+			lspSpec, ok := resource.spec.(*config.HandlerLspResourceSpecLsp)
 			if !ok {
-				return nil, fmt.Errorf("lsp resource %v is not of type %T", name, (*config.HandlerLspResourceSpecLsp)(nil))
+				return nil, fmt.Errorf("lsp resource %v is not of type %T", variable, (*config.HandlerLspResourceSpecLsp)(nil))
 			}
 
-			lspName, token, err := s.plane.Scope().LspAcquire(name, resource.scope)
+			lspName, token, err := s.plane.Scope().LspAcquire(lspSpec.Name, resource.scope)
 			if err != nil {
 				return nil, err
 			}
@@ -210,24 +210,24 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 			if definition.Resource == nil {
 				return nil, fmt.Errorf("model resource not defined")
 			}
-			name := *definition.Resource
+			variable := *definition.Resource
 
 			if definition.Prompt == nil {
 				return nil, fmt.Errorf("model prompt not defined")
 			}
 			prompt := *definition.Prompt
 
-			resource, ok := s.resources.Load(name)
+			resource, ok := s.resources.Load(variable)
 			if !ok {
-				return nil, fmt.Errorf("model resource %v not found", name)
+				return nil, fmt.Errorf("model resource %v not found", variable)
 			}
 
-			_, ok = resource.spec.(*config.HandlerLspResourceSpecModel)
+			modelSpec, ok := resource.spec.(*config.HandlerLspResourceSpecModel)
 			if !ok {
-				return nil, fmt.Errorf("model resource %v is not of type %T", name, (*config.HandlerLspResourceSpecModel)(nil))
+				return nil, fmt.Errorf("model resource %v is not of type %T", variable, (*config.HandlerLspResourceSpecModel)(nil))
 			}
 
-			modelName, token, err := s.plane.Scope().ModelAcquire(name, resource.scope)
+			modelName, token, err := s.plane.Scope().ModelAcquire(modelSpec.Name, resource.scope)
 			if err != nil {
 				return nil, err
 			}
@@ -246,7 +246,7 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 			if definition.Resource == nil {
 				return nil, fmt.Errorf("model resource not defined")
 			}
-			name := *definition.Resource
+			variable := *definition.Resource
 
 			if definition.Prompt == nil {
 				return nil, fmt.Errorf("model prompt not defined")
@@ -259,17 +259,17 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 				prompt = util.Ptr("")
 			}
 
-			resource, ok := s.resources.Load(name)
+			resource, ok := s.resources.Load(variable)
 			if !ok {
-				return nil, fmt.Errorf("model resource %v not found", name)
+				return nil, fmt.Errorf("model resource %v not found", variable)
 			}
 
-			_, ok = resource.spec.(*config.HandlerLspResourceSpecModel)
+			modelSpec, ok := resource.spec.(*config.HandlerLspResourceSpecModel)
 			if !ok {
-				return nil, fmt.Errorf("model resource %v is not of type %T", name, (*config.HandlerLspResourceSpecModel)(nil))
+				return nil, fmt.Errorf("model resource %v is not of type %T", variable, (*config.HandlerLspResourceSpecModel)(nil))
 			}
 
-			modelName, token, err := s.plane.Scope().ModelAcquire(name, resource.scope)
+			modelName, token, err := s.plane.Scope().ModelAcquire(modelSpec.Name, resource.scope)
 			if err != nil {
 				return nil, err
 			}
