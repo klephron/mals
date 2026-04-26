@@ -104,8 +104,8 @@ func (s *ExecutionEnvironment) buildRecursive(steps []*config.Step, i int) (*exe
 	case *config.StepJsonParse:
 	case *config.StepJsonParseCompletion:
 	case *config.StepLspCompletion:
-	case *config.StepModelSimple:
-	case *config.StepModelTemplate:
+	case *config.StepModelRaw:
+	case *config.StepModel:
 		// simple sequential steps: fall through to linear node construction below
 	default:
 		return nil, nil, fmt.Errorf("unexpected config.StepDefinition: %#v", cd)

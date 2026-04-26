@@ -54,7 +54,7 @@ handlers:
               input: "{{ .clangd }}"
             assign: clangd_str
 
-          - model/simple:
+          - model/raw:
               resource: llama
               prompt: |
                 Write system prompt for model to generate LSP completion list. Model must generate a valid JSON with the type of []string.
@@ -63,7 +63,7 @@ handlers:
           - for:
               condition: "{{ .llm_result }}"
               do:
-                - model/template:
+                - model:
                     resource: llama
                     prompt: |
                       {{ .llm_system }}

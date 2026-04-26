@@ -204,8 +204,8 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 				assignValue = nil
 			}
 
-		case *config.StepModelSimple:
-		case *config.StepModelTemplate:
+		case *config.StepModelRaw:
+		case *config.StepModel:
 			// TODO
 
 		default:

@@ -109,16 +109,16 @@ func TestConfigStepUnwire(t *testing.T) {
 			},
 		},
 		{
-			name: "model/simple",
+			name: "model/raw",
 			input: &Step{
-				"model/simple": map[string]any{
+				"model/raw": map[string]any{
 					"resource": "r1",
 					"prompt":   "p1",
 				},
 			},
 			expected: testExpected{
 				output: &config.Step{
-					Definition: &config.StepModelSimple{
+					Definition: &config.StepModelRaw{
 						Resource: util.Ptr("r1"),
 						Prompt:   util.Ptr("p1"),
 					},
@@ -127,16 +127,16 @@ func TestConfigStepUnwire(t *testing.T) {
 			},
 		},
 		{
-			name: "model/template",
+			name: "model",
 			input: &Step{
-				"model/template": map[string]any{
+				"model": map[string]any{
 					"resource": "r1",
 					"prompt":   "p1",
 				},
 			},
 			expected: testExpected{
 				output: &config.Step{
-					Definition: &config.StepModelTemplate{
+					Definition: &config.StepModel{
 						Resource: util.Ptr("r1"),
 						Prompt:   util.Ptr("p1"),
 					},

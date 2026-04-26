@@ -67,8 +67,8 @@ func (o *Step) Unwire() (*config.Step, error) {
 				}
 				c.Definition = &d
 
-			case (&config.StepModelSimple{}).StepDefinitionKind():
-				d := config.StepModelSimple{}
+			case (&config.StepModelRaw{}).StepDefinitionKind():
+				d := config.StepModelRaw{}
 				vm, ok := v.(map[string]any)
 				if !ok {
 					continue
@@ -81,8 +81,8 @@ func (o *Step) Unwire() (*config.Step, error) {
 				}
 				c.Definition = &d
 
-			case (&config.StepModelTemplate{}).StepDefinitionKind():
-				d := config.StepModelTemplate{}
+			case (&config.StepModel{}).StepDefinitionKind():
+				d := config.StepModel{}
 				vm, ok := v.(map[string]any)
 				if !ok {
 					continue
