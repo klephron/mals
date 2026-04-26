@@ -68,13 +68,27 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 
 	exec := execution.New(s.plane)
 
-	exec.SetResources(s.resources)
+	resources := make([]execution.ExecutionSetResource, 0)
+	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
+		scope, err := s.getResourceScope(value.Scope)
+		if err != nil {
+			s.plane.Errorf("%T %v: when getting resource scope %v", s, s.Name(), err)
+		}
+		resources = append(resources, execution.ExecutionSetResource{
+			Name:  value.Name,
+			Scope: scope,
+			Spec:  value.Spec,
+		})
+		return true
+	})
+	exec.SetResources(resources)
 
 	uri := params.TextDocument.URI
-	exec.SetFileUri(uri)
-
 	workspaces := s.workspaceFindAllByPrefix(uri)
 	exec.SetWorkspaces(workspaces)
+
+	exec.SetFileUri(uri)
+	exec.SetFileCursor(params.TextDocumentPositionParams.Position.Line, params.TextDocumentPositionParams.Position.Character)
 
 	defer exec.ResetContext()
 

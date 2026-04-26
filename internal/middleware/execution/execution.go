@@ -5,6 +5,7 @@ import (
 	"mals/internal/middleware/document"
 	"mals/internal/middleware/workspace"
 	"mals/internal/plane"
+	"mals/internal/scope"
 	"mals/pkg/config"
 	"path"
 	"reflect"
@@ -18,12 +19,23 @@ type executionNode struct {
 	Else *executionNode
 }
 
+type executionResource struct {
+	scope *scope.Scope
+	spec  config.HandlerLspResourceSpec
+}
+
+type ExecutionSetResource struct {
+	Name  string
+	Scope *scope.Scope
+	Spec  config.HandlerLspResourceSpec
+}
+
 type ExecutionEnvironment struct {
 	plane plane.Plane
 
 	graph *executionNode
 
-	resources  *xsync.Map[string, *config.HandlerLspResource]
+	resources  *xsync.Map[string, *executionResource]
 	workspaces []*workspace.Workspace
 	fileUri    *string
 	fileLine   *uint32
@@ -42,8 +54,16 @@ func New(plane plane.Plane) *ExecutionEnvironment {
 	}
 }
 
-func (s *ExecutionEnvironment) SetResources(resources *xsync.Map[string, *config.HandlerLspResource]) {
-	s.resources = resources
+func (s *ExecutionEnvironment) SetResources(resources []ExecutionSetResource) {
+	if s.resources == nil {
+		s.resources = xsync.NewMap[string, *executionResource]()
+	}
+	for _, resource := range resources {
+		s.resources.Store(resource.Name, &executionResource{
+			scope: resource.Scope,
+			spec:  resource.Spec,
+		})
+	}
 }
 
 func (s *ExecutionEnvironment) SetWorkspaces(workspaces []*workspace.Workspace) {

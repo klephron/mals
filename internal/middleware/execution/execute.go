@@ -2,7 +2,10 @@ package execution
 
 import (
 	"fmt"
+	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
+	"mals/pkg/info"
+	"strings"
 )
 
 func (s *ExecutionEnvironment) Execute() (any, error) {
@@ -25,6 +28,8 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 		if current.Step == nil {
 			return nil, fmt.Errorf("step is nil")
 		}
+
+		var assignValue any
 
 		switch definition := current.Step.Definition.(type) {
 		case nil:
@@ -81,10 +86,63 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 			}
 			return value, nil
 
+		case *config.StepLspCompletion:
+			if definition.Resource == nil {
+				return nil, fmt.Errorf("lsp resource not defined")
+			}
+
+			name := *definition.Resource
+			resource, ok := s.resources.Load(name)
+			if !ok {
+				return nil, fmt.Errorf("lsp resource %v not found", name)
+			}
+
+			_, ok = resource.spec.(*config.HandlerLspResourceSpecLsp)
+			if !ok {
+				return nil, fmt.Errorf("lsp resource %v is not of type %T", name, (*config.HandlerLspResourceSpecLsp)(nil))
+			}
+
+			lspName, token, err := s.plane.Scope().LspAcquire(name, resource.scope)
+			if err != nil {
+				return nil, err
+			}
+			defer s.plane.Scope().LspRelease(lspName, token)
+
+			if s.fileUri == nil || s.fileLine == nil || s.fileChar == nil {
+				return nil, fmt.Errorf("file uri/line/char is not set")
+			}
+
+			params := &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{
+						URI: *s.fileUri,
+					},
+					Position: protocol.Position{
+						Line:      *s.fileLine,
+						Character: *s.fileChar,
+					},
+				},
+			}
+
+			lspList, err := s.plane.Lsp().TextDocumentCompletion(lspName, params)
+			if err != nil {
+				return nil, err
+			}
+
+			lspItems := make([]protocol.CompletionItem, len(lspList.Items))
+			for i, s := range lspList.Items {
+				lspItems[i] = protocol.CompletionItem{
+					Label:         strings.TrimSpace(s.Label),
+					Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, lspName),
+					Documentation: &protocol.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
+				}
+			}
+
+			assignValue = lspItems
+
 		case *config.StepJsonDumps:
 		case *config.StepJsonParse:
 		case *config.StepJsonParseCompletion:
-		case *config.StepLspCompletion:
 		case *config.StepModelSimple:
 		case *config.StepModelTemplate:
 			// TODO
@@ -94,6 +152,12 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 		}
 
 		// simple sequential steps
+		if current.Step.Assign != nil {
+			if err := s.set(memory, assignValue, *current.Step.Assign); err != nil {
+				return nil, err
+			}
+		}
+
 		current = current.Then
 	}
 }

@@ -44,7 +44,13 @@ handlers:
       shutdown:
         default: true
       textDocument/completion:
-        default: true
+        default: false
+        execution:
+          - lsp/completion:
+              resource: clangd
+            assign: clangd
+
+          - return: "{{ .clangd }}"
 
 listeners:
   - name: api-tcp:9650
