@@ -28,7 +28,6 @@ type ExecutionEnvironment struct {
 	fileUri    *string
 	fileLine   *uint32
 	fileChar   *uint32
-	memory     map[string]any
 }
 
 func New(plane plane.Plane) *ExecutionEnvironment {
@@ -40,7 +39,6 @@ func New(plane plane.Plane) *ExecutionEnvironment {
 		fileUri:    nil,
 		fileLine:   nil,
 		fileChar:   nil,
-		memory:     make(map[string]any),
 	}
 }
 
@@ -73,18 +71,19 @@ func (s *ExecutionEnvironment) ResetFileUri() {
 	s.fileUri = nil
 }
 
-func (s *ExecutionEnvironment) ResetMemory() {
-	clear(s.memory)
+func (s *ExecutionEnvironment) ResetFileCursor() {
+	s.fileLine = nil
+	s.fileChar = nil
 }
 
 func (s *ExecutionEnvironment) ResetContext() {
-	s.ResetMemory()
+	s.ResetFileCursor()
 	s.ResetFileUri()
 	s.ResetWorkspace()
 	s.ResetResources()
 }
 
-func (s *ExecutionEnvironment) Get(segments ...string) (any, error) {
+func (s *ExecutionEnvironment) get(memory map[string]any, segments ...string) (any, error) {
 	if len(segments) == 0 {
 		return nil, fmt.Errorf("get: empty path")
 	}
@@ -96,7 +95,7 @@ func (s *ExecutionEnvironment) Get(segments ...string) (any, error) {
 		return s.getFile(segments[1])
 	}
 
-	var current any = s.memory
+	var current any = memory
 	for i, key := range segments {
 		var err error
 		current, err = traverseGet(current, key)
@@ -107,7 +106,7 @@ func (s *ExecutionEnvironment) Get(segments ...string) (any, error) {
 	return current, nil
 }
 
-func (s *ExecutionEnvironment) Set(value any, segments ...string) error {
+func (s *ExecutionEnvironment) set(memory map[string]any, value any, segments ...string) error {
 	if len(segments) == 0 {
 		return fmt.Errorf("set: empty path")
 	}
@@ -119,14 +118,14 @@ func (s *ExecutionEnvironment) Set(value any, segments ...string) error {
 		return fmt.Errorf("set: file.%s is read-only", segments[1])
 	}
 
-	if s.memory == nil {
+	if memory == nil {
 		return fmt.Errorf("set: memory is nil")
 	}
 
-	return traverseSet(reflect.ValueOf(s.memory), segments, value)
+	return traverseSet(reflect.ValueOf(memory), segments, value)
 }
 
-func (s *ExecutionEnvironment) currentDocument() (*document.Document, error) {
+func (s *ExecutionEnvironment) getCurrentDocument() (*document.Document, error) {
 	if s.fileUri == nil {
 		return nil, fmt.Errorf("no active file")
 	}
@@ -151,7 +150,7 @@ func (s *ExecutionEnvironment) getFile(key string) (any, error) {
 		return *s.fileUri, nil
 
 	case "text":
-		doc, err := s.currentDocument()
+		doc, err := s.getCurrentDocument()
 		if err != nil {
 			return nil, fmt.Errorf("file.text: %w", err)
 		}
@@ -161,7 +160,7 @@ func (s *ExecutionEnvironment) getFile(key string) (any, error) {
 		if s.fileLine == nil || s.fileChar == nil {
 			return nil, fmt.Errorf("file.text_before: no active cursor")
 		}
-		doc, err := s.currentDocument()
+		doc, err := s.getCurrentDocument()
 		if err != nil {
 			return nil, fmt.Errorf("file.text_before: %w", err)
 		}
@@ -171,7 +170,7 @@ func (s *ExecutionEnvironment) getFile(key string) (any, error) {
 		if s.fileLine == nil || s.fileChar == nil {
 			return nil, fmt.Errorf("file.text_after: no active cursor")
 		}
-		doc, err := s.currentDocument()
+		doc, err := s.getCurrentDocument()
 		if err != nil {
 			return nil, fmt.Errorf("file.text_after: %w", err)
 		}

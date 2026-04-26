@@ -15,6 +15,7 @@ func (s *ExecutionEnvironment) Execute() (any, error) {
 
 func (s *ExecutionEnvironment) execute() (any, error) {
 	current := s.graph
+	// memory := make(map[string]any)
 
 	for {
 		if current == nil {
@@ -29,6 +30,10 @@ func (s *ExecutionEnvironment) execute() (any, error) {
 		case nil:
 			return nil, fmt.Errorf("step definition is nil")
 		case *config.StepIf:
+			if definition.Condition == nil {
+				return nil, fmt.Errorf("if condition is nil")
+			}
+			// condition, err := renderBool(definition.Condition, s.memory)
 		case *config.StepJsonDumps:
 		case *config.StepJsonParse:
 		case *config.StepJsonParseCompletion:
