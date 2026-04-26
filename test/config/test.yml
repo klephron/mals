@@ -62,13 +62,13 @@ handlers:
               input: "{{ .clangd_str }}"
             assign: clangd3
 
-          - model/raw:
-              resource: llama
-              prompt: |
-                Write sample completion list for LSP.
-            assign: llama_result
+          # - model/raw:
+          #     resource: llama
+          #     prompt: |
+          #       Write sample completion list for LSP.
+          #   assign: llama_result
 
-          - return: "{{ .llama_result }}"
+          - return: "{{ .clangd3 }}"
 
 listeners:
   - name: api-tcp:9650
