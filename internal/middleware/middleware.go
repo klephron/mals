@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"fmt"
-	"mals/internal/lsp/protocol"
 	"mals/internal/middleware/handler"
 	"mals/internal/plane"
 	"mals/internal/scope"
 	"mals/pkg/config"
 	"mals/pkg/info"
+	"mals/third_party/lsp"
 )
 
 type Middleware struct {
@@ -16,7 +16,7 @@ type Middleware struct {
 
 	plane plane.Plane
 
-	textDocumentSyncKind protocol.TextDocumentSyncKind
+	textDocumentSyncKind lsp.TextDocumentSyncKind
 
 	handlers    []*handler.Handler
 	initialized bool
@@ -27,7 +27,7 @@ func New(listenerName string, clientName string, plane plane.Plane) *Middleware 
 		listenerName:         listenerName,
 		clientName:           clientName,
 		plane:                plane,
-		textDocumentSyncKind: protocol.Incremental,
+		textDocumentSyncKind: lsp.Incremental,
 		handlers:             make([]*handler.Handler, 0),
 		initialized:          false,
 	}
@@ -41,7 +41,7 @@ func (s *Middleware) Name() string {
 	return fmt.Sprintf("%v:%v", s.listenerName, s.clientName)
 }
 
-func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+func (s *Middleware) Initialize(params *lsp.InitializeParams) (*lsp.InitializeResult, error) {
 	if s.initialized {
 		err := fmt.Errorf("middleware is already initialized")
 		s.plane.Errorf("%T: %v", s, err)
@@ -78,15 +78,15 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.In
 	}
 	s.handlers = handlers
 
-	result := &protocol.InitializeResult{
-		Capabilities: protocol.ServerCapabilities{
-			TextDocumentSync: protocol.TextDocumentSyncOptions{
+	result := &lsp.InitializeResult{
+		Capabilities: lsp.ServerCapabilities{
+			TextDocumentSync: lsp.TextDocumentSyncOptions{
 				OpenClose: true,
 				Change:    s.textDocumentSyncKind,
 			},
-			CompletionProvider: &protocol.CompletionOptions{},
+			CompletionProvider: &lsp.CompletionOptions{},
 		},
-		ServerInfo: &protocol.ServerInfo{
+		ServerInfo: &lsp.ServerInfo{
 			Name:    info.MiddlewareServerName,
 			Version: info.MiddlewareVersion,
 		},
@@ -95,7 +95,7 @@ func (s *Middleware) Initialize(params *protocol.InitializeParams) (*protocol.In
 	return result, nil
 }
 
-func (s *Middleware) Initialized(params *protocol.InitializedParams) error {
+func (s *Middleware) Initialized(params *lsp.InitializedParams) error {
 	for _, handler := range s.handlers {
 		if err := handler.Initialized(params); err != nil {
 			return err
@@ -126,8 +126,8 @@ func (s *Middleware) Shutdown() error {
 	return error
 }
 
-func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	completionList := protocol.CompletionList{}
+func (s *Middleware) TextDocumentCompletion(params *lsp.CompletionParams) (*lsp.CompletionList, error) {
+	completionList := lsp.CompletionList{}
 	var error error
 
 	for _, handler := range s.handlers {
@@ -144,7 +144,7 @@ func (s *Middleware) TextDocumentCompletion(params *protocol.CompletionParams) (
 	return &completionList, error
 }
 
-func (s *Middleware) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
+func (s *Middleware) TextDocumentDidChange(params *lsp.DidChangeTextDocumentParams) error {
 	var error error
 
 	for _, handler := range s.handlers {
@@ -156,7 +156,7 @@ func (s *Middleware) TextDocumentDidChange(params *protocol.DidChangeTextDocumen
 	return error
 }
 
-func (s *Middleware) TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error {
+func (s *Middleware) TextDocumentDidClose(params *lsp.DidCloseTextDocumentParams) error {
 	var error error
 
 	for _, handler := range s.handlers {
@@ -168,7 +168,7 @@ func (s *Middleware) TextDocumentDidClose(params *protocol.DidCloseTextDocumentP
 	return error
 }
 
-func (s *Middleware) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error {
+func (s *Middleware) TextDocumentDidOpen(params *lsp.DidOpenTextDocumentParams) error {
 	var error error
 
 	for _, handler := range s.handlers {

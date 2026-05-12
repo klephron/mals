@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 )
 
-func (s *Handler) TextDocumentDidOpenDefault(params *protocol.DidOpenTextDocumentParams) error {
+func (s *Handler) TextDocumentDidOpenDefault(params *lsp.DidOpenTextDocumentParams) error {
 	uri := params.TextDocument.URI
 	workspaces := s.workspaceFindAllByPrefix(uri)
 
@@ -37,8 +37,8 @@ func (s *Handler) TextDocumentDidOpenDefault(params *protocol.DidOpenTextDocumen
 				}
 			}()
 
-			lspParams := &protocol.DidOpenTextDocumentParams{
-				TextDocument: protocol.TextDocumentItem{
+			lspParams := &lsp.DidOpenTextDocumentParams{
+				TextDocument: lsp.TextDocumentItem{
 					URI:        params.TextDocument.URI,
 					LanguageID: params.TextDocument.LanguageID,
 					Version:    params.TextDocument.Version,
@@ -63,7 +63,7 @@ func (s *Handler) TextDocumentDidOpenDefault(params *protocol.DidOpenTextDocumen
 	return nil
 }
 
-func (s *Handler) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error {
+func (s *Handler) TextDocumentDidOpen(params *lsp.DidOpenTextDocumentParams) error {
 	if *s.endpoints.TextDocumentDidOpen.Default {
 		err := s.TextDocumentDidOpenDefault(params)
 		if err != nil {

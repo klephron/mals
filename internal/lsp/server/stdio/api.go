@@ -3,11 +3,11 @@ package stdio
 import (
 	"errors"
 	"mals/internal/jsonrpc"
-	"mals/internal/lsp/protocol"
 	"mals/internal/util"
+	"mals/third_party/lsp"
 )
 
-func (s *LspServerStdio) Capabilities() (*protocol.ServerCapabilities, error) {
+func (s *LspServerStdio) Capabilities() (*lsp.ServerCapabilities, error) {
 	s.rw.RLock()
 	defer s.rw.RUnlock()
 
@@ -18,7 +18,7 @@ func (s *LspServerStdio) Capabilities() (*protocol.ServerCapabilities, error) {
 	return s.capabilities, nil
 }
 
-func (s *LspServerStdio) Info() (*protocol.ServerInfo, error) {
+func (s *LspServerStdio) Info() (*lsp.ServerInfo, error) {
 	s.rw.RLock()
 	defer s.rw.RUnlock()
 
@@ -29,7 +29,7 @@ func (s *LspServerStdio) Info() (*protocol.ServerInfo, error) {
 	return s.info, nil
 }
 
-func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+func (s *LspServerStdio) Initialize(params *lsp.InitializeParams) (*lsp.InitializeResult, error) {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
@@ -56,7 +56,7 @@ func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protoco
 		return nil, errors.New(resp.Error.Message)
 	}
 
-	result, err := util.JsonUnmarshal[*protocol.InitializeResult](resp.Result)
+	result, err := util.JsonUnmarshal[*lsp.InitializeResult](resp.Result)
 	if err != nil {
 		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}
@@ -72,7 +72,7 @@ func (s *LspServerStdio) Initialize(params *protocol.InitializeParams) (*protoco
 	return result, nil
 }
 
-func (s *LspServerStdio) Initialized(params *protocol.InitializedParams) error {
+func (s *LspServerStdio) Initialized(params *lsp.InitializedParams) error {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
@@ -92,7 +92,7 @@ func (s *LspServerStdio) Initialized(params *protocol.InitializedParams) error {
 	return nil
 }
 
-func (s *LspServerStdio) TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error {
+func (s *LspServerStdio) TextDocumentDidOpen(params *lsp.DidOpenTextDocumentParams) error {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
@@ -112,7 +112,7 @@ func (s *LspServerStdio) TextDocumentDidOpen(params *protocol.DidOpenTextDocumen
 	return nil
 }
 
-func (s *LspServerStdio) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
+func (s *LspServerStdio) TextDocumentDidChange(params *lsp.DidChangeTextDocumentParams) error {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
@@ -132,7 +132,7 @@ func (s *LspServerStdio) TextDocumentDidChange(params *protocol.DidChangeTextDoc
 	return nil
 }
 
-func (s *LspServerStdio) TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error {
+func (s *LspServerStdio) TextDocumentDidClose(params *lsp.DidCloseTextDocumentParams) error {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
@@ -152,7 +152,7 @@ func (s *LspServerStdio) TextDocumentDidClose(params *protocol.DidCloseTextDocum
 	return nil
 }
 
-func (s *LspServerStdio) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+func (s *LspServerStdio) TextDocumentCompletion(params *lsp.CompletionParams) (*lsp.CompletionList, error) {
 	paramsRaw, err := util.JsonMarshal(params)
 	if err != nil {
 		s.plane.Errorf("%T %v: %v", s, s.Name(), err)
@@ -179,7 +179,7 @@ func (s *LspServerStdio) TextDocumentCompletion(params *protocol.CompletionParam
 		return nil, errors.New(resp.Error.Message)
 	}
 
-	result, err := util.JsonUnmarshal[*protocol.CompletionList](resp.Result)
+	result, err := util.JsonUnmarshal[*lsp.CompletionList](resp.Result)
 	if err != nil {
 		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}

@@ -3,11 +3,11 @@ package execution
 import (
 	"encoding/json"
 	"fmt"
-	"mals/internal/lsp/protocol"
 	"mals/internal/model"
 	"mals/internal/util"
 	"mals/pkg/config"
 	"mals/pkg/info"
+	"mals/third_party/lsp"
 	"strings"
 )
 
@@ -181,10 +181,10 @@ func (s *ExecutionEnvironment) executeStepLspCompletion(def *config.StepLspCompl
 		return nil, fmt.Errorf("file uri/line/char is not set")
 	}
 
-	params := &protocol.CompletionParams{
-		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
-			TextDocument: protocol.TextDocumentIdentifier{URI: *s.fileUri},
-			Position:     protocol.Position{Line: *s.fileLine, Character: *s.fileChar},
+	params := &lsp.CompletionParams{
+		TextDocumentPositionParams: lsp.TextDocumentPositionParams{
+			TextDocument: lsp.TextDocumentIdentifier{URI: *s.fileUri},
+			Position:     lsp.Position{Line: *s.fileLine, Character: *s.fileChar},
 		},
 	}
 	lspList, err := s.plane.Lsp().TextDocumentCompletion(lspName, params)
@@ -192,12 +192,12 @@ func (s *ExecutionEnvironment) executeStepLspCompletion(def *config.StepLspCompl
 		return nil, err
 	}
 
-	items := make([]protocol.CompletionItem, len(lspList.Items))
+	items := make([]lsp.CompletionItem, len(lspList.Items))
 	for i, item := range lspList.Items {
-		items[i] = protocol.CompletionItem{
+		items[i] = lsp.CompletionItem{
 			Label:         strings.TrimSpace(item.Label),
 			Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, lspName),
-			Documentation: &protocol.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
+			Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
 		}
 	}
 
@@ -255,7 +255,7 @@ func (s *ExecutionEnvironment) executeStepJsonParseCompletion(def *config.StepJs
 		return nil, nil
 	}
 
-	var output []protocol.CompletionItem
+	var output []lsp.CompletionItem
 	if err := json.Unmarshal([]byte(*value), &output); err != nil {
 		return nil, err
 	}

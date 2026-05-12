@@ -26,7 +26,7 @@ handlers:
     resources:
       - name: llama
         model: Llama-3.2-1B-Instruct-Q6_K
-        scope: client
+        scope: global
       - name: clangd
         lsp: clangd
         scope: client
@@ -50,46 +50,7 @@ handlers:
               resource: clangd
             assign: clangd
 
-          - json/dumps:
-              input: "{{ .clangd }}"
-            assign: clangd_str
-
-          - model/raw:
-              resource: llama
-              prompt: |
-                Write system prompt for model to generate LSP completion list. Model must generate a valid JSON with the type of []string.
-            assign: llm_result
-
-          - for:
-              condition: "{{ .llm_result }}"
-              do:
-                - model:
-                    resource: llama
-                    prompt: |
-                      {{ .llm_system }}
-
-                      Document info:
-                        - path: {{ .file.path }}
-
-                      Text:
-                      {{ .file.text }}
-
-                      Text before:
-                      {{ .file.text_before }}
-                  assign: llm_result
-
-          - if:
-              condition: "{{ .llm_result }}"
-              then:
-                - json/parse/completion:
-                    input: "{{ .llm_result }}"
-                  assign: completion_json
-              else:
-                - json/parse/completion:
-                    input: "[]"
-                  assign: completion_json
-
-          - return: "{{ .completion_json }}"
+          - return: "{{ .clangd }}"
 
 listeners:
   - name: api-tcp:9650

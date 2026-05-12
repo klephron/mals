@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
 	"mals/pkg/info"
+	"mals/third_party/lsp"
 	"os"
 )
 
-func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
+func (s *Handler) InitializeDefault(params *lsp.InitializeParams) error {
 	for _, workspace := range params.WorkspaceFolders {
 		s.workspaceAdd(workspace.URI, workspace.Name)
 	}
@@ -34,31 +34,31 @@ func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
 			}()
 
 			workspaces := s.workspaceFindAll()
-			workspaceFolders := make([]protocol.WorkspaceFolder, len(workspaces))
+			workspaceFolders := make([]lsp.WorkspaceFolder, len(workspaces))
 			for i, workspace := range workspaces {
-				workspaceFolders[i] = protocol.WorkspaceFolder{
+				workspaceFolders[i] = lsp.WorkspaceFolder{
 					URI:  workspace.Uri(),
 					Name: workspace.Name(),
 				}
 			}
 
-			lspParams := &protocol.InitializeParams{
-				XInitializeParams: protocol.XInitializeParams{
+			lspParams := &lsp.InitializeParams{
+				XInitializeParams: lsp.XInitializeParams{
 					ProcessID: int32(os.Getpid()),
-					ClientInfo: &protocol.ClientInfo{
+					ClientInfo: &lsp.ClientInfo{
 						Name:    info.MiddlewareClientName,
 						Version: info.MiddlewareVersion,
 					},
 					Locale: params.Locale,
-					Capabilities: protocol.ClientCapabilities{
-						TextDocument: protocol.TextDocumentClientCapabilities{
-							Synchronization: &protocol.TextDocumentSyncClientCapabilities{
+					Capabilities: lsp.ClientCapabilities{
+						TextDocument: lsp.TextDocumentClientCapabilities{
+							Synchronization: &lsp.TextDocumentSyncClientCapabilities{
 								DynamicRegistration: false,
 								WillSave:            false,
 								WillSaveWaitUntil:   false,
 								DidSave:             false,
 							},
-							Completion: protocol.CompletionClientCapabilities{
+							Completion: lsp.CompletionClientCapabilities{
 								DynamicRegistration: false,
 							},
 						},
@@ -66,7 +66,7 @@ func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
 					InitializationOptions: params.InitializationOptions,
 					Trace:                 params.Trace,
 				},
-				WorkspaceFoldersInitializeParams: protocol.WorkspaceFoldersInitializeParams{
+				WorkspaceFoldersInitializeParams: lsp.WorkspaceFoldersInitializeParams{
 					WorkspaceFolders: workspaceFolders,
 				},
 			}
@@ -96,7 +96,7 @@ func (s *Handler) InitializeDefault(params *protocol.InitializeParams) error {
 	return nil
 }
 
-func (s *Handler) Initialize(params *protocol.InitializeParams) error {
+func (s *Handler) Initialize(params *lsp.InitializeParams) error {
 	if *s.endpoints.Initialize.Default {
 		err := s.InitializeDefault(params)
 		if err != nil {

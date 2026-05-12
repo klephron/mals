@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/jsonrpc"
-	"mals/internal/lsp/protocol"
 	"mals/internal/middleware"
 	"mals/internal/plane"
+	"mals/third_party/lsp"
 )
 
 type LspClient struct {
@@ -22,7 +22,7 @@ func errorParseUnexpectedType[T jsonrpc.Message](s *LspClient) {
 
 	resp := jsonrpc.Response{
 		Error: &jsonrpc.Error{
-			Code:    int32(protocol.ParseError),
+			Code:    int32(lsp.ParseError),
 			Message: fmt.Sprintf("message is not of type %T", dummy),
 		},
 	}

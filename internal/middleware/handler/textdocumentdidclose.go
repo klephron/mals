@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 )
 
-func (s *Handler) TextDocumentDidCloseDefault(params *protocol.DidCloseTextDocumentParams) error {
+func (s *Handler) TextDocumentDidCloseDefault(params *lsp.DidCloseTextDocumentParams) error {
 	uri := params.TextDocument.URI
 	workspaces := s.workspaceFindAllByPrefix(uri)
 
@@ -45,8 +45,8 @@ func (s *Handler) TextDocumentDidCloseDefault(params *protocol.DidCloseTextDocum
 				}
 			}()
 
-			lspParams := &protocol.DidCloseTextDocumentParams{
-				TextDocument: protocol.TextDocumentIdentifier{
+			lspParams := &lsp.DidCloseTextDocumentParams{
+				TextDocument: lsp.TextDocumentIdentifier{
 					URI: params.TextDocument.URI,
 				},
 			}
@@ -68,7 +68,7 @@ func (s *Handler) TextDocumentDidCloseDefault(params *protocol.DidCloseTextDocum
 	return nil
 }
 
-func (s *Handler) TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error {
+func (s *Handler) TextDocumentDidClose(params *lsp.DidCloseTextDocumentParams) error {
 	if *s.endpoints.TextDocumentDidClose.Default {
 		err := s.TextDocumentDidCloseDefault(params)
 		if err != nil {

@@ -1,0 +1,28 @@
+- lsp/completion:
+    resource: lsp
+  assign: completions
+
+- json/dumps:
+    input: "{{ .completions }}"
+  assign: completions_json
+
+- model:
+    resource: model
+    schema: json/completionItems
+    prompt: |
+      Document info:
+        - path: {{ .file.path }}
+      Text:
+      {{ .file.text }}
+      Text before:
+      {{ .file.text_before }}
+      LSP completions:
+      {{ .completions_json }}
+  assign: model_result
+
+- json/parse/completion:
+    input: "{{ .model_result }}"
+  assign: result
+
+- return:
+    input: "{{ .result }}"

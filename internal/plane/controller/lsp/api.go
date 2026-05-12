@@ -3,10 +3,10 @@ package lsp
 import (
 	"context"
 	"fmt"
-	"mals/internal/lsp/protocol"
 	"mals/internal/lsp/server/stdio"
 	"mals/internal/plane/controller"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 	"sync"
 )
 
@@ -200,7 +200,7 @@ func (s *LspController) Stop(name string) error {
 	return nil
 }
 
-func (s *LspController) GetCapabilities(lspName string) (*protocol.ServerCapabilities, error) {
+func (s *LspController) GetCapabilities(lspName string) (*lsp.ServerCapabilities, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -215,7 +215,7 @@ func (s *LspController) GetCapabilities(lspName string) (*protocol.ServerCapabil
 	return value.lsp.Capabilities()
 }
 
-func (s *LspController) GetInfo(lspName string) (*protocol.ServerInfo, error) {
+func (s *LspController) GetInfo(lspName string) (*lsp.ServerInfo, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -274,7 +274,7 @@ func (s *LspController) GetAll() []*controller.LspData {
 	return datas
 }
 
-func (s *LspController) Initialize(lspName string, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
+func (s *LspController) Initialize(lspName string, params *lsp.InitializeParams) (*lsp.InitializeResult, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -289,7 +289,7 @@ func (s *LspController) Initialize(lspName string, params *protocol.InitializePa
 	return value.lsp.Initialize(params)
 }
 
-func (s *LspController) Initialized(lspName string, params *protocol.InitializedParams) error {
+func (s *LspController) Initialized(lspName string, params *lsp.InitializedParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -304,7 +304,7 @@ func (s *LspController) Initialized(lspName string, params *protocol.Initialized
 	return value.lsp.Initialized(params)
 }
 
-func (s *LspController) TextDocumentDidOpen(lspName string, params *protocol.DidOpenTextDocumentParams) error {
+func (s *LspController) TextDocumentDidOpen(lspName string, params *lsp.DidOpenTextDocumentParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -319,7 +319,7 @@ func (s *LspController) TextDocumentDidOpen(lspName string, params *protocol.Did
 	return value.lsp.TextDocumentDidOpen(params)
 }
 
-func (s *LspController) TextDocumentDidChange(lspName string, params *protocol.DidChangeTextDocumentParams) error {
+func (s *LspController) TextDocumentDidChange(lspName string, params *lsp.DidChangeTextDocumentParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -334,7 +334,7 @@ func (s *LspController) TextDocumentDidChange(lspName string, params *protocol.D
 	return value.lsp.TextDocumentDidChange(params)
 }
 
-func (s *LspController) TextDocumentDidClose(lspName string, params *protocol.DidCloseTextDocumentParams) error {
+func (s *LspController) TextDocumentDidClose(lspName string, params *lsp.DidCloseTextDocumentParams) error {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {
@@ -349,7 +349,7 @@ func (s *LspController) TextDocumentDidClose(lspName string, params *protocol.Di
 	return value.lsp.TextDocumentDidClose(params)
 }
 
-func (s *LspController) TextDocumentCompletion(lspName string, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+func (s *LspController) TextDocumentCompletion(lspName string, params *lsp.CompletionParams) (*lsp.CompletionList, error) {
 	value, _ := s.state.lsps.Load(lspName)
 
 	if value != nil {

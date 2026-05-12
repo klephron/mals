@@ -2,8 +2,8 @@ package client
 
 import (
 	"mals/internal/jsonrpc"
-	"mals/internal/lsp/protocol"
 	"mals/internal/util"
+	"mals/third_party/lsp"
 )
 
 func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
@@ -14,7 +14,7 @@ func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := util.JsonUnmarshal[protocol.InitializeParams](req.Params)
+	params, err := util.JsonUnmarshal[lsp.InitializeParams](req.Params)
 	if err != nil {
 		s.plane.Warnf("%T %v: %v", s, s.Name(), err)
 	}
@@ -23,7 +23,7 @@ func (s *LspClient) handleInitialize(msg jsonrpc.Message) {
 		resp := jsonrpc.Response{
 			Id: req.Id,
 			Error: &jsonrpc.Error{
-				Code:    int32(protocol.InvalidRequest),
+				Code:    int32(lsp.InvalidRequest),
 				Message: "no workspace folders",
 			},
 		}
@@ -58,7 +58,7 @@ func (s *LspClient) handleInitialized(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := util.JsonUnmarshal[protocol.InitializedParams](ntf.Params)
+	params, err := util.JsonUnmarshal[lsp.InitializedParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("%T %v: Initialized %v", s, s.Name(), err)
 	}
@@ -77,7 +77,7 @@ func (s *LspClient) handleTextDocumentDidOpen(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := util.JsonUnmarshal[protocol.DidOpenTextDocumentParams](ntf.Params)
+	params, err := util.JsonUnmarshal[lsp.DidOpenTextDocumentParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("%T %v: TextDocumentDidOpen %v", s, s.Name(), err)
 	}
@@ -96,7 +96,7 @@ func (s *LspClient) handleTextDocumentDidChange(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := util.JsonUnmarshal[protocol.DidChangeTextDocumentParams](ntf.Params)
+	params, err := util.JsonUnmarshal[lsp.DidChangeTextDocumentParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
 	}
@@ -115,7 +115,7 @@ func (s *LspClient) handleTextDocumentDidClose(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := util.JsonUnmarshal[protocol.DidCloseTextDocumentParams](ntf.Params)
+	params, err := util.JsonUnmarshal[lsp.DidCloseTextDocumentParams](ntf.Params)
 	if err != nil {
 		s.plane.Warnf("%T %v: TextDocumentDidClose %v", s, s.Name(), err)
 	}
@@ -134,7 +134,7 @@ func (s *LspClient) handleTextDocumentCompletion(msg jsonrpc.Message) {
 		return
 	}
 
-	params, err := util.JsonUnmarshal[protocol.CompletionParams](req.Params)
+	params, err := util.JsonUnmarshal[lsp.CompletionParams](req.Params)
 	if err != nil {
 		s.plane.Warnf("%T %v: TextDocumentCompletion %v", s, s.Name(), err)
 	}

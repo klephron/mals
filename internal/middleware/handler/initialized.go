@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 )
 
-func (s *Handler) InitializedDefault(params *protocol.InitializedParams) error {
+func (s *Handler) InitializedDefault(params *lsp.InitializedParams) error {
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
 		scope, err := s.getResourceScope(value.Scope)
 		if err != nil {
@@ -27,7 +27,7 @@ func (s *Handler) InitializedDefault(params *protocol.InitializedParams) error {
 				}
 			}()
 
-			lspParams := &protocol.InitializedParams{}
+			lspParams := &lsp.InitializedParams{}
 
 			err = s.plane.Lsp().Initialized(lspName, lspParams)
 			if err != nil {
@@ -47,7 +47,7 @@ func (s *Handler) InitializedDefault(params *protocol.InitializedParams) error {
 	return nil
 }
 
-func (s *Handler) Initialized(params *protocol.InitializedParams) error {
+func (s *Handler) Initialized(params *lsp.InitializedParams) error {
 	if *s.endpoints.Initialized.Default {
 		err := s.InitializedDefault(params)
 		if err != nil {

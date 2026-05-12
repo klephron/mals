@@ -2,8 +2,8 @@ package workspace
 
 import (
 	"fmt"
-	"mals/internal/lsp/protocol"
 	"mals/internal/middleware/document"
+	"mals/third_party/lsp"
 
 	"github.com/puzpuzpuz/xsync/v4"
 )
@@ -53,7 +53,7 @@ func (s *Workspace) DocumentDelete(uri string) error {
 	return nil
 }
 
-func (s *Workspace) DocumentUpdate(document *document.Document, version int32, changes []protocol.TextDocumentContentChangeEvent) error {
+func (s *Workspace) DocumentUpdate(document *document.Document, version int32, changes []lsp.TextDocumentContentChangeEvent) error {
 	ok := document.TextUpdate(version, changes)
 
 	if !ok {

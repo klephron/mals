@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"mals/internal/lsp/protocol"
+	"mals/third_party/lsp"
 )
 
 type LspServer interface {
@@ -10,14 +10,14 @@ type LspServer interface {
 	Kind() string
 	Run(ctx context.Context, onReady func()) error
 
-	Capabilities() (*protocol.ServerCapabilities, error)
-	Info() (*protocol.ServerInfo, error)
+	Capabilities() (*lsp.ServerCapabilities, error)
+	Info() (*lsp.ServerInfo, error)
 
-	Initialize(params *protocol.InitializeParams) (*protocol.InitializeResult, error)
-	Initialized(params *protocol.InitializedParams) error
-	TextDocumentDidOpen(params *protocol.DidOpenTextDocumentParams) error
-	TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error
-	TextDocumentDidClose(params *protocol.DidCloseTextDocumentParams) error
-	TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error)
+	Initialize(params *lsp.InitializeParams) (*lsp.InitializeResult, error)
+	Initialized(params *lsp.InitializedParams) error
+	TextDocumentDidOpen(params *lsp.DidOpenTextDocumentParams) error
+	TextDocumentDidChange(params *lsp.DidChangeTextDocumentParams) error
+	TextDocumentDidClose(params *lsp.DidCloseTextDocumentParams) error
+	TextDocumentCompletion(params *lsp.CompletionParams) (*lsp.CompletionList, error)
 	Shutdown() error
 }

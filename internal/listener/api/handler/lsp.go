@@ -2,22 +2,22 @@ package handler
 
 import (
 	"context"
-	"mals/internal/lsp/protocol"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
 	"mals/pkg/wire"
+	"mals/third_party/lsp"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
 type LspDto struct {
-	Name         string                       `json:"name"`
-	Status       controller.LspStatus         `json:"status"`
-	StatusFlags  []string                     `json:"status_flags"`
-	Config       *wire.Lsp                    `json:"config"`
-	Capabilities *protocol.ServerCapabilities `json:"capabilities"`
-	Info         *protocol.ServerInfo         `json:"info"`
+	Name         string                  `json:"name"`
+	Status       controller.LspStatus    `json:"status"`
+	StatusFlags  []string                `json:"status_flags"`
+	Config       *wire.Lsp               `json:"config"`
+	Capabilities *lsp.ServerCapabilities `json:"capabilities"`
+	Info         *lsp.ServerInfo         `json:"info"`
 }
 
 type LspGetInput struct {
@@ -33,23 +33,23 @@ var (
 	}
 )
 
-func lspToDto(lsp *controller.LspData) LspDto {
+func lspToDto(data *controller.LspData) LspDto {
 	statusFlags := make([]string, 0, 4)
 	for bit, name := range lspStatusFlags {
-		if lsp.Status&bit != 0 {
+		if data.Status&bit != 0 {
 			statusFlags = append(statusFlags, name)
 		}
 	}
 
 	t := LspDto{
-		Name:         lsp.Name,
-		Status:       lsp.Status,
+		Name:         data.Name,
+		Status:       data.Status,
 		StatusFlags:  statusFlags,
 		Config:       &wire.Lsp{},
-		Capabilities: lsp.Capabilities,
-		Info:         lsp.Info,
+		Capabilities: data.Capabilities,
+		Info:         data.Info,
 	}
-	t.Config.Wire(lsp.Config)
+	t.Config.Wire(data.Config)
 
 	return t
 }

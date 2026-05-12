@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"mals/internal/lsp/protocol"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 )
 
 type LspStatus int32
@@ -18,8 +18,8 @@ type LspData struct {
 	Name         string
 	Status       LspStatus
 	Config       *config.Lsp
-	Capabilities *protocol.ServerCapabilities
-	Info         *protocol.ServerInfo
+	Capabilities *lsp.ServerCapabilities
+	Info         *lsp.ServerInfo
 }
 
 type LspController interface {
@@ -34,16 +34,16 @@ type LspController interface {
 	Start(name string) error
 	Stop(name string) error
 
-	GetCapabilities(name string) (*protocol.ServerCapabilities, error)
-	GetInfo(name string) (*protocol.ServerInfo, error)
+	GetCapabilities(name string) (*lsp.ServerCapabilities, error)
+	GetInfo(name string) (*lsp.ServerInfo, error)
 	Get(name string) (*LspData, error)
 	GetAll() []*LspData
 
-	Initialize(name string, params *protocol.InitializeParams) (*protocol.InitializeResult, error)
-	Initialized(name string, params *protocol.InitializedParams) error
-	TextDocumentDidOpen(name string, params *protocol.DidOpenTextDocumentParams) error
-	TextDocumentDidChange(name string, params *protocol.DidChangeTextDocumentParams) error
-	TextDocumentDidClose(name string, params *protocol.DidCloseTextDocumentParams) error
-	TextDocumentCompletion(name string, params *protocol.CompletionParams) (*protocol.CompletionList, error)
+	Initialize(name string, params *lsp.InitializeParams) (*lsp.InitializeResult, error)
+	Initialized(name string, params *lsp.InitializedParams) error
+	TextDocumentDidOpen(name string, params *lsp.DidOpenTextDocumentParams) error
+	TextDocumentDidChange(name string, params *lsp.DidChangeTextDocumentParams) error
+	TextDocumentDidClose(name string, params *lsp.DidCloseTextDocumentParams) error
+	TextDocumentCompletion(name string, params *lsp.CompletionParams) (*lsp.CompletionList, error)
 	Shutdown(name string) error
 }

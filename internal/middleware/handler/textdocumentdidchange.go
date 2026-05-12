@@ -2,13 +2,13 @@ package handler
 
 import (
 	"fmt"
-	"mals/internal/lsp/protocol"
 	"mals/internal/middleware/document"
 	"mals/internal/util"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 )
 
-func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDocumentParams) error {
+func (s *Handler) TextDocumentDidChangeDefault(params *lsp.DidChangeTextDocumentParams) error {
 	uri := params.TextDocument.URI
 	workspaces := s.workspaceFindAllByPrefix(uri)
 
@@ -57,22 +57,22 @@ func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDoc
 				return true
 			}
 
-			var syncKind protocol.TextDocumentSyncKind
+			var syncKind lsp.TextDocumentSyncKind
 
 			switch v := capabilities.TextDocumentSync.(type) {
-			case protocol.TextDocumentSyncOptions:
+			case lsp.TextDocumentSyncOptions:
 				syncKind = v.Change
-			case protocol.TextDocumentSyncKind:
+			case lsp.TextDocumentSyncKind:
 				syncKind = v
 			case float64:
-				syncKind = protocol.TextDocumentSyncKind(v)
+				syncKind = lsp.TextDocumentSyncKind(v)
 			case map[string]any:
 				data, err := util.JsonMarshal(&v)
 				if err != nil {
 					s.plane.Errorf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
 					return true
 				}
-				if syncOptions, err := util.JsonUnmarshal[protocol.TextDocumentSyncOptions](data); err != nil {
+				if syncOptions, err := util.JsonUnmarshal[lsp.TextDocumentSyncOptions](data); err != nil {
 					s.plane.Warnf("%T %v: TextDocumentDidChange %v", s, s.Name(), err)
 					syncKind = syncOptions.Change
 				} else {
@@ -85,10 +85,10 @@ func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDoc
 
 			s.plane.Debugf("%T %v: TextDocumentDidChange sync kind %d", s, s.Name(), syncKind)
 
-			var lspParams *protocol.DidChangeTextDocumentParams
+			var lspParams *lsp.DidChangeTextDocumentParams
 
 			switch syncKind {
-			case protocol.Full:
+			case lsp.Full:
 				uri := params.TextDocument.TextDocumentIdentifier.URI
 
 				var document *document.Document
@@ -105,21 +105,21 @@ func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDoc
 					return true
 				}
 
-				lspParams = &protocol.DidChangeTextDocumentParams{
-					TextDocument: protocol.VersionedTextDocumentIdentifier{
-						TextDocumentIdentifier: protocol.TextDocumentIdentifier{
+				lspParams = &lsp.DidChangeTextDocumentParams{
+					TextDocument: lsp.VersionedTextDocumentIdentifier{
+						TextDocumentIdentifier: lsp.TextDocumentIdentifier{
 							URI: uri,
 						},
 						Version: params.TextDocument.Version,
 					},
-					ContentChanges: []protocol.TextDocumentContentChangeEvent{
+					ContentChanges: []lsp.TextDocumentContentChangeEvent{
 						{
 							Text: document.Text(),
 						},
 					},
 				}
 
-			case protocol.Incremental:
+			case lsp.Incremental:
 				lspParams = params
 
 			default:
@@ -147,7 +147,7 @@ func (s *Handler) TextDocumentDidChangeDefault(params *protocol.DidChangeTextDoc
 	return nil
 }
 
-func (s *Handler) TextDocumentDidChange(params *protocol.DidChangeTextDocumentParams) error {
+func (s *Handler) TextDocumentDidChange(params *lsp.DidChangeTextDocumentParams) error {
 	if *s.endpoints.TextDocumentDidChange.Default {
 		err := s.TextDocumentDidChangeDefault(params)
 		if err != nil {

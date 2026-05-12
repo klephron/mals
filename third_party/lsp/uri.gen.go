@@ -1,4 +1,4 @@
-package protocol
+package lsp
 
 type URI = string
 type DocumentURI = string

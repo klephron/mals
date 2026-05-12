@@ -3,17 +3,17 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"mals/internal/lsp/protocol"
 	"mals/internal/middleware/execution"
 	"mals/pkg/config"
 	"mals/pkg/info"
+	"mals/third_party/lsp"
 	"strings"
 )
 
-func (s *Handler) TextDocumentCompletionDefault(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	list := protocol.CompletionList{
+func (s *Handler) TextDocumentCompletionDefault(params *lsp.CompletionParams) (*lsp.CompletionList, error) {
+	list := lsp.CompletionList{
 		IsIncomplete: false,
-		Items:        make([]protocol.CompletionItem, 0),
+		Items:        make([]lsp.CompletionItem, 0),
 	}
 
 	s.resources.Range(func(key string, value *config.HandlerLspResource) bool {
@@ -43,12 +43,12 @@ func (s *Handler) TextDocumentCompletionDefault(params *protocol.CompletionParam
 				return true
 			}
 
-			lspItems := make([]protocol.CompletionItem, len(lspList.Items))
+			lspItems := make([]lsp.CompletionItem, len(lspList.Items))
 			for i, s := range lspList.Items {
-				lspItems[i] = protocol.CompletionItem{
+				lspItems[i] = lsp.CompletionItem{
 					Label:         strings.TrimSpace(s.Label),
 					Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, lspName),
-					Documentation: &protocol.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
+					Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
 				}
 			}
 
@@ -65,7 +65,7 @@ func (s *Handler) TextDocumentCompletionDefault(params *protocol.CompletionParam
 	return &list, nil
 }
 
-func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
+func (s *Handler) TextDocumentCompletionCustom(params *lsp.CompletionParams) (*lsp.CompletionList, error) {
 
 	exec := execution.New(s.plane, s.clientName)
 
@@ -110,7 +110,7 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 	bytes, err := json.Marshal(completionItemsAny)
 	s.plane.Infof("%T %v: got %v", s, s.Name(), string(bytes))
 
-	completionItems, ok := completionItemsAny.([]protocol.CompletionItem)
+	completionItems, ok := completionItemsAny.([]lsp.CompletionItem)
 
 	if !ok {
 		err := fmt.Errorf("output type %T is not of type []protocol.CompletionItem", completionItemsAny)
@@ -118,7 +118,7 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 		return nil, err
 	}
 
-	list := &protocol.CompletionList{
+	list := &lsp.CompletionList{
 		IsIncomplete: false,
 		Items:        completionItems,
 	}
@@ -126,8 +126,8 @@ func (s *Handler) TextDocumentCompletionCustom(params *protocol.CompletionParams
 	return list, nil
 }
 
-func (s *Handler) TextDocumentCompletion(params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	var list *protocol.CompletionList
+func (s *Handler) TextDocumentCompletion(params *lsp.CompletionParams) (*lsp.CompletionList, error) {
+	var list *lsp.CompletionList
 	var err error
 
 	if *s.endpoints.TextDocumentCompletion.Default {

@@ -10,7 +10,6 @@ models:
     api:
       kind: openai
       url: http://127.0.0.1:9652
-      max_tokens: 250
       temperature: 0.5
 
 lsps:

@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 	"mals/internal/jsonrpc"
-	"mals/internal/lsp/protocol"
 	"mals/internal/plane"
 	"mals/pkg/config"
+	"mals/third_party/lsp"
 	"os/exec"
 	"sync"
 	"sync/atomic"
@@ -30,8 +30,8 @@ type LspServerStdio struct {
 	running      bool
 	reader       *bufio.Reader
 	writer       *bufio.Writer
-	capabilities *protocol.ServerCapabilities
-	info         *protocol.ServerInfo
+	capabilities *lsp.ServerCapabilities
+	info         *lsp.ServerInfo
 
 	tasks *xsync.Map[int32, *lspTask]
 	taskc atomic.Int32

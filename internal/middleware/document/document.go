@@ -1,7 +1,7 @@
 package document
 
 import (
-	"mals/internal/lsp/protocol"
+	"mals/third_party/lsp"
 	"strings"
 )
 
@@ -90,7 +90,7 @@ func (d *Document) Text() string {
 	return strings.Join(d.lines, "\n")
 }
 
-func (d *Document) TextUpdate(version int32, changes []protocol.TextDocumentContentChangeEvent) bool {
+func (d *Document) TextUpdate(version int32, changes []lsp.TextDocumentContentChangeEvent) bool {
 	if d.version >= version {
 		return false
 	}
