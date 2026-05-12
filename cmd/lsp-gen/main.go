@@ -16,7 +16,7 @@ const (
 	source = "https://raw.githubusercontent.com/golang/tools/refs/heads/master"
 )
 
-func httpRead(source string, file string) []byte {
+func readHttp(source string, file string) []byte {
 	sourcePath, err := url.JoinPath(source, file)
 	if err != nil {
 		log.Fatal(err)
@@ -52,19 +52,22 @@ func write(target string, bytes []byte) {
 	}
 }
 
-func modify(args args, bytes []byte) []byte {
+func modifyPackage(args args, bytes []byte) []byte {
 	re := regexp.MustCompile(`(?m)^package\s+\w+`)
 	modified := re.ReplaceAll(bytes, []byte("package "+args.Package))
 	return modified
 }
 
-func getTargetPath(args args, file string) string {
-	targetName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file)) + "." + args.Suffix + filepath.Ext(file)
+func getTargetPath(args args, file string, suffix bool) string {
+	targetName := strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))
+	if suffix {
+		targetName = targetName + "." + args.Suffix + filepath.Ext(file)
+	}
 	targetPath := path.Join(path.Join(args.Target, targetName))
 	return targetPath
 }
 
-func genGopls(args args) {
+func installGoplsSources(args args) {
 	files := []string{
 		"gopls/internal/protocol/tsprotocol.go",
 		"gopls/internal/protocol/tsdocument_changes.go",
@@ -72,28 +75,42 @@ func genGopls(args args) {
 	}
 
 	for _, file := range files {
-		bytes := httpRead(source, file)
-		modified := modify(args, bytes)
-		targetPath := getTargetPath(args, file)
+		bytes := readHttp(source, file)
+		modified := modifyPackage(args, bytes)
+		targetPath := getTargetPath(args, file, true)
 		write(targetPath, modified)
 	}
 }
 
-func genUri(args args) {
+func installGoplsMeta(args args) {
+	files := []string{
+		"LICENSE",
+	}
+
+	for _, file := range files {
+		bytes := readHttp(source, file)
+		modified := modifyPackage(args, bytes)
+		targetPath := getTargetPath(args, file, false)
+		write(targetPath, modified)
+	}
+}
+
+func installUri(args args) {
 	file := "uri.go"
 	bytes := []byte(`package protocol
 
 type URI = string
 type DocumentURI = string`)
 
-	modified := modify(args, bytes)
-	targetPath := getTargetPath(args, file)
+	modified := modifyPackage(args, bytes)
+	targetPath := getTargetPath(args, file, true)
 	write(targetPath, modified)
 }
 
 func main() {
 	args := argParse()
 
-	genGopls(args)
-	genUri(args)
+	installGoplsSources(args)
+	installGoplsMeta(args)
+	installUri(args)
 }
