@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"mals/internal/log"
-	"mals/pkg/config"
+	"mals/pkg/core"
 	"os"
 )
 
@@ -13,7 +13,7 @@ type LogFile struct {
 	logger *slog.Logger
 }
 
-func Open(path string, cLevel config.LogLevel) (*LogFile, error) {
+func Open(path string, cLevel core.LogLevel) (*LogFile, error) {
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 
 	if err != nil {

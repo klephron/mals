@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"mals/internal/middleware/execution"
 	"mals/pkg/config"
-	"mals/pkg/info"
+	"mals/pkg/core"
 	"mals/third_party/lsp"
 	"strings"
 )
@@ -47,7 +47,7 @@ func (s *Handler) TextDocumentCompletionDefault(params *lsp.CompletionParams) (*
 			for i, s := range lspList.Items {
 				lspItems[i] = lsp.CompletionItem{
 					Label:         strings.TrimSpace(s.Label),
-					Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, lspName),
+					Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, lspName),
 					Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
 				}
 			}

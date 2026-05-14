@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"mals/internal/util"
 	"mals/pkg/config"
+	"mals/pkg/core"
 	"testing"
 )
 
@@ -113,14 +114,14 @@ func TestConfigUnwire(t *testing.T) {
 					Logs: []*config.Log{
 						{
 							Name:  "first",
-							Level: config.LogLevelInfo,
+							Level: core.LogLevelInfo,
 							Output: &config.LogOutputFile{
 								File: "",
 							},
 						},
 						{
 							Name:  "second",
-							Level: config.LogLevelError,
+							Level: core.LogLevelError,
 							Output: &config.LogOutputFile{
 								File: "/dev/null",
 							},

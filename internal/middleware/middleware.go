@@ -6,7 +6,7 @@ import (
 	"mals/internal/plane"
 	"mals/internal/scope"
 	"mals/pkg/config"
-	"mals/pkg/info"
+	"mals/pkg/core"
 	"mals/third_party/lsp"
 )
 
@@ -87,8 +87,8 @@ func (s *Middleware) Initialize(params *lsp.InitializeParams) (*lsp.InitializeRe
 			CompletionProvider: &lsp.CompletionOptions{},
 		},
 		ServerInfo: &lsp.ServerInfo{
-			Name:    info.MiddlewareServerName,
-			Version: info.MiddlewareVersion,
+			Name:    core.MiddlewareServerName,
+			Version: core.MiddlewareVersion,
 		},
 	}
 

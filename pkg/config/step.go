@@ -1,5 +1,7 @@
 package config
 
+import "mals/pkg/core"
+
 type Step struct {
 	Name       *string
 	Assign     *string
@@ -47,22 +49,16 @@ func (s *StepJsonParseCompletion) StepDefinitionKind() string {
 }
 
 // model
-type StepModelSchema string
-
-const (
-	StepModelSchemaJsonCompletionItems StepModelSchema = "json/completionItems"
-)
-
 type StepModelMessage struct {
-	Role    string
-	Content string
+	Role    core.ModelRole
+	Content *string
 }
 
 type StepModel struct {
 	Resource *string
 	Prompt   *string
 	Messages []*StepModelMessage
-	Schema   StepModelSchema
+	Schema   core.ModelSchema
 }
 
 func (s *StepModel) StepDefinitionKind() string {
@@ -73,7 +69,7 @@ func (s *StepModel) StepDefinitionKind() string {
 type StepModelRaw struct {
 	Resource *string
 	Prompt   *string
-	Schema   StepModelSchema
+	Schema   core.ModelSchema
 }
 
 func (s *StepModelRaw) StepDefinitionKind() string {

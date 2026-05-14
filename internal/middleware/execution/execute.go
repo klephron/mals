@@ -6,7 +6,7 @@ import (
 	"mals/internal/model"
 	"mals/internal/util"
 	"mals/pkg/config"
-	"mals/pkg/info"
+	"mals/pkg/core"
 	"mals/third_party/lsp"
 	"strings"
 )
@@ -196,7 +196,7 @@ func (s *ExecutionEnvironment) executeStepLspCompletion(def *config.StepLspCompl
 	for i, item := range lspList.Items {
 		items[i] = lsp.CompletionItem{
 			Label:         strings.TrimSpace(item.Label),
-			Detail:        fmt.Sprintf("%v(%v)", info.MiddlewareServerName, lspName),
+			Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, lspName),
 			Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
 		}
 	}
@@ -287,7 +287,7 @@ func (s *ExecutionEnvironment) executeStepModelRaw(def *config.StepModelRaw) (an
 	}
 	defer s.plane.Scope().ModelRelease(modelName, token)
 
-	task := model.NewTask(*def.Prompt, def.Schema)
+	task := model.NewTaskWPrompt(*def.Prompt, def.Schema)
 
 	return s.plane.Model().TaskExecClient(modelName, task, s.clientName)
 }
@@ -296,16 +296,12 @@ func (s *ExecutionEnvironment) executeStepModel(def *config.StepModel, memory ma
 	if def.Resource == nil {
 		return nil, fmt.Errorf("model resource not defined")
 	}
-	if def.Prompt == nil {
-		return nil, fmt.Errorf("model prompt not defined")
-	}
 
-	prompt, err := s.renderString(*def.Prompt, memory)
-	if err != nil {
-		return nil, err
+	if def.Prompt != nil && len(def.Messages) > 0 {
+		return nil, fmt.Errorf("cannot specify both prompt and messages")
 	}
-	if prompt == nil {
-		prompt = util.Ptr("")
+	if def.Prompt == nil && len(def.Messages) == 0 {
+		return nil, fmt.Errorf("either prompt or messages must be specified")
 	}
 
 	resource, ok := s.resources.Load(*def.Resource)
@@ -324,7 +320,39 @@ func (s *ExecutionEnvironment) executeStepModel(def *config.StepModel, memory ma
 	}
 	defer s.plane.Scope().ModelRelease(modelName, token)
 
-	task := model.NewTask(*prompt, def.Schema)
+	var task *model.Task
+	if def.Prompt != nil {
+		prompt, err := s.renderString(*def.Prompt, memory)
+		if err != nil {
+			return nil, err
+		}
+		if prompt == nil {
+			prompt = util.Ptr("")
+		}
+
+		task = model.NewTaskWPrompt(*prompt, def.Schema)
+	} else {
+		messages := make([]core.ModelMessage, len(def.Messages))
+
+		for i, msg := range def.Messages {
+			if msg.Content == nil {
+				return nil, fmt.Errorf("model message content is nil")
+			}
+			content, err := s.renderString(*msg.Content, memory)
+			if err != nil {
+				return nil, err
+			}
+			if content == nil {
+				content = util.Ptr("")
+			}
+			messages[i] = core.ModelMessage{
+				Role:    msg.Role,
+				Content: *content,
+			}
+		}
+
+		task = model.NewTaskWMessages(messages, def.Schema)
+	}
 
 	return s.plane.Model().TaskExecClient(modelName, task, s.clientName)
 }

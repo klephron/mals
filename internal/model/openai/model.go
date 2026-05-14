@@ -5,6 +5,7 @@ import (
 	"mals/internal/model"
 	"mals/internal/plane"
 	"mals/pkg/config"
+	"mals/pkg/core"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -69,7 +70,7 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 	var responseFormat openai.ChatCompletionNewParamsResponseFormatUnion
 
 	switch task.Schema {
-	case config.StepModelSchemaJsonCompletionItems:
+	case core.ModelSchemaJsonCompletionItems:
 		completionItemsSchema := map[string]any{
 			"type": "array",
 			"items": map[string]any{
@@ -86,7 +87,7 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{
 			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
 				JSONSchema: openai.ResponseFormatJSONSchemaJSONSchemaParam{
-					Name:   string(config.StepModelSchemaJsonCompletionItems),
+					Name:   string(core.ModelSchemaJsonCompletionItems),
 					Strict: openai.Bool(true),
 					Schema: completionItemsSchema,
 				},
@@ -96,10 +97,23 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{}
 	}
 
+	messages := make([]openai.ChatCompletionMessageParamUnion, len(task.Messages))
+
+	for i, msg := range task.Messages {
+		switch msg.Role {
+		case core.ModelRoleSystem:
+			messages[i] = openai.SystemMessage(msg.Content)
+		case core.ModelRoleUser:
+			messages[i] = openai.UserMessage(msg.Content)
+		case core.ModelRoleAssistant:
+			messages[i] = openai.AssistantMessage(msg.Content)
+		default:
+			messages[i] = openai.UserMessage(msg.Content)
+		}
+	}
+
 	resp, err := s.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(task.Text),
-		},
+		Messages:            messages,
 		MaxCompletionTokens: s.maxTokens,
 		Temperature:         s.temperature,
 		N:                   openai.Int(1),

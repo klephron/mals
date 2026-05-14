@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"mals/pkg/config"
+	"mals/pkg/core"
 )
 
 type Log struct {
@@ -35,13 +36,13 @@ func (o *Log) Wire(c *config.Log) error {
 	o.Name = c.Name
 
 	switch c.Level {
-	case config.LogLevelError:
+	case core.LogLevelError:
 		o.Level = LogLevelError
-	case config.LogLevelWarn:
+	case core.LogLevelWarn:
 		o.Level = LogLevelWarn
-	case config.LogLevelInfo:
+	case core.LogLevelInfo:
 		o.Level = LogLevelInfo
-	case config.LogLevelDebug:
+	case core.LogLevelDebug:
 		o.Level = LogLevelDebug
 	default:
 		return fmt.Errorf("unknown log level")
@@ -67,13 +68,13 @@ func (o *Log) Unwire() (*config.Log, error) {
 
 	switch o.Level {
 	case LogLevelError:
-		c.Level = config.LogLevelError
+		c.Level = core.LogLevelError
 	case LogLevelWarn:
-		c.Level = config.LogLevelWarn
+		c.Level = core.LogLevelWarn
 	case LogLevelInfo:
-		c.Level = config.LogLevelInfo
+		c.Level = core.LogLevelInfo
 	case LogLevelDebug:
-		c.Level = config.LogLevelDebug
+		c.Level = core.LogLevelDebug
 	default:
 		return nil, fmt.Errorf("unknown log level")
 	}

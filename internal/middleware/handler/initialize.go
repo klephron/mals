@@ -2,7 +2,7 @@ package handler
 
 import (
 	"mals/pkg/config"
-	"mals/pkg/info"
+	"mals/pkg/core"
 	"mals/third_party/lsp"
 	"os"
 )
@@ -46,8 +46,8 @@ func (s *Handler) InitializeDefault(params *lsp.InitializeParams) error {
 				XInitializeParams: lsp.XInitializeParams{
 					ProcessID: int32(os.Getpid()),
 					ClientInfo: &lsp.ClientInfo{
-						Name:    info.MiddlewareClientName,
-						Version: info.MiddlewareVersion,
+						Name:    core.MiddlewareClientName,
+						Version: core.MiddlewareVersion,
 					},
 					Locale: params.Locale,
 					Capabilities: lsp.ClientCapabilities{

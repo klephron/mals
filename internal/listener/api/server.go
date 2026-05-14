@@ -2,7 +2,7 @@ package api
 
 import (
 	"mals/internal/listener/api/handler"
-	"mals/pkg/info"
+	"mals/pkg/core"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -16,7 +16,7 @@ func (s *ListenerApi) newServer() *http.Server {
 	router.GET("/metrics", handler.Metrics())
 
 	// api
-	config := huma.DefaultConfig("MALS API", info.MiddlewareVersion)
+	config := huma.DefaultConfig("MALS API", core.MiddlewareVersion)
 	config.OpenAPIPath = "/openapi"
 	config.DocsPath = "/docs"
 

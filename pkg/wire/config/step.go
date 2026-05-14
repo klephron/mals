@@ -1,8 +1,16 @@
 package config
 
-import "mals/pkg/config"
+import (
+	"mals/pkg/config"
+	"mals/pkg/core"
+)
 
 type Step map[string]any
+
+type StepModelMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
 
 func (o *Step) Wire(c *config.Step) error {
 	return nil
@@ -80,10 +88,10 @@ func (o *Step) Unwire() (*config.Step, error) {
 					d.Prompt = &prompt
 				}
 				if raw, ok := vm["schema"].(string); ok {
-					schema := config.StepModelSchema(raw)
+					schema := core.ModelSchema(raw)
 					switch schema {
-					case config.StepModelSchemaJsonCompletionItems:
-						d.Schema = config.StepModelSchemaJsonCompletionItems
+					case core.ModelSchemaJsonCompletionItems:
+						d.Schema = core.ModelSchemaJsonCompletionItems
 					default:
 						d.Schema = ""
 					}
@@ -102,11 +110,36 @@ func (o *Step) Unwire() (*config.Step, error) {
 				if prompt, ok := vm["prompt"].(string); ok {
 					d.Prompt = &prompt
 				}
+				if messagesRaw, ok := vm["messages"].([]any); ok {
+					messages := make([]*config.StepModelMessage, len(messagesRaw))
+					for i, item := range messagesRaw {
+						msgMap, ok := item.(map[string]any)
+						if !ok {
+							continue
+						}
+						messages[i] = &config.StepModelMessage{}
+						role, _ := msgMap["role"].(string)
+						switch core.ModelRole(role) {
+						case core.ModelRoleSystem:
+							messages[i].Role = core.ModelRoleSystem
+						case core.ModelRoleUser:
+							messages[i].Role = core.ModelRoleUser
+						case core.ModelRoleAssistant:
+							messages[i].Role = core.ModelRoleAssistant
+						default:
+						}
+						content, ok := msgMap["content"].(string)
+						if ok {
+							messages[i].Content = &content
+						}
+					}
+					d.Messages = messages
+				}
 				if raw, ok := vm["schema"].(string); ok {
-					schema := config.StepModelSchema(raw)
+					schema := core.ModelSchema(raw)
 					switch schema {
-					case config.StepModelSchemaJsonCompletionItems:
-						d.Schema = config.StepModelSchemaJsonCompletionItems
+					case core.ModelSchemaJsonCompletionItems:
+						d.Schema = core.ModelSchemaJsonCompletionItems
 					default:
 						d.Schema = ""
 					}

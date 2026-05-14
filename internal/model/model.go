@@ -2,22 +2,31 @@ package model
 
 import (
 	"context"
-	"mals/pkg/config"
+	"mals/pkg/core"
 
 	"github.com/google/uuid"
 )
 
 type Task struct {
-	Id           uuid.UUID              `json:"id"`
-	Text         string                 `json:"text"`
-	Schema       config.StepModelSchema `json:"schema"`
-	SchemaStrict bool                   `json:"schema_strict"`
+	Id           uuid.UUID           `json:"id"`
+	Messages     []core.ModelMessage `json:"messages,omitempty"`
+	Schema       core.ModelSchema    `json:"schema"`
+	SchemaStrict bool                `json:"schema_strict"`
 }
 
-func NewTask(text string, schema config.StepModelSchema) *Task {
+func NewTaskWPrompt(prompt string, schema core.ModelSchema) *Task {
 	return &Task{
 		Id:           uuid.New(),
-		Text:         text,
+		Messages:     []core.ModelMessage{{Role: core.ModelRoleUser, Content: prompt}},
+		Schema:       schema,
+		SchemaStrict: true,
+	}
+}
+
+func NewTaskWMessages(messages []core.ModelMessage, schema core.ModelSchema) *Task {
+	return &Task{
+		Id:           uuid.New(),
+		Messages:     messages,
 		Schema:       schema,
 		SchemaStrict: true,
 	}

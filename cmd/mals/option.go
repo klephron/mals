@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"mals/pkg/info"
+	"mals/pkg/core"
 	"os"
 	"path/filepath"
 )
@@ -22,7 +22,7 @@ func newOptions(args args) *options {
 		configDir = filepath.Join(home, ".config")
 	}
 	if options.ConfigPath == "" {
-		options.ConfigPath = filepath.Join(configDir, info.AppName, "config.toml")
+		options.ConfigPath = filepath.Join(configDir, core.AppName, "config.toml")
 	}
 
 	return &options

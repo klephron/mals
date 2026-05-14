@@ -1,19 +1,12 @@
 package config
 
+import "mals/pkg/core"
+
 type Log struct {
 	Name   string
-	Level  LogLevel
+	Level  core.LogLevel
 	Output LogOutput
 }
-
-type LogLevel string
-
-const (
-	LogLevelDebug LogLevel = "debug"
-	LogLevelInfo  LogLevel = "info"
-	LogLevelWarn  LogLevel = "warn"
-	LogLevelError LogLevel = "error"
-)
 
 type LogOutput interface {
 	LogOutputKind() string
@@ -29,7 +22,7 @@ func (s *LogOutputFile) LogOutputKind() string {
 
 func (s *Log) Default() {
 	if s.Level == "" {
-		s.Level = LogLevelInfo
+		s.Level = core.LogLevelInfo
 	}
 	switch co := s.Output.(type) {
 	case *LogOutputFile:

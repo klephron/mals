@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"mals/internal/util"
 	"mals/pkg/config"
+	"mals/pkg/core"
 	"testing"
 )
 
@@ -140,7 +141,33 @@ func TestConfigStepUnwire(t *testing.T) {
 					Definition: &config.StepModel{
 						Resource: util.Ptr("r1"),
 						Prompt:   util.Ptr("p1"),
-						Schema:   config.StepModelSchemaJsonCompletionItems,
+						Schema:   core.ModelSchemaJsonCompletionItems,
+					},
+				},
+				error: false,
+			},
+		},
+		{
+			name: "model with messages",
+			input: &Step{
+				"model": map[string]any{
+					"resource": "r1",
+					"messages": []any{
+						map[string]any{"role": "system", "content": "You are a helpful assistant."},
+						map[string]any{"role": "user", "content": "Hello"},
+					},
+					"schema": "json/completionItems",
+				},
+			},
+			expected: testExpected{
+				output: &config.Step{
+					Definition: &config.StepModel{
+						Resource: util.Ptr("r1"),
+						Messages: []*config.StepModelMessage{
+							{Role: core.ModelRoleSystem, Content: util.Ptr("You are a helpful assistant.")},
+							{Role: core.ModelRoleUser, Content: util.Ptr("Hello")},
+						},
+						Schema: core.ModelSchemaJsonCompletionItems,
 					},
 				},
 				error: false,
