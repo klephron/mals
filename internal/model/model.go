@@ -8,27 +8,24 @@ import (
 )
 
 type Task struct {
-	Id           uuid.UUID           `json:"id"`
-	Messages     []core.ModelMessage `json:"messages,omitempty"`
-	Schema       core.ModelSchema    `json:"schema"`
-	SchemaStrict bool                `json:"schema_strict"`
+	Id         uuid.UUID            `json:"id"`
+	Messages   []core.ModelMessage  `json:"messages,omitempty"`
+	Parameters core.ModelParameters `json:"parameters"`
 }
 
-func NewTaskWPrompt(prompt string, schema core.ModelSchema) *Task {
+func NewTaskWPrompt(prompt string, parameters core.ModelParameters) *Task {
 	return &Task{
-		Id:           uuid.New(),
-		Messages:     []core.ModelMessage{{Role: core.ModelRoleUser, Content: prompt}},
-		Schema:       schema,
-		SchemaStrict: true,
+		Id:         uuid.New(),
+		Messages:   []core.ModelMessage{{Role: core.ModelRoleUser, Content: prompt}},
+		Parameters: parameters,
 	}
 }
 
-func NewTaskWMessages(messages []core.ModelMessage, schema core.ModelSchema) *Task {
+func NewTaskWMessages(messages []core.ModelMessage, parameters core.ModelParameters) *Task {
 	return &Task{
-		Id:           uuid.New(),
-		Messages:     messages,
-		Schema:       schema,
-		SchemaStrict: true,
+		Id:         uuid.New(),
+		Messages:   messages,
+		Parameters: parameters,
 	}
 }
 

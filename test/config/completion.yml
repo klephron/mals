@@ -10,8 +10,6 @@ models:
     api:
       kind: openai
       url: http://localhost:9652
-      max_tokens: 250
-      temperature: 0.5
 
 lsps:
   - name: clangd
@@ -65,18 +63,22 @@ handlers:
               do:
                 - model:
                     resource: llama
-                    prompt: |
-                      {{ .llm_system }}
-
-                      Document info:
-                        - path: {{ .file.path }}
-
-                      Text:
-                      {{ .file.text }}
-
-                      Text before:
-                      {{ .file.text_before }}
-                  assign: llm_result
+                    parameters:
+                      schema: json/completionItems
+                      max_tokens: 250
+                      temperature: 0.8
+                    messages:
+                      - role: system
+                        content: "You are a helpful completion engine. Complete text between <text_before_end> and <text_after_start>. Write only completion results. No decision comments."
+                      - role: user
+                        content: |
+                          Document Path: {{ .file.path }}
+                          <text_before_start>
+                          {{ .file.text_before }}
+                          <text_before_end>
+                          <text_after_start>
+                          {{ .file.text_before }}
+                          <text_after_end>
 
           - if:
               condition: "{{ .llm_result }}"

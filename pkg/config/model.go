@@ -10,9 +10,7 @@ type ModelApi interface {
 }
 
 type ModelApiOpenai struct {
-	Url         string
-	MaxTokens   *int32
-	Temperature *float32
+	Url string
 }
 
 func (s *ModelApiOpenai) ModelApiKind() string {

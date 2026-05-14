@@ -149,9 +149,7 @@ func TestConfigUnwire(t *testing.T) {
 						{
 							Name: "first",
 							Api: &config.ModelApiOpenai{
-								Url:         "",
-								MaxTokens:   nil,
-								Temperature: nil,
+								Url: "",
 							},
 						},
 					},
@@ -166,10 +164,8 @@ func TestConfigUnwire(t *testing.T) {
 					{
 						Name: "first",
 						Api: &ModelApi{
-							Kind:        ModelApiKindOpenai,
-							Url:         util.Ptr("http://localhost:8091"),
-							MaxTokens:   util.Ptr(int32(250)),
-							Temperature: util.Ptr(float32(0.87)),
+							Kind: ModelApiKindOpenai,
+							Url:  util.Ptr("http://localhost:8091"),
 						},
 					},
 				},
@@ -180,9 +176,7 @@ func TestConfigUnwire(t *testing.T) {
 						{
 							Name: "first",
 							Api: &config.ModelApiOpenai{
-								Url:         "http://localhost:8091",
-								MaxTokens:   util.Ptr(int32(250)),
-								Temperature: util.Ptr(float32(0.87)),
+								Url: "http://localhost:8091",
 							},
 						},
 					},

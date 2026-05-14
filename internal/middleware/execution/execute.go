@@ -287,7 +287,7 @@ func (s *ExecutionEnvironment) executeStepModelRaw(def *config.StepModelRaw) (an
 	}
 	defer s.plane.Scope().ModelRelease(modelName, token)
 
-	task := model.NewTaskWPrompt(*def.Prompt, def.Schema)
+	task := model.NewTaskWPrompt(*def.Prompt, def.Parameters)
 
 	return s.plane.Model().TaskExecClient(modelName, task, s.clientName)
 }
@@ -330,7 +330,7 @@ func (s *ExecutionEnvironment) executeStepModel(def *config.StepModel, memory ma
 			prompt = util.Ptr("")
 		}
 
-		task = model.NewTaskWPrompt(*prompt, def.Schema)
+		task = model.NewTaskWPrompt(*prompt, def.Parameters)
 	} else {
 		messages := make([]core.ModelMessage, len(def.Messages))
 
@@ -351,7 +351,7 @@ func (s *ExecutionEnvironment) executeStepModel(def *config.StepModel, memory ma
 			}
 		}
 
-		task = model.NewTaskWMessages(messages, def.Schema)
+		task = model.NewTaskWMessages(messages, def.Parameters)
 	}
 
 	return s.plane.Model().TaskExecClient(modelName, task, s.clientName)

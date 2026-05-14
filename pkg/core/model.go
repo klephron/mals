@@ -15,6 +15,12 @@ const (
 )
 
 type ModelMessage struct {
-	Role    ModelRole `json:"role"`
-	Content string    `json:"content"`
+	Role    ModelRole
+	Content string
+}
+
+type ModelParameters struct {
+	Schema      ModelSchema
+	Temperature *float64
+	MaxTokens   *int64
 }

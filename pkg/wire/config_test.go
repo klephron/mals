@@ -115,8 +115,6 @@ models:
     api:
       kind: openai
       url: "https://localhost:9091"
-      max_tokens: 250
-      temperature: 0.87
 `),
 			expected: testExpected{
 				output: &Config{
@@ -124,10 +122,8 @@ models:
 						{
 							Name: "first",
 							Api: &ModelApi{
-								Kind:        ModelApiKindOpenai,
-								Url:         util.Ptr("https://localhost:9091"),
-								MaxTokens:   util.Ptr(int32(250)),
-								Temperature: util.Ptr(float32(0.87)),
+								Kind: ModelApiKindOpenai,
+								Url:  util.Ptr("https://localhost:9091"),
 							},
 						},
 					},
@@ -151,10 +147,8 @@ models:
 						{
 							Name: "second",
 							Api: &ModelApi{
-								Kind:        ModelApiKindOpenai,
-								Url:         util.Ptr("https://localhost:9091"),
-								MaxTokens:   nil,
-								Temperature: nil,
+								Kind: ModelApiKindOpenai,
+								Url:  util.Ptr("https://localhost:9091"),
 							},
 						},
 					},

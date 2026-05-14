@@ -11,10 +11,8 @@ type Model struct {
 }
 
 type ModelApi struct {
-	Kind        ModelApiKind `mapstructure:"kind"`
-	Url         *string      `mapstructure:"url"`
-	MaxTokens   *int32       `mapstructure:"max_tokens"`
-	Temperature *float32     `mapstructure:"temperature"`
+	Kind ModelApiKind `mapstructure:"kind"`
+	Url  *string      `mapstructure:"url"`
 }
 
 type ModelApiKind string
@@ -35,12 +33,6 @@ func (o *Model) Wire(c *config.Model) error {
 		if ca.Url != "" {
 			o.Api.Url = &ca.Url
 		}
-		if ca.MaxTokens != nil {
-			o.Api.MaxTokens = ca.MaxTokens
-		}
-		if ca.Temperature != nil {
-			o.Api.Temperature = ca.Temperature
-		}
 
 	default:
 		return fmt.Errorf("unknown model settings kind")
@@ -57,10 +49,7 @@ func (o *Model) Unwire() (*config.Model, error) {
 	if o.Api != nil {
 		switch o.Api.Kind {
 		case ModelApiKindOpenai:
-			api := &config.ModelApiOpenai{
-				MaxTokens:   o.Api.MaxTokens,
-				Temperature: o.Api.Temperature,
-			}
+			api := &config.ModelApiOpenai{}
 			if o.Api.Url != nil {
 				api.Url = *o.Api.Url
 			}

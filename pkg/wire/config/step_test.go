@@ -133,7 +133,11 @@ func TestConfigStepUnwire(t *testing.T) {
 				"model": map[string]any{
 					"resource": "r1",
 					"prompt":   "p1",
-					"schema":   "json/completionItems",
+					"parameters": map[string]any{
+						"schema":      "json/completionItems",
+						"max_tokens":  250,
+						"temperature": 0.8,
+					},
 				},
 			},
 			expected: testExpected{
@@ -141,7 +145,11 @@ func TestConfigStepUnwire(t *testing.T) {
 					Definition: &config.StepModel{
 						Resource: util.Ptr("r1"),
 						Prompt:   util.Ptr("p1"),
-						Schema:   core.ModelSchemaJsonCompletionItems,
+						Parameters: core.ModelParameters{
+							Schema:      core.ModelSchemaJsonCompletionItems,
+							MaxTokens:   util.Ptr(int64(250)),
+							Temperature: util.Ptr(float64(0.8)),
+						},
 					},
 				},
 				error: false,
@@ -156,7 +164,6 @@ func TestConfigStepUnwire(t *testing.T) {
 						map[string]any{"role": "system", "content": "You are a helpful assistant."},
 						map[string]any{"role": "user", "content": "Hello"},
 					},
-					"schema": "json/completionItems",
 				},
 			},
 			expected: testExpected{
@@ -167,7 +174,7 @@ func TestConfigStepUnwire(t *testing.T) {
 							{Role: core.ModelRoleSystem, Content: util.Ptr("You are a helpful assistant.")},
 							{Role: core.ModelRoleUser, Content: util.Ptr("Hello")},
 						},
-						Schema: core.ModelSchemaJsonCompletionItems,
+						Parameters: core.ModelParameters{},
 					},
 				},
 				error: false,

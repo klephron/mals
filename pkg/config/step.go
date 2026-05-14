@@ -55,10 +55,10 @@ type StepModelMessage struct {
 }
 
 type StepModel struct {
-	Resource *string
-	Prompt   *string
-	Messages []*StepModelMessage
-	Schema   core.ModelSchema
+	Resource   *string
+	Prompt     *string
+	Messages   []*StepModelMessage
+	Parameters core.ModelParameters
 }
 
 func (s *StepModel) StepDefinitionKind() string {
@@ -67,9 +67,9 @@ func (s *StepModel) StepDefinitionKind() string {
 
 // model/raw
 type StepModelRaw struct {
-	Resource *string
-	Prompt   *string
-	Schema   core.ModelSchema
+	Resource   *string
+	Prompt     *string
+	Parameters core.ModelParameters
 }
 
 func (s *StepModelRaw) StepDefinitionKind() string {

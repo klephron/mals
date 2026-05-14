@@ -15,9 +15,7 @@ import (
 type ModelOpenai struct {
 	name string
 
-	client      openai.Client
-	maxTokens   param.Opt[int64]
-	temperature param.Opt[float64]
+	client openai.Client
 
 	plane plane.Plane
 }
@@ -25,22 +23,10 @@ type ModelOpenai struct {
 func New(name string, api *config.ModelApiOpenai, plane plane.Plane) *ModelOpenai {
 	client := openai.NewClient(option.WithBaseURL(api.Url), option.WithAPIKey("sk-dummy"))
 
-	var maxTokens param.Opt[int64]
-	if api.MaxTokens != nil {
-		maxTokens = openai.Int(int64(*api.MaxTokens))
-	}
-
-	var temperature param.Opt[float64]
-	if api.Temperature != nil {
-		temperature = openai.Float(float64(*api.Temperature))
-	}
-
 	return &ModelOpenai{
-		name:        name,
-		client:      client,
-		maxTokens:   maxTokens,
-		temperature: temperature,
-		plane:       plane,
+		name:   name,
+		client: client,
+		plane:  plane,
 	}
 }
 
@@ -69,7 +55,7 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 
 	var responseFormat openai.ChatCompletionNewParamsResponseFormatUnion
 
-	switch task.Schema {
+	switch task.Parameters.Schema {
 	case core.ModelSchemaJsonCompletionItems:
 		completionItemsSchema := map[string]any{
 			"type": "array",
@@ -97,6 +83,16 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{}
 	}
 
+	var maxTokens param.Opt[int64]
+	if task.Parameters.MaxTokens != nil {
+		maxTokens = openai.Int(*task.Parameters.MaxTokens)
+	}
+
+	var temperature param.Opt[float64]
+	if task.Parameters.Temperature != nil {
+		temperature = openai.Float(*task.Parameters.Temperature)
+	}
+
 	messages := make([]openai.ChatCompletionMessageParamUnion, len(task.Messages))
 
 	for i, msg := range task.Messages {
@@ -114,8 +110,8 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 
 	resp, err := s.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages:            messages,
-		MaxCompletionTokens: s.maxTokens,
-		Temperature:         s.temperature,
+		MaxCompletionTokens: maxTokens,
+		Temperature:         temperature,
 		N:                   openai.Int(1),
 		ResponseFormat:      responseFormat,
 	})
