@@ -1,5 +1,7 @@
 package config
 
+import "mals/internal/util"
+
 type Handler struct {
 	Name string
 	Spec HandlerSpec
@@ -93,4 +95,70 @@ type HandlerLspEndpointTextDocumentDidClose struct {
 
 type HandlerLspEndpointTextDocumentDidOpen struct {
 	HandlerLspEndpoint
+}
+
+func (s *Handler) Default() {
+	switch cs := s.Spec.(type) {
+	case *HandlerSpecLsp:
+		if cs.Resources == nil {
+			cs.Resources = make([]*HandlerLspResource, 0)
+		}
+		for _, resource := range cs.Resources {
+			if resource.Scope == "" {
+				resource.Scope = HandlerLspResourceScopeClient
+			}
+		}
+
+		if cs.Endpoints.Initialize == nil {
+			cs.Endpoints.Initialize = &HandlerLspEndpointInitialize{}
+		}
+		if cs.Endpoints.Initialize.Default == nil {
+			cs.Endpoints.Initialize.Default = util.Ptr(true)
+		}
+
+		if cs.Endpoints.Initialized == nil {
+			cs.Endpoints.Initialized = &HandlerLspEndpointInitialized{}
+		}
+		if cs.Endpoints.Initialized.Default == nil {
+			cs.Endpoints.Initialized.Default = util.Ptr(true)
+		}
+
+		if cs.Endpoints.Shutdown == nil {
+			cs.Endpoints.Shutdown = &HandlerLspEndpointShutdown{}
+		}
+		if cs.Endpoints.Shutdown.Default == nil {
+			cs.Endpoints.Shutdown.Default = util.Ptr(true)
+		}
+
+		if cs.Endpoints.TextDocumentCompletion == nil {
+			cs.Endpoints.TextDocumentCompletion = &HandlerLspEndpointTextDocumentCompletion{}
+		}
+		if cs.Endpoints.TextDocumentCompletion.Execution == nil {
+			cs.Endpoints.TextDocumentCompletion.Execution = make([]*Step, 0)
+		}
+		if cs.Endpoints.TextDocumentCompletion.Default == nil {
+			cs.Endpoints.TextDocumentCompletion.Default = util.Ptr(len(cs.Endpoints.TextDocumentCompletion.Execution) == 0)
+		}
+
+		if cs.Endpoints.TextDocumentDidChange == nil {
+			cs.Endpoints.TextDocumentDidChange = &HandlerLspEndpointTextDocumentDidChange{}
+		}
+		if cs.Endpoints.TextDocumentDidChange.Default == nil {
+			cs.Endpoints.TextDocumentDidChange.Default = util.Ptr(true)
+		}
+
+		if cs.Endpoints.TextDocumentDidClose == nil {
+			cs.Endpoints.TextDocumentDidClose = &HandlerLspEndpointTextDocumentDidClose{}
+		}
+		if cs.Endpoints.TextDocumentDidClose.Default == nil {
+			cs.Endpoints.TextDocumentDidClose.Default = util.Ptr(true)
+		}
+
+		if cs.Endpoints.TextDocumentDidOpen == nil {
+			cs.Endpoints.TextDocumentDidOpen = &HandlerLspEndpointTextDocumentDidOpen{}
+		}
+		if cs.Endpoints.TextDocumentDidOpen.Default == nil {
+			cs.Endpoints.TextDocumentDidOpen.Default = util.Ptr(true)
+		}
+	}
 }

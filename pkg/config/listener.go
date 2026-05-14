@@ -41,3 +41,13 @@ type ListenerProtocolLspHandler struct {
 	Name    string
 	Handler string
 }
+
+func (s *Listener) Default() {
+	switch cp := s.Protocol.(type) {
+	case *ListenerProtocolLsp:
+		if cp.Handlers == nil {
+			cp.Handlers = make([]*ListenerProtocolLspHandler, 0)
+		}
+	case *ListenerProtocolApi:
+	}
+}

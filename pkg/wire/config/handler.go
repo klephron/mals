@@ -1,371 +1,55 @@
-package wire
+package config
 
 import (
 	"fmt"
 	"mals/pkg/config"
 )
 
-func (o *Config) Wire(c *config.Config) error {
-	if c.Logs != nil {
-		o.Logs = make([]Log, len(c.Logs))
-		for i, log := range c.Logs {
-			wired := Log{}
-			if err := wired.Wire(log); err != nil {
-				return err
-			}
-			o.Logs[i] = wired
-		}
-	}
-
-	if c.Models != nil {
-		o.Models = make([]Model, len(c.Models))
-		for i, model := range c.Models {
-			wired := Model{}
-			if err := wired.Wire(model); err != nil {
-				return err
-			}
-			o.Models[i] = wired
-		}
-	}
-
-	if c.Lsps != nil {
-		o.Lsps = make([]Lsp, 0, len(c.Lsps))
-		for i, lsp := range c.Lsps {
-			wired := Lsp{}
-			if err := wired.Wire(lsp); err != nil {
-				return err
-			}
-			o.Lsps[i] = wired
-		}
-	}
-
-	if c.Handlers != nil {
-		o.Handlers = make([]Handler, 0, len(c.Handlers))
-		for i, handler := range c.Handlers {
-			wired := Handler{}
-			if err := wired.Wire(handler); err != nil {
-				return err
-			}
-			o.Handlers[i] = wired
-		}
-	}
-
-	if c.Listeners != nil {
-		o.Listeners = make([]Listener, 0, len(c.Listeners))
-		for i, listener := range c.Listeners {
-			wired := Listener{}
-			if err := wired.Wire(listener); err != nil {
-				return err
-			}
-			o.Listeners[i] = wired
-		}
-	}
-
-	return nil
+type Handler struct {
+	Name      string            `mapstructure:"name"`
+	Kind      HandlerKind       `mapstructure:"kind"`
+	Resources []HandlerResource `mapstructure:"resources"`
+	Endpoints *HandlerEndpoints `mapstructure:"endpoints"`
 }
 
-func (o *Config) Unwire() (*config.Config, error) {
-	c := &config.Config{}
+type HandlerKind string
 
-	if o.Logs != nil {
-		c.Logs = make([]*config.Log, len(o.Logs))
-		for i, log := range o.Logs {
-			unwired, err := log.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Logs[i] = unwired
-		}
-	}
+const (
+	HandlerKindLspCompletion HandlerKind = "lsp/completion"
+)
 
-	if o.Models != nil {
-		c.Models = make([]*config.Model, len(o.Models))
-		for i, model := range o.Models {
-			unwired, err := model.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Models[i] = unwired
-		}
-	}
-
-	if o.Lsps != nil {
-		c.Lsps = make([]*config.Lsp, len(o.Lsps))
-		for i, lsp := range o.Lsps {
-			unwired, err := lsp.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Lsps[i] = unwired
-		}
-	}
-
-	if o.Handlers != nil {
-		c.Handlers = make([]*config.Handler, len(o.Handlers))
-		for i, handler := range o.Handlers {
-			unwired, err := handler.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Handlers[i] = unwired
-		}
-	}
-
-	if o.Listeners != nil {
-		c.Listeners = make([]*config.Listener, len(o.Listeners))
-		for i, listener := range o.Listeners {
-			unwired, err := listener.Unwire()
-			if err != nil {
-				return nil, err
-			}
-			c.Listeners[i] = unwired
-		}
-	}
-
-	return c, nil
+type HandlerResource struct {
+	Name  string               `mapstructure:"name"`
+	Model *string              `mapstructure:"model"`
+	Lsp   *string              `mapstructure:"lsp"`
+	Scope HandlerResourceScope `mapstructure:"scope"`
 }
 
-func (o *Log) Wire(c *config.Log) error {
-	o.Name = c.Name
+type HandlerResourceScope string
 
-	switch c.Level {
-	case config.LogLevelError:
-		o.Level = LogLevelError
-	case config.LogLevelWarn:
-		o.Level = LogLevelWarn
-	case config.LogLevelInfo:
-		o.Level = LogLevelInfo
-	case config.LogLevelDebug:
-		o.Level = LogLevelDebug
-	default:
-		return fmt.Errorf("unknown log level")
-	}
+const (
+	HandlerResourceScopeGlobal  HandlerResourceScope = "global"
+	HandlerResourceScopeClient  HandlerResourceScope = "client"
+	HandlerResourceScopeHandler HandlerResourceScope = "handler"
+)
 
-	switch k := c.Output.(type) {
-	case *config.LogOutputFile:
-		o.Output = &LogOutput{
-			Kind: LogOutputKindFile,
-			File: &k.File,
-		}
-	default:
-		return fmt.Errorf("unknown log kind")
-	}
-
-	return nil
+type HandlerEndpoints struct {
+	Initialize             *HandlerEndpoint           `mapstructure:"initialize"`
+	Initialized            *HandlerEndpoint           `mapstructure:"initialized"`
+	Shutdown               *HandlerEndpoint           `mapstructure:"shutdown"`
+	TextDocumentCompletion *HandlerEndpointCompletion `mapstructure:"textDocument/completion"`
+	TextDocumentDidChange  *HandlerEndpoint           `mapstructure:"textDocument/didChange"`
+	TextDocumentDidClose   *HandlerEndpoint           `mapstructure:"textDocument/didClose"`
+	TextDocumentDidOpen    *HandlerEndpoint           `mapstructure:"textDocument/didOpen"`
 }
 
-func (o *Log) Unwire() (*config.Log, error) {
-	c := &config.Log{
-		Name: o.Name,
-	}
-
-	switch o.Level {
-	case LogLevelError:
-		c.Level = config.LogLevelError
-	case LogLevelWarn:
-		c.Level = config.LogLevelWarn
-	case LogLevelInfo:
-		c.Level = config.LogLevelInfo
-	case LogLevelDebug:
-		c.Level = config.LogLevelDebug
-	default:
-		return nil, fmt.Errorf("unknown log level")
-	}
-
-	switch o.Output.Kind {
-	case LogOutputKindFile:
-		output := &config.LogOutputFile{}
-		if o.Output.File != nil {
-			output.File = *o.Output.File
-		}
-		c.Output = output
-	default:
-		return nil, fmt.Errorf("unknown log kind: %v", o.Output.Kind)
-	}
-
-	return c, nil
+type HandlerEndpoint struct {
+	Default *bool `mapstructure:"default"`
 }
 
-func (o *Model) Wire(c *config.Model) error {
-	o.Name = c.Name
-
-	switch ca := c.Api.(type) {
-	case *config.ModelApiOpenai:
-		o.Api = &ModelApi{
-			Kind: ModelApiKindOpenai,
-		}
-
-		if ca.Url != "" {
-			o.Api.Url = &ca.Url
-		}
-		if ca.MaxTokens != nil {
-			o.Api.MaxTokens = ca.MaxTokens
-		}
-		if ca.Temperature != nil {
-			o.Api.Temperature = ca.Temperature
-		}
-
-	default:
-		return fmt.Errorf("unknown model settings kind")
-	}
-
-	return nil
-}
-
-func (o *Model) Unwire() (*config.Model, error) {
-	c := &config.Model{
-		Name: o.Name,
-	}
-
-	if o.Api != nil {
-		switch o.Api.Kind {
-		case ModelApiKindOpenai:
-			api := &config.ModelApiOpenai{
-				MaxTokens:   o.Api.MaxTokens,
-				Temperature: o.Api.Temperature,
-			}
-			if o.Api.Url != nil {
-				api.Url = *o.Api.Url
-			}
-			c.Api = api
-		default:
-			c.Api = nil
-		}
-	}
-
-	return c, nil
-}
-
-func (o *Lsp) Wire(c *config.Lsp) error {
-	o.Name = c.Name
-
-	switch ca := c.Api.(type) {
-	case *config.LspApiStdio:
-		o.Api = &LspApi{
-			Kind: LspApiKindStdio,
-			Cmd:  ca.Cmd,
-		}
-	default:
-		return fmt.Errorf("unknown lsp settings kind")
-	}
-
-	return nil
-}
-
-func (o *Lsp) Unwire() (*config.Lsp, error) {
-	c := &config.Lsp{
-		Name: o.Name,
-	}
-
-	switch o.Api.Kind {
-	case LspApiKindStdio:
-		c.Api = &config.LspApiStdio{
-			Cmd: o.Api.Cmd,
-		}
-	default:
-		c.Api = nil
-	}
-
-	return c, nil
-}
-
-func (o *Listener) Wire(c *config.Listener) error {
-	o.Name = c.Name
-
-	switch cp := c.Protocol.(type) {
-	case *config.ListenerProtocolApi:
-		o.Protocol = &ListenerProtocol{
-			Kind:     ListenerProtocolKindApi,
-			Handlers: nil,
-		}
-	case *config.ListenerProtocolLsp:
-		handlers := make([]ListenerProtocolHandler, 0, len(cp.Handlers))
-		for _, handler := range cp.Handlers {
-			wire := ListenerProtocolHandler{}
-			if err := wire.Wire(handler); err != nil {
-				return err
-			}
-			handlers = append(handlers, wire)
-		}
-
-		o.Protocol = &ListenerProtocol{
-			Kind:     ListenerProtocolKindLsp,
-			Handlers: handlers,
-		}
-	default:
-		return fmt.Errorf("unknown listener kind")
-	}
-
-	switch i := c.Ipc.(type) {
-	case *config.ListenerIpcTcp:
-		o.Ipc = &ListenerIpc{
-			Kind: ListenerIpcKindTcp,
-			Port: i.Port,
-		}
-	default:
-		return fmt.Errorf("unknown listener ipc")
-	}
-
-	return nil
-}
-
-func (o *Listener) Unwire() (*config.Listener, error) {
-	c := &config.Listener{
-		Name: o.Name,
-	}
-
-	if o.Protocol != nil {
-		switch o.Protocol.Kind {
-		case ListenerProtocolKindApi:
-			c.Protocol = &config.ListenerProtocolApi{}
-		case ListenerProtocolKindLsp:
-			handlers := make([]*config.ListenerProtocolLspHandler, 0, len(o.Protocol.Handlers))
-
-			for _, handler := range o.Protocol.Handlers {
-				unwired, err := handler.Unwire()
-				if err != nil {
-					return nil, err
-				}
-				handlers = append(handlers, unwired)
-			}
-
-			c.Protocol = &config.ListenerProtocolLsp{
-				Handlers: handlers,
-			}
-		default:
-			return nil, fmt.Errorf("unknown listener kind: %v", o.Protocol.Kind)
-		}
-	}
-
-	if o.Ipc != nil {
-		switch o.Ipc.Kind {
-		case ListenerIpcKindTcp:
-			tcp := &config.ListenerIpcTcp{
-				Port: o.Ipc.Port,
-			}
-			c.Ipc = tcp
-		default:
-			return nil, fmt.Errorf("unknown listener ipc: %v", o.Ipc)
-		}
-	}
-
-	return c, nil
-}
-
-func (o *ListenerProtocolHandler) Wire(c *config.ListenerProtocolLspHandler) error {
-	o.Name = c.Name
-	o.Handler = c.Handler
-
-	return nil
-}
-
-func (o *ListenerProtocolHandler) Unwire() (*config.ListenerProtocolLspHandler, error) {
-	c := config.ListenerProtocolLspHandler{
-		Name:    o.Name,
-		Handler: o.Handler,
-	}
-
-	return &c, nil
+type HandlerEndpointCompletion struct {
+	HandlerEndpoint `mapstructure:",squash"`
+	Execution       []Step `mapstructure:"execution"`
 }
 
 func (o *Handler) Wire(c *config.Handler) error {

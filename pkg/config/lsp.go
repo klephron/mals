@@ -16,3 +16,12 @@ type LspApiStdio struct {
 func (s *LspApiStdio) LspApiKind() string {
 	return "stdio"
 }
+
+func (s *Lsp) Default() {
+	switch settings := s.Api.(type) {
+	case *LspApiStdio:
+		if settings.Cmd == nil {
+			settings.Cmd = make([]string, 0)
+		}
+	}
+}

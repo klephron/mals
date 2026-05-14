@@ -18,3 +18,6 @@ type ModelApiOpenai struct {
 func (s *ModelApiOpenai) ModelApiKind() string {
 	return "openai"
 }
+
+func (s *Model) Default() {
+}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/pkg/wire"
+	wirecfg "mals/pkg/wire/config"
 	"mals/third_party/lsp"
 	"net/http"
 
@@ -15,7 +15,7 @@ type LspDto struct {
 	Name         string                  `json:"name"`
 	Status       controller.LspStatus    `json:"status"`
 	StatusFlags  []string                `json:"status_flags"`
-	Config       *wire.Lsp               `json:"config"`
+	Config       *wirecfg.Lsp            `json:"config"`
 	Capabilities *lsp.ServerCapabilities `json:"capabilities"`
 	Info         *lsp.ServerInfo         `json:"info"`
 }
@@ -45,7 +45,7 @@ func lspToDto(data *controller.LspData) LspDto {
 		Name:         data.Name,
 		Status:       data.Status,
 		StatusFlags:  statusFlags,
-		Config:       &wire.Lsp{},
+		Config:       &wirecfg.Lsp{},
 		Capabilities: data.Capabilities,
 		Info:         data.Info,
 	}

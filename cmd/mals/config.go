@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"mals/internal/plane"
 	"mals/pkg/config"
-	"mals/pkg/wire"
+	wirecfg "mals/pkg/wire/config"
 
 	"github.com/spf13/viper"
 	// "sigs.k8s.io/yaml"
@@ -17,7 +17,7 @@ func configLoad(options *options) (*config.Config, error) {
 		return nil, err
 	}
 
-	var wire wire.Config
+	var wire wirecfg.Config
 	if err := viper.Unmarshal(&wire); err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func configLoad(options *options) (*config.Config, error) {
 		return nil, err
 	}
 
-	config.Default(cfg)
+	cfg.Default()
 
 	return cfg, nil
 }

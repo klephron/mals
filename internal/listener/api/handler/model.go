@@ -5,7 +5,7 @@ import (
 	"mals/internal/model"
 	"mals/internal/plane"
 	"mals/internal/plane/controller"
-	"mals/pkg/wire"
+	wirecfg "mals/pkg/wire/config"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -15,7 +15,7 @@ type ModelDto struct {
 	Name        string                 `json:"name"`
 	Status      controller.ModelStatus `json:"status"`
 	StatusFlags []string               `json:"status_flags"`
-	Config      *wire.Model            `json:"config"`
+	Config      *wirecfg.Model         `json:"config"`
 	Tasks       []*model.Task          `json:"tasks"`
 }
 
@@ -44,7 +44,7 @@ func modelToDto(model *controller.ModelData) ModelDto {
 		Name:        model.Name,
 		Status:      model.Status,
 		StatusFlags: statusFlags,
-		Config:      &wire.Model{},
+		Config:      &wirecfg.Model{},
 		Tasks:       model.Tasks,
 	}
 	t.Config.Wire(model.Config)

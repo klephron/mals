@@ -1,8 +1,8 @@
-package wire
+package config
 
-import (
-	"mals/pkg/config"
-)
+import "mals/pkg/config"
+
+type Step map[string]any
 
 func (o *Step) Wire(c *config.Step) error {
 	return nil

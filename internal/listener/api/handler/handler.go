@@ -4,20 +4,20 @@ import (
 	"context"
 	"mals/internal/plane"
 	"mals/pkg/config"
-	"mals/pkg/wire"
+	wirecfg "mals/pkg/wire/config"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
-type HandlerDto wire.Handler
+type HandlerDto wirecfg.Handler
 
 type HandlerGetInput struct {
 	Name string `path:"name" doc:"handler name"`
 }
 
 func handlerToDto(handler *config.Handler) HandlerDto {
-	t := wire.Handler{}
+	t := wirecfg.Handler{}
 	t.Wire(handler)
 	return HandlerDto(t)
 }

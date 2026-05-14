@@ -53,9 +53,15 @@ const (
 	StepModelSchemaJsonCompletionItems StepModelSchema = "json/completionItems"
 )
 
+type StepModelMessage struct {
+	Role    string
+	Content string
+}
+
 type StepModel struct {
 	Resource *string
 	Prompt   *string
+	Messages []*StepModelMessage
 	Schema   StepModelSchema
 }
 
