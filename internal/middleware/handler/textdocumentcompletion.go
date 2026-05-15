@@ -45,8 +45,11 @@ func (s *Handler) TextDocumentCompletionDefault(params *lsp.CompletionParams) (*
 
 			lspItems := make([]lsp.CompletionItem, len(lspList.Items))
 			for i, s := range lspList.Items {
+				completionText := strings.TrimSpace(s.Label)
+
 				lspItems[i] = lsp.CompletionItem{
-					Label:         strings.TrimSpace(s.Label),
+					Label:         completionText,
+					InsertText:    completionText,
 					Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, lspName),
 					Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
 				}

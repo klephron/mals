@@ -2,10 +2,14 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"mals/internal/model"
 	"mals/internal/plane"
 	"mals/pkg/config"
 	"mals/pkg/core"
+	"mals/third_party/lsp"
+	"strings"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -50,24 +54,16 @@ func (s *ModelOpenai) Run(ctx context.Context) error {
 }
 
 func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, error) {
-
 	s.plane.Infof("%T %v task %v: received", s, s.Name(), task)
 
-	var responseFormat openai.ChatCompletionNewParamsResponseFormatUnion
+	responseFormat := openai.ChatCompletionNewParamsResponseFormatUnion{}
 
 	switch task.Parameters.Schema {
 	case core.ModelSchemaJsonCompletionItems:
 		completionItemsSchema := map[string]any{
 			"type": "array",
 			"items": map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"label": map[string]any{
-						"type": "string",
-					},
-				},
-				"required":             []string{"label"},
-				"additionalProperties": false,
+				"type": "string",
 			},
 		}
 		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{
@@ -79,8 +75,6 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 				},
 			},
 		}
-	default:
-		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{}
 	}
 
 	var maxTokens param.Opt[int64]
@@ -123,7 +117,41 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 		return "", err
 	}
 
+	if len(resp.Choices) == 0 {
+		return "", fmt.Errorf("openai response has no choices")
+	}
+
 	text := resp.Choices[0].Message.Content
+
+	switch task.Parameters.Schema {
+	case core.ModelSchemaJsonCompletionItems:
+		var completions []string
+		if err := json.Unmarshal([]byte(text), &completions); err != nil {
+			return "", fmt.Errorf("parse model completion JSON: %v", err)
+		}
+
+		items := make([]lsp.CompletionItem, 0, len(completions))
+		for _, raw := range completions {
+			insertText := strings.TrimSpace(raw)
+			if insertText == "" {
+				continue
+			}
+
+			items = append(items, lsp.CompletionItem{
+				Label:         insertText,
+				InsertText:    insertText,
+				Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, s.Name()),
+				Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", s.Name())},
+			})
+		}
+
+		out, err := json.Marshal(items)
+		if err != nil {
+			return "", fmt.Errorf("marshal LSP completion items: %v", err)
+		}
+
+		text = string(out)
+	}
 
 	return text, nil
 }
