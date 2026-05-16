@@ -168,7 +168,7 @@ func (s *ExecutionEnvironment) executeStepLspCompletion(def *config.StepLspCompl
 
 	lspSpec, ok := resource.spec.(*config.HandlerLspResourceSpecLsp)
 	if !ok {
-		return nil, fmt.Errorf("lsp resource %v is not of type %T", *def.Resource, (*config.HandlerLspResourceSpecLsp)(nil))
+		return nil, fmt.Errorf("lsp resource %v %T is not of type %T", *def.Resource, resource.spec, (*config.HandlerLspResourceSpecLsp)(nil))
 	}
 
 	lspName, token, err := s.plane.Scope().LspAcquire(lspSpec.Name, resource.scope)

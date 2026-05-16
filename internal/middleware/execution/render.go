@@ -158,33 +158,28 @@ func (s *ExecutionEnvironment) getRenderFuncMap(memory map[string]any) template.
 		"get": func(segments ...string) (any, error) {
 			return s.get(memory, segments...)
 		},
-		"index": func(a any, i any) (any, error) { return nil, nil },
 	}
 }
 
 func (s *ExecutionEnvironment) renderString(tmpl string, memory map[string]any) (*string, error) {
 	funcs := s.getRenderFuncMap(memory)
 
-	trees, err := parse.Parse("root", tmpl, "", "", funcs)
+	t, err := template.New("root").Funcs(funcs).Parse(tmpl)
 	if err != nil {
 		return nil, err
 	}
 
-	t := template.New("root").Funcs(funcs)
-	for name, tree := range trees {
-		rewriteNode(tree.Root)
-		if name == "root" {
-			t.Tree = tree
-		} else {
-			nt, _ := t.New(name).Parse("") // initialize the slot
-			nt.Tree = tree
+	for _, tree := range t.Templates() {
+		if tree.Tree != nil && tree.Tree.Root != nil {
+			rewriteNode(tree.Tree.Root)
 		}
 	}
 
 	var buf bytes.Buffer
-	if err := t.Execute(&buf, nil); err != nil {
+	if err := t.Execute(&buf, memory); err != nil {
 		return nil, err
 	}
+
 	return util.Ptr(buf.String()), nil
 }
 
@@ -221,35 +216,32 @@ func (s *ExecutionEnvironment) renderInt(tmpl string, data map[string]any) (*int
 	return util.Ptr(i), nil
 }
 
-func (s *ExecutionEnvironment) renderValue(tmpl string, data map[string]any) (any, error) {
-	funcs := s.getRenderFuncMap(data)
+func (s *ExecutionEnvironment) renderValue(tmpl string, memory map[string]any) (any, error) {
+	funcs := s.getRenderFuncMap(memory)
 
-	trees, err := parse.Parse("root", tmpl, "", "", funcs)
+	t, err := template.New("root").Funcs(funcs).Parse(tmpl)
 	if err != nil {
 		return nil, err
 	}
 
-	if segments, ok := extractSingleFieldAccess(trees["root"]); ok {
-		val, err := s.get(data, segments...)
-		if err != nil {
-			return nil, err
+	if t.Tree != nil {
+		if segments, ok := extractSingleFieldAccess(t.Tree); ok {
+			val, err := s.get(memory, segments...)
+			if err != nil {
+				return nil, err
+			}
+			return val, nil
 		}
-		return val, nil
 	}
 
-	t := template.New("root").Funcs(funcs)
-	for name, tree := range trees {
-		rewriteNode(tree.Root)
-		if name == "root" {
-			t.Tree = tree
-		} else {
-			nt, _ := t.New(name).Parse("")
-			nt.Tree = tree
+	for _, tmpl := range t.Templates() {
+		if tmpl.Tree != nil && tmpl.Tree.Root != nil {
+			rewriteNode(tmpl.Tree.Root)
 		}
 	}
 
 	var buf bytes.Buffer
-	if err := t.Execute(&buf, nil); err != nil {
+	if err := t.Execute(&buf, memory); err != nil {
 		return nil, err
 	}
 

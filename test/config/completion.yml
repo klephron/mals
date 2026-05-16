@@ -48,10 +48,6 @@ handlers:
               resource: clangd
             assign: clangd
 
-          - json/dumps:
-              input: "{{ .clangd }}"
-            assign: clangd_str
-
           - model/raw:
               resource: llama
               prompt: |
