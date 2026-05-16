@@ -160,12 +160,24 @@ func (s *LspClient) handleTextDocumentCompletion(msg jsonrpc.Message) {
 	}()
 }
 
-func (s *LspClient) handleShutdown(_ jsonrpc.Message) {
+func (s *LspClient) handleShutdown(msg jsonrpc.Message) {
+	req, ok := msg.(*jsonrpc.Request)
+	if !ok {
+		errorParseUnexpectedType[*jsonrpc.Request](s)
+		return
+	}
+
 	err := s.middleware.Shutdown()
 	if err != nil {
 		s.plane.Errorf("%T %v: TextDocumentShutdown %v", s, s.Name(), err)
 		return
 	}
+
+	resp := jsonrpc.Response{
+		Id:     req.Id,
+		Result: nil,
+	}
+	s.send(&resp)
 }
 
 func (s *LspClient) handle(bytes []byte) {
