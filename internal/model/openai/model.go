@@ -9,7 +9,6 @@ import (
 	"mals/pkg/config"
 	"mals/pkg/core"
 	"mals/third_party/lsp"
-	"strings"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -59,22 +58,8 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 	responseFormat := openai.ChatCompletionNewParamsResponseFormatUnion{}
 
 	switch task.Parameters.Schema {
-	case core.ModelSchemaJsonCompletionItems:
-		completionItemsSchema := map[string]any{
-			"type": "array",
-			"items": map[string]any{
-				"type": "string",
-			},
-		}
-		responseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{
-			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
-				JSONSchema: openai.ResponseFormatJSONSchemaJSONSchemaParam{
-					Name:   string(core.ModelSchemaJsonCompletionItems),
-					Strict: openai.Bool(true),
-					Schema: completionItemsSchema,
-				},
-			},
-		}
+	case core.ModelSchemaJsonCompletionItem:
+		// No JSON schema here
 	}
 
 	var maxTokens param.Opt[int64]
@@ -123,31 +108,19 @@ func (s *ModelOpenai) Execute(ctx context.Context, task *model.Task) (string, er
 
 	text := resp.Choices[0].Message.Content
 
+	s.plane.Infof("%T %v task %v response: %v", s, s.Name(), task.Id, text)
+
 	switch task.Parameters.Schema {
-	case core.ModelSchemaJsonCompletionItems:
-		var completions []string
-		if err := json.Unmarshal([]byte(text), &completions); err != nil {
-			return "", fmt.Errorf("parse model completion JSON: %v", err)
+	case core.ModelSchemaJsonCompletionItem:
+		item := lsp.CompletionItem{
+			Label:         text,
+			InsertText:    text,
+			Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, s.Name()),
+			Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", s.Name())},
 		}
-
-		items := make([]lsp.CompletionItem, 0, len(completions))
-		for _, raw := range completions {
-			insertText := strings.TrimSpace(raw)
-			if insertText == "" {
-				continue
-			}
-
-			items = append(items, lsp.CompletionItem{
-				Label:         insertText,
-				InsertText:    insertText,
-				Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, s.Name()),
-				Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", s.Name())},
-			})
-		}
-
-		out, err := json.Marshal(items)
+		out, err := json.Marshal(item)
 		if err != nil {
-			return "", fmt.Errorf("marshal LSP completion items: %v", err)
+			return "", fmt.Errorf("marshal LSP %v: %v", core.ModelSchemaJsonCompletionItem, err)
 		}
 
 		text = string(out)

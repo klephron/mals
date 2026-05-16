@@ -3,7 +3,7 @@ package core
 type ModelSchema string
 
 const (
-	ModelSchemaJsonCompletionItems ModelSchema = "json/completionItems"
+	ModelSchemaJsonCompletionItem ModelSchema = "json/completionItem"
 )
 
 type ModelRole string

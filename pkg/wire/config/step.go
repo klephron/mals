@@ -22,8 +22,8 @@ func unwireModelParameters(raw map[string]any) core.ModelParameters {
 	if schemaRaw, ok := raw["schema"].(string); ok {
 		schema := core.ModelSchema(schemaRaw)
 		switch schema {
-		case core.ModelSchemaJsonCompletionItems:
-			p.Schema = core.ModelSchemaJsonCompletionItems
+		case core.ModelSchemaJsonCompletionItem:
+			p.Schema = core.ModelSchemaJsonCompletionItem
 		default:
 			p.Schema = ""
 		}
@@ -77,7 +77,7 @@ func unwireStepModelRaw(vm map[string]any) *config.StepModelRaw {
 	if prompt, ok := vm["prompt"].(string); ok {
 		d.Prompt = &prompt
 	}
-	if raw, ok := vm["parameters"].(map[string]interface{}); ok {
+	if raw, ok := vm["parameters"].(map[string]any); ok {
 		d.Parameters = unwireModelParameters(raw)
 	}
 	return &d
@@ -114,7 +114,7 @@ func unwireStepModel(vm map[string]any) *config.StepModel {
 		}
 		d.Messages = messages
 	}
-	if raw, ok := vm["parameters"].(map[string]interface{}); ok {
+	if raw, ok := vm["parameters"].(map[string]any); ok {
 		d.Parameters = unwireModelParameters(raw)
 	}
 	return &d

@@ -134,7 +134,7 @@ func TestConfigStepUnwire(t *testing.T) {
 					"resource": "r1",
 					"prompt":   "p1",
 					"parameters": map[string]any{
-						"schema":      "json/completionItems",
+						"schema":      "json/completionItem",
 						"max_tokens":  250,
 						"temperature": 0.8,
 					},
@@ -146,7 +146,7 @@ func TestConfigStepUnwire(t *testing.T) {
 						Resource: util.Ptr("r1"),
 						Prompt:   util.Ptr("p1"),
 						Parameters: core.ModelParameters{
-							Schema:      core.ModelSchemaJsonCompletionItems,
+							Schema:      core.ModelSchemaJsonCompletionItem,
 							MaxTokens:   util.Ptr(int64(250)),
 							Temperature: util.Ptr(float64(0.8)),
 						},
