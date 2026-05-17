@@ -196,6 +196,7 @@ func (s *ExecutionEnvironment) executeStepLspCompletion(def *config.StepLspCompl
 	for i, item := range lspList.Items {
 		items[i] = lsp.CompletionItem{
 			Label:         strings.TrimSpace(item.Label),
+			InsertText:    item.InsertText,
 			Detail:        fmt.Sprintf("%v(%v)", core.MiddlewareServerName, lspName),
 			Documentation: &lsp.Or_CompletionItem_documentation{Value: fmt.Sprintf("%v", lspName)},
 		}
