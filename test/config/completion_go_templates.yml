@@ -17,6 +17,8 @@ lsps:
       kind: stdio
       cmd:
         - clangd
+        - --clang-tidy
+        - --all-scopes-completion
 
 handlers:
   - name: completion
@@ -37,7 +39,7 @@ handlers:
             assign: clangd
 
           - json/dumps:
-              input: "{{ .clangd }}"
+              input: '[{{- range $i, $item := .clangd }}{{- if $i }},{{ end }}{{ printf "%q" $item.Label }} {{- end }}]'
             assign: clangd_str
 
           - model:
@@ -48,10 +50,10 @@ handlers:
                 temperature: 0.2
               messages:
                 - role: system
-                  content: "You are an expert code completion AI. Complete the code snippet accurately and concisely. Follow the existing code style and patterns. The cursor is marked with <CURSOR>. Only provide the text that should be inserted at <CURSOR>, without explanations."
+                  content: "You are an expert code completion AI. ... The cursor is marked with <CURSOR> ..."
                 - role: user
                   content: |
-                    LSP textDocument/completion results: [{{- range $i, $item := .clangd }}{{- if $i }},{{ end }}{{ printf "%q" $item.Label }} {{- end }}]
+                    LSP textDocument/completion results: {{ .clangd_str }}
                 - role: user
                   content: |
                     {{ .file.text_before }}<CURSOR>{{ .file.text_after }}

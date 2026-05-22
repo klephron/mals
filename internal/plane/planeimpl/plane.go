@@ -68,7 +68,6 @@ func (s *Plane) Run(onReady func()) {
 			s.handler.ControllerRun(func() { wgReady.Done() })
 		})
 	}
-
 	{
 		wgReady.Add(1)
 		wg.Go(func() {
@@ -86,7 +85,6 @@ func (s *Plane) Shutdown() error {
 		s.Errorf("%v", err)
 		return err
 	}
-
 	if err := s.handler.ControllerShutdown(); err != nil {
 		s.Errorf("%v", err)
 		return err
