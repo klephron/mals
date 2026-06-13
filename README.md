@@ -1,5 +1,13 @@
 # mals
 
+## Components
+
+- [`mals`](https://github.com/klephron/mals.git) - main server component
+- [`mals-adapter`](https://github.com/klephron/mals-adapter.git) - LSP stdio to TCP adapter
+- [`mals-ctl`](https://github.com/klephron/mals-ctl.git) - utility command line tool
+- [`mals-vscode`](https://github.com/klephron/mals-vscode.git) - VSCode Extension LSP client wrapper
+- [`mals-test`](https://github.com/klephron/mals-test.git) - testing application and other testing utilities
+
 ## Generate LSP protocol structures
 
 Build utility script to fetch latest changes:
